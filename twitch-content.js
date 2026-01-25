@@ -55,26 +55,35 @@
     function replaceWithYouTube(videoId) {
         if (!videoId) return;
 
-        const playerContainer = document.querySelector('.video-player, [data-a-target="video-player"]');
-        if (!playerContainer) return;
+        // Try multiple selectors for the video player area
+        const playerContainer = document.querySelector('[data-a-target="video-player-layout"]') ||
+            document.querySelector('.video-player__container') ||
+            document.querySelector('.video-player') ||
+            document.querySelector('[data-a-target="video-player"]');
 
-        // Store original player
-        if (!state.originalPlayer) {
-            state.originalPlayer = playerContainer.innerHTML;
+        if (!playerContainer) {
+            console.log('[TCFY] Player container not found');
+            return;
         }
+
+        // Create wrapper div
+        const wrapper = document.createElement('div');
+        wrapper.id = 'tcfy-youtube-wrapper';
+        wrapper.style.cssText = 'position:absolute;inset:0;z-index:9999;background:#000;';
 
         // Create YouTube iframe
         const iframe = document.createElement('iframe');
         iframe.id = 'tcfy-youtube-player';
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.style.cssText = 'width:100%;height:100%;border:none;position:absolute;inset:0;z-index:10;';
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.style.cssText = 'width:100%;height:100%;border:none;';
 
-        // Clear player and add iframe
+        wrapper.appendChild(iframe);
+
+        // Add wrapper to player (don't remove original, just overlay)
         playerContainer.style.position = 'relative';
-        playerContainer.innerHTML = '';
-        playerContainer.appendChild(iframe);
+        playerContainer.appendChild(wrapper);
 
         // Update UI
         document.getElementById('tcfy-yt-panel').classList.add('hidden');
@@ -83,14 +92,20 @@
 
         state.youtubeUrl = videoId;
         chrome.storage?.local?.set({ tcfy_youtube_id: videoId });
+
+        console.log('[TCFY] YouTube player injected:', videoId);
     }
 
     function restoreTwitchPlayer() {
-        const playerContainer = document.querySelector('.video-player, [data-a-target="video-player"]');
-        if (!playerContainer || !state.originalPlayer) return;
+        const wrapper = document.getElementById('tcfy-youtube-wrapper');
+        if (wrapper) {
+            wrapper.remove();
+        }
 
-        // Restore original - will reload Twitch player
-        location.reload();
+        // Update UI
+        document.getElementById('tcfy-yt-toggle').textContent = '📺 Watch YouTube';
+        document.getElementById('tcfy-yt-restore').style.display = 'none';
+        state.youtubeUrl = null;
     }
 
     function init() {
