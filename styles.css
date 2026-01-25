@@ -16,13 +16,15 @@
 
 /* Main container that replaces YouTube chat */
 .tcfy-container {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: var(--tcfy-bg-primary);
   border-radius: 12px;
   overflow: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 100;
 }
 
 /* Header with tabs */
