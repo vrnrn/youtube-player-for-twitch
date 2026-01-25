@@ -4,6 +4,9 @@
 
 A Chrome extension that lets you overlay any YouTube livestream on top of a Twitch channel player, keeping the Twitch chat and interface intact. Perfect for when your favorite streamer switches platforms or when you want the superior YouTube video quality with Twitch's superior chat experience.
 
+
+[![Available in the Chrome Web Store](https://storage.googleapis.com/web-dev-uploads/image/WdceHbbN37HLWkJCn1n2/8MIG1b5T4Fw58aedb40R.png)](https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad)
+
 ![Icon](icons/icon128.png)
 
 ## ✨ Features
@@ -31,7 +34,7 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 
 ## 🚀 Usage
 
-1. **Install** the extension (Developer Mode for now)
+1. **Install** the extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad)
 2. Go to any **Twitch Channel**
 3. Click the **▶ YouTube** button in the top navigation bar
 
