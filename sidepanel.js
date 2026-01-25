@@ -1,6 +1,6 @@
 // Side panel script
 
-const TWITCH_URL = 'https://www.twitch.tv/embed/{channel}/chat?parent=www.youtube.com&darkpopout';
+const TWITCH_URL = 'https://www.twitch.tv/popout/{channel}/chat?darkpopout';
 
 const elements = {
     setup: document.getElementById('setup'),
