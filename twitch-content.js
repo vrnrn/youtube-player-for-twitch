@@ -16,26 +16,29 @@
         originalPlayer: null
     };
 
-    function createYouTubeOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'tcfy-yt-overlay';
-        overlay.innerHTML = `
-      <div class="tcfy-yt-controls">
-        <button class="tcfy-yt-toggle" id="tcfy-yt-toggle">📺 Watch YouTube</button>
-      </div>
-      <div class="tcfy-yt-input-panel" id="tcfy-yt-panel">
-        <div class="tcfy-yt-header">
-          <span>Replace with YouTube Stream</span>
-          <button class="tcfy-yt-close" id="tcfy-yt-close">×</button>
-        </div>
-        <div class="tcfy-yt-body">
-          <input type="text" id="tcfy-yt-url" placeholder="Paste YouTube livestream URL" />
-          <button id="tcfy-yt-go">Watch</button>
-        </div>
-        <button class="tcfy-yt-restore" id="tcfy-yt-restore">Restore Twitch Player</button>
-      </div>
-    `;
-        return overlay;
+    function createNavButton() {
+        // Create a wrapper that matches Twitch's nav item styling
+        const wrapper = document.createElement('div');
+        wrapper.id = 'tcfy-nav-wrapper';
+        wrapper.style.cssText = 'position:relative;display:flex;align-items:center;margin-left:10px;';
+
+        wrapper.innerHTML = `
+          <button class="tcfy-nav-btn" id="tcfy-yt-toggle">
+            <span style="margin-right:5px;">▶</span>YouTube
+          </button>
+          <div class="tcfy-dropdown" id="tcfy-yt-panel">
+            <div class="tcfy-dropdown-header">
+              <span>Watch YouTube Stream</span>
+              <button class="tcfy-dropdown-close" id="tcfy-yt-close">×</button>
+            </div>
+            <div class="tcfy-dropdown-body">
+              <input type="text" id="tcfy-yt-url" placeholder="Paste YouTube URL" />
+              <button id="tcfy-yt-go">Go</button>
+            </div>
+            <button class="tcfy-dropdown-restore" id="tcfy-yt-restore">Restore Twitch</button>
+          </div>
+        `;
+        return wrapper;
     }
 
     function extractVideoId(url) {
@@ -106,8 +109,10 @@
         playerContainer.appendChild(wrapper);
 
         // Update UI
-        document.getElementById('tcfy-yt-panel').classList.add('hidden');
-        document.getElementById('tcfy-yt-toggle').textContent = '🔴 YouTube Active';
+        document.getElementById('tcfy-yt-panel').classList.remove('visible');
+        const toggle = document.getElementById('tcfy-yt-toggle');
+        toggle.innerHTML = '<span style="margin-right:5px;">🔴</span>Live';
+        toggle.classList.add('active');
         document.getElementById('tcfy-yt-restore').style.display = 'block';
 
         state.youtubeUrl = videoId;
@@ -126,7 +131,8 @@
         resumeTwitchPlayer();
 
         // Update UI
-        document.getElementById('tcfy-yt-toggle').textContent = '📺 Watch YouTube';
+        const toggle = document.getElementById('tcfy-yt-toggle');
+        toggle.innerHTML = '<span style="margin-right:5px;">▶</span>YouTube';
         document.getElementById('tcfy-yt-restore').style.display = 'none';
         state.youtubeUrl = null;
     }
@@ -134,13 +140,21 @@
     function init() {
         if (state.initialized) return;
 
-        // Wait for player to exist
-        const playerContainer = document.querySelector('.video-player, [data-a-target="video-player"]');
-        if (!playerContainer) return;
+        // Find the left side of the nav bar (contains Twitch logo, Following, Browse, More Options)
+        const leftNav = document.querySelector('.top-nav__menu > div:first-child') ||
+            document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
 
-        // Create overlay
-        const overlay = createYouTubeOverlay();
-        document.body.appendChild(overlay);
+        if (!leftNav) {
+            console.log('[TCFY] Nav bar not found');
+            return;
+        }
+
+        // Already injected?
+        if (document.getElementById('tcfy-nav-wrapper')) return;
+
+        // Create and inject nav button
+        const navBtn = createNavButton();
+        leftNav.appendChild(navBtn);
 
         // Event listeners
         const toggleBtn = document.getElementById('tcfy-yt-toggle');
@@ -150,8 +164,8 @@
         const goBtn = document.getElementById('tcfy-yt-go');
         const restoreBtn = document.getElementById('tcfy-yt-restore');
 
-        toggleBtn.onclick = () => panel.classList.toggle('hidden');
-        closeBtn.onclick = () => panel.classList.add('hidden');
+        toggleBtn.onclick = () => panel.classList.toggle('visible');
+        closeBtn.onclick = () => panel.classList.remove('visible');
 
         goBtn.onclick = () => {
             const videoId = extractVideoId(urlInput.value);
@@ -177,7 +191,8 @@
         if (state.initialized || attempts > 15) return;
         attempts++;
 
-        if (document.querySelector('.video-player, [data-a-target="video-player"]')) {
+        // Look for nav bar
+        if (document.querySelector('.top-nav__menu') || document.querySelector('button[aria-label="More Options"]')) {
             init();
         } else {
             setTimeout(check, 1500);
