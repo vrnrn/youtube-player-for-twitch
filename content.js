@@ -6,247 +6,168 @@
 (function () {
   'use strict';
 
-  console.log('[TCFY] 🚀 Content script loaded on:', window.location.href);
+  // Only run once
+  if (window.__tcfyLoaded) return;
+  window.__tcfyLoaded = true;
 
-  // Configuration
-  const CONFIG = {
-    TWITCH_CHAT_URL: 'https://www.twitch.tv/embed/{channel}/chat?parent=www.youtube.com&darkpopout',
-    CHECK_INTERVAL: 2000,
-    MAX_RETRIES: 20
-  };
+  console.log('[TCFY] Content script loaded');
 
-  // State
+  const TWITCH_CHAT_URL = 'https://www.twitch.tv/embed/{channel}/chat?parent=www.youtube.com&darkpopout';
+
   let state = {
-    isInitialized: false,
-    youtubeChannel: null,
-    twitchChannel: null,
+    initialized: false,
     showingTwitch: true,
-    originalChatElement: null,
-    twitchContainer: null
+    originalChat: null,
+    youtubeChannel: null
   };
 
-  /**
-   * Check if the current page is a YouTube livestream
-   */
-  function isLiveStream() {
-    const chatFrame = document.querySelector('iframe#chatframe');
-    const liveChat = document.querySelector('ytd-live-chat-frame');
-    const chatContainer = document.querySelector('#chat');
-
-    const isLive = !!(chatFrame || liveChat || chatContainer);
-    console.log('[TCFY] Livestream check:', { chatFrame: !!chatFrame, liveChat: !!liveChat, chatContainer: !!chatContainer, isLive });
-    return isLive;
-  }
-
-  /**
-   * Extract YouTube channel name from the page
-   */
-  function getYouTubeChannelName() {
+  function getChannelName() {
     const selectors = [
       'ytd-channel-name yt-formatted-string a',
       'ytd-channel-name a',
       '#channel-name a',
-      '#owner-name a',
-      '#upload-info ytd-channel-name a'
+      '#owner-name a'
     ];
-
-    for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element && element.textContent) {
-        return element.textContent.trim();
-      }
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el?.textContent) return el.textContent.trim();
     }
     return null;
   }
 
-  /**
-   * Normalize channel name for Twitch lookup
-   */
-  function normalizeTwitchName(name) {
-    if (!name) return '';
-    return name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_]/g, '');
+  function normalize(name) {
+    return name ? name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_]/g, '') : '';
   }
 
-  /**
-   * Create the Twitch chat container
-   */
-  function createTwitchContainer() {
-    const container = document.createElement('div');
-    container.id = 'tcfy-twitch-container';
-    container.innerHTML = `
+  function createUI() {
+    const div = document.createElement('div');
+    div.id = 'tcfy-container';
+    div.innerHTML = `
       <div class="tcfy-header">
         <span class="tcfy-title">📺 Twitch Chat</span>
-        <button class="tcfy-toggle" id="tcfy-toggle">Show YouTube Chat</button>
+        <button class="tcfy-toggle" id="tcfy-toggle">YouTube</button>
       </div>
-      <div class="tcfy-content">
-        <iframe id="tcfy-twitch-iframe" src="about:blank"></iframe>
+      <div class="tcfy-body">
+        <iframe id="tcfy-iframe" src="about:blank"></iframe>
         <div class="tcfy-overlay" id="tcfy-overlay">
-          <div class="tcfy-overlay-content">
-            <div class="tcfy-overlay-title">Enter Twitch Channel</div>
-            <div class="tcfy-overlay-subtitle" id="tcfy-suggestion"></div>
-            <div class="tcfy-input-row">
-              <input type="text" id="tcfy-input" placeholder="Twitch username" />
-              <button id="tcfy-connect">Connect</button>
+          <div class="tcfy-form">
+            <div class="tcfy-label">Enter Twitch Channel</div>
+            <div class="tcfy-hint" id="tcfy-hint"></div>
+            <div class="tcfy-row">
+              <input type="text" id="tcfy-input" placeholder="channel name" />
+              <button id="tcfy-go">Go</button>
             </div>
           </div>
         </div>
       </div>
     `;
-    return container;
+    return div;
   }
 
-  /**
-   * Connect to Twitch channel
-   */
-  function connectToTwitch(channel) {
+  function connect(channel) {
     if (!channel) return;
-
-    state.twitchChannel = channel;
-    const iframe = document.getElementById('tcfy-twitch-iframe');
+    const iframe = document.getElementById('tcfy-iframe');
     const overlay = document.getElementById('tcfy-overlay');
-
-    iframe.src = CONFIG.TWITCH_CHAT_URL.replace('{channel}', channel.toLowerCase());
+    iframe.src = TWITCH_CHAT_URL.replace('{channel}', channel.toLowerCase());
     overlay.style.display = 'none';
+    document.querySelector('.tcfy-title').textContent = '📺 ' + channel;
 
-    // Update header
-    document.querySelector('.tcfy-title').textContent = `📺 ${channel}`;
-
-    // Save to storage
-    if (chrome?.storage) {
-      chrome.storage.local.set({ [`yt_${normalizeTwitchName(state.youtubeChannel)}`]: channel });
-    }
-
-    console.log('[TCFY] Connected to Twitch:', channel);
+    // Save preference
+    const key = 'tcfy_' + normalize(state.youtubeChannel);
+    try { chrome?.storage?.local?.set({ [key]: channel }); } catch (e) { }
+    console.log('[TCFY] Connected:', channel);
   }
 
-  /**
-   * Toggle between Twitch and YouTube chat
-   */
-  function toggleChat() {
+  function toggle() {
     state.showingTwitch = !state.showingTwitch;
-
-    const twitchContainer = document.getElementById('tcfy-twitch-container');
-    const toggleBtn = document.getElementById('tcfy-toggle');
+    const container = document.getElementById('tcfy-container');
+    const btn = document.getElementById('tcfy-toggle');
 
     if (state.showingTwitch) {
-      twitchContainer.style.display = 'flex';
-      if (state.originalChatElement) state.originalChatElement.style.display = 'none';
-      toggleBtn.textContent = 'Show YouTube Chat';
+      container.style.display = 'flex';
+      if (state.originalChat) state.originalChat.style.display = 'none';
+      btn.textContent = 'YouTube';
     } else {
-      twitchContainer.style.display = 'none';
-      if (state.originalChatElement) state.originalChatElement.style.display = '';
-      toggleBtn.textContent = 'Show Twitch Chat';
+      container.style.display = 'none';
+      if (state.originalChat) state.originalChat.style.display = '';
+      btn.textContent = 'Twitch';
     }
   }
 
-  /**
-   * Initialize the extension
-   */
-  async function inject() {
-    if (state.isInitialized) return true;
-
-    // Find YouTube chat
-    const chatParent = document.querySelector('#chat') ||
-      document.querySelector('ytd-live-chat-frame')?.parentElement ||
-      document.querySelector('#chat-container');
-
-    if (!chatParent) {
-      console.log('[TCFY] Chat parent not found');
-      return false;
-    }
-
-    // Store original chat reference
-    state.originalChatElement = chatParent.querySelector('ytd-live-chat-frame') ||
-      chatParent.querySelector('iframe#chatframe');
-
-    // Get channel name
-    state.youtubeChannel = getYouTubeChannelName();
-    console.log('[TCFY] YouTube channel:', state.youtubeChannel);
-
-    // Create Twitch container
-    const container = createTwitchContainer();
-    chatParent.style.position = 'relative';
-    chatParent.insertBefore(container, chatParent.firstChild);
-
-    // Hide original chat
-    if (state.originalChatElement) {
-      state.originalChatElement.style.display = 'none';
-    }
-
-    // Set up events
-    document.getElementById('tcfy-toggle').addEventListener('click', toggleChat);
-    document.getElementById('tcfy-connect').addEventListener('click', () => {
-      connectToTwitch(document.getElementById('tcfy-input').value.trim());
-    });
-    document.getElementById('tcfy-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') connectToTwitch(e.target.value.trim());
-    });
-
-    // Try to load saved channel or suggest one
-    const suggested = normalizeTwitchName(state.youtubeChannel);
-    const input = document.getElementById('tcfy-input');
-    const suggestion = document.getElementById('tcfy-suggestion');
-
-    if (chrome?.storage) {
-      chrome.storage.local.get([`yt_${suggested}`], (result) => {
-        const saved = result[`yt_${suggested}`];
-        if (saved) {
-          connectToTwitch(saved);
-        } else if (suggested) {
-          input.value = suggested;
-          suggestion.textContent = `Suggested: ${suggested}`;
-        }
-      });
-    } else if (suggested) {
-      input.value = suggested;
-      suggestion.textContent = `Suggested: ${suggested}`;
-    }
-
-    state.isInitialized = true;
-    console.log('[TCFY] ✅ Initialized');
-    return true;
-  }
-
-  /**
-   * Main loop
-   */
   function init() {
-    let retries = 0;
+    if (state.initialized) return;
 
-    const check = () => {
-      if (!isLiveStream()) {
-        if (retries++ < CONFIG.MAX_RETRIES) setTimeout(check, CONFIG.CHECK_INTERVAL);
-        return;
-      }
-      inject().then(success => {
-        if (!success && retries++ < CONFIG.MAX_RETRIES) setTimeout(check, CONFIG.CHECK_INTERVAL);
+    // Find chat container
+    const chat = document.querySelector('#chat');
+    if (!chat) return;
+
+    // Check if already injected
+    if (document.getElementById('tcfy-container')) return;
+
+    state.originalChat = chat.querySelector('ytd-live-chat-frame') || chat.querySelector('iframe#chatframe');
+    state.youtubeChannel = getChannelName();
+
+    // Create and inject UI
+    const ui = createUI();
+    chat.style.position = 'relative';
+    chat.insertBefore(ui, chat.firstChild);
+
+    // Hide original
+    if (state.originalChat) state.originalChat.style.display = 'none';
+
+    // Events
+    document.getElementById('tcfy-toggle').onclick = toggle;
+    document.getElementById('tcfy-go').onclick = () => connect(document.getElementById('tcfy-input').value.trim());
+    document.getElementById('tcfy-input').onkeypress = (e) => {
+      if (e.key === 'Enter') connect(e.target.value.trim());
+    };
+
+    // Try to load saved channel
+    const suggested = normalize(state.youtubeChannel);
+    const input = document.getElementById('tcfy-input');
+    const hint = document.getElementById('tcfy-hint');
+
+    if (suggested) {
+      input.value = suggested;
+      hint.textContent = 'Suggested: ' + suggested;
+    }
+
+    const key = 'tcfy_' + suggested;
+    try {
+      chrome?.storage?.local?.get([key], (r) => {
+        if (r?.[key]) connect(r[key]);
       });
-    };
+    } catch (e) { }
 
-    check();
-
-    // Handle YouTube SPA navigation - use events instead of MutationObserver
-    let lastUrl = location.href;
-
-    const onNavigate = () => {
-      if (location.href !== lastUrl) {
-        lastUrl = location.href;
-        state.isInitialized = false;
-        retries = 0;
-        setTimeout(check, 1000);
-      }
-    };
-
-    // YouTube fires this on SPA navigation
-    window.addEventListener('yt-navigate-finish', onNavigate);
-    // Fallback for popstate
-    window.addEventListener('popstate', onNavigate);
+    state.initialized = true;
+    console.log('[TCFY] Initialized for:', state.youtubeChannel);
   }
 
+  // Simple polling - stops once initialized
+  let attempts = 0;
+  function check() {
+    if (state.initialized || attempts > 15) return;
+    attempts++;
+
+    const hasChat = document.querySelector('#chat');
+    if (hasChat) {
+      init();
+    } else {
+      setTimeout(check, 1500);
+    }
+  }
+
+  // Start
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', check);
   } else {
-    init();
+    setTimeout(check, 500);
   }
-})();
 
+  // Handle YouTube navigation
+  window.addEventListener('yt-navigate-finish', () => {
+    state.initialized = false;
+    attempts = 0;
+    setTimeout(check, 1000);
+  });
+})();
