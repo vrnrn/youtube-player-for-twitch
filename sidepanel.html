@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitch Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0e0e10;
+      color: #efeff1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      padding: 12px 16px;
+      background: #18181b;
+      border-bottom: 1px solid #2f2f35;
+    }
+    
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .setup {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 16px;
+    }
+    
+    .setup.hidden {
+      display: none;
+    }
+    
+    .setup-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .setup-hint {
+      font-size: 12px;
+      color: #9147ff;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 280px;
+    }
+    
+    input {
+      flex: 1;
+      padding: 10px 14px;
+      background: #1f1f23;
+      border: 1px solid #3a3a3d;
+      border-radius: 6px;
+      color: #efeff1;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    input:focus {
+      border-color: #9147ff;
+    }
+    
+    button {
+      padding: 10px 18px;
+      background: #9147ff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background: #772ce8;
+    }
+    
+    .chat-container {
+      flex: 1;
+      display: none;
+    }
+    
+    .chat-container.active {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chat-header {
+      padding: 8px 12px;
+      background: #18181b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #2f2f35;
+    }
+    
+    .channel-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .change-btn {
+      padding: 4px 10px;
+      background: #3a3a3d;
+      font-size: 11px;
+    }
+    
+    .change-btn:hover {
+      background: #4a4a4d;
+    }
+    
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📺 Twitch Chat for YouTube</h1>
+  </div>
+  
+  <div class="setup" id="setup">
+    <div class="setup-title">Enter Twitch Channel</div>
+    <div class="setup-hint" id="hint"></div>
+    <div class="input-group">
+      <input type="text" id="channel" placeholder="Channel name" />
+      <button id="connect">Connect</button>
+    </div>
+  </div>
+  
+  <div class="chat-container" id="chat">
+    <div class="chat-header">
+      <span class="channel-name" id="channelName"></span>
+      <button class="change-btn" id="change">Change</button>
+    </div>
+    <iframe id="frame" src="about:blank"></iframe>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
