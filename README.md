@@ -1,4 +1,4 @@
-# YouTube on Twitch
+# YouTube Player for Twitch
 
 **Watch YouTube livestreams with Twitch chat.**
 

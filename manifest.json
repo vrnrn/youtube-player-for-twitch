@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "YouTube on Twitch",
+  "name": "YouTube Player for Twitch",
   "version": "1.2.0",
   "description": "Watch YouTube livestreams with Twitch chat - the best of both worlds",
   "permissions": [
