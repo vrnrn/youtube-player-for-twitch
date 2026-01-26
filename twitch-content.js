@@ -97,7 +97,7 @@
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player">
+            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube Player (Alt+Y)">
                 <span class="ytot-icon">▶</span>
                 <span class="ytot-label">YouTube</span>
             </button>
@@ -589,6 +589,12 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDropdown();
+            // Toggle menu with Alt+Y
+            if (e.altKey && (e.key === 'y' || e.key === 'Y')) {
+                e.preventDefault();
+                const dropdown = document.getElementById('ytot-dropdown');
+                if (dropdown) dropdown.classList.toggle('visible');
+            }
         });
     }
 
