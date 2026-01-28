@@ -427,9 +427,7 @@
         }
 
         // Try multiple selectors to support Twitch layout changes
-        const container = document.querySelector('[data-a-target="video-player-layout"]') ||
-            document.querySelector('.video-player__container') ||
-            document.querySelector('.video-player');
+        const container = document.querySelector('[data-a-target="video-player-layout"], .video-player__container, .video-player');
 
         if (!container) {
             updateStatus('Error: Player not found', 'error');
