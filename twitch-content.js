@@ -46,7 +46,8 @@
         syncIntervalId: null,
         isSyncing: false,
         forceHighestQuality: false,
-        qualityIntervalId: null
+        qualityIntervalId: null,
+        pauseListener: null,
     };
 
     /**
@@ -422,6 +423,17 @@
             video.pause();
             video.muted = true;
             state.twitchVideo = video;
+
+            // Aggressive resource saving: ensure it stays paused
+            if (!state.pauseListener) {
+                state.pauseListener = () => {
+                    if (state.youtubeVideoId && !video.paused) {
+                        console.log('[YTOT] Prevented Twitch autoplay');
+                        video.pause();
+                    }
+                };
+                video.addEventListener('play', state.pauseListener);
+            }
         }
     }
 
@@ -430,6 +442,12 @@
      */
     function resumeTwitch() {
         if (state.twitchVideo) {
+            // Remove aggressive listener
+            if (state.pauseListener) {
+                state.twitchVideo.removeEventListener('play', state.pauseListener);
+                state.pauseListener = null;
+            }
+
             state.twitchVideo.muted = false;
             state.twitchVideo.play().catch(() => { });
         }
