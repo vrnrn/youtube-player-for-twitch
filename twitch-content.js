@@ -283,16 +283,34 @@
     function levenshteinDistance(a, b) {
         if (a.length === 0) return b.length;
         if (b.length === 0) return a.length;
-        const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+        if (a.length > b.length) {
+            [a, b] = [b, a];
+        }
+
+        const row = new Array(a.length + 1);
+        for (let i = 0; i <= a.length; i++) {
+            row[i] = i;
+        }
+
         for (let i = 1; i <= b.length; i++) {
+            let prevDiagonal = row[0];
+            row[0] = i;
+
             for (let j = 1; j <= a.length; j++) {
+                const temp = row[j];
                 const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
-                matrix[i][j] = Math.min(matrix[i - 1][j - 1] + cost, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+
+                row[j] = Math.min(
+                    prevDiagonal + cost,
+                    temp + 1,
+                    row[j - 1] + 1
+                );
+
+                prevDiagonal = temp;
             }
         }
-        return matrix[b.length][a.length];
+        return row[a.length];
     }
 
     /**
