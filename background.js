@@ -83,22 +83,24 @@ async function handleSearch(query) {
         if (!contents) return { error: 'No results found' };
 
         // Map results to a simplified format
-        const results = contents
-            .filter(item => item.videoRenderer)
-            .map(item => {
-                const v = item.videoRenderer;
-                const isLive = v.badges?.some(b =>
-                    b.metadataBadgeRenderer?.label?.toLowerCase().includes('live')
-                );
+        const results = [];
+        for (const item of contents) {
+            const v = item.videoRenderer;
+            if (!v) continue;
 
-                return {
+            const isLive = v.badges?.some(b =>
+                b.metadataBadgeRenderer?.label?.toLowerCase().includes('live')
+            );
+
+            if (isLive) {
+                results.push({
                     videoId: v.videoId,
                     title: v.title?.runs?.[0]?.text || '',
                     channel: v.ownerText?.runs?.[0]?.text || '',
-                    isLive: !!isLive
-                };
-            })
-            .filter(r => r.isLive); // Only return live stuff
+                    isLive: true
+                });
+            }
+        }
 
         return { results };
 
