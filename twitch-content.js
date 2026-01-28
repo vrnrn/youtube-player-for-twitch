@@ -29,6 +29,11 @@
         MAX_ATTEMPTS: 15               // Max checks for nav bar before giving up
     };
 
+    const VIDEO_ID_PATTERNS = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+
     // =====================
     // State Management
     // =====================
@@ -266,11 +271,7 @@
      */
     function extractVideoId(url) {
         if (!url) return null;
-        const patterns = [
-            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
-            /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
-        ];
-        for (const pattern of patterns) {
+        for (const pattern of VIDEO_ID_PATTERNS) {
             const match = url.match(pattern);
             if (match) return match[1];
         }
