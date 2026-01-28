@@ -26,7 +26,8 @@
         SYNC_SPEED: 2.0,               // Speed to catch up
         NORMAL_SPEED: 1.0,             // Normal playback speed
         CHECK_INTERVAL: 1500,          // Poll interval for nav bar
-        MAX_ATTEMPTS: 15               // Max checks for nav bar before giving up
+        MAX_ATTEMPTS: 15,              // Max checks for nav bar before giving up
+        QUALITY_CHECK_INTERVAL: 5 * 60 * 1000 // 5 minutes
     };
 
     const VIDEO_ID_PATTERNS = [
@@ -43,7 +44,9 @@
         twitchVideo: null,
         autoSyncEnabled: false,
         syncIntervalId: null,
-        isSyncing: false
+        isSyncing: false,
+        forceHighestQuality: false,
+        qualityIntervalId: null
     };
 
     /**
@@ -135,6 +138,10 @@
                     <label class="ytot-option">
                         <input type="checkbox" id="ytot-autosync" />
                         <span>Auto-sync (catch up every 10 min)</span>
+                    </label>
+                    <label class="ytot-option">
+                        <input type="checkbox" id="ytot-quality" />
+                        <span>Force Highest Quality (Source)</span>
                     </label>
                 </div>
                 
@@ -585,6 +592,65 @@
     }
 
     // =====================
+    // Quality Enforcement
+    // =====================
+
+    /**
+     * Enforces the user's preferred Twitch stream quality
+     */
+    function enforceQuality() {
+        if (!state.forceHighestQuality) return;
+
+        try {
+            // Twitch stores quality in localStorage under 'video-quality'
+            // Format: {"default":"160p30"} or {"default":"chunked"} (Source)
+            const qualityKey = 'video-quality';
+            const currentSettings = JSON.parse(window.localStorage.getItem(qualityKey) || '{}');
+
+            // Map simple values to likely Twitch keys if needed, but for now we try direct mapping
+            // Note: Twitch often appends '30' or '60' to resolution (e.g., '160p30').
+            // We'll rely on the user selecting an option that roughly matches, or we'd need
+            // to fetch available qualities from the player, which is complex.
+            // For this feature, we'll try to set what we know.
+
+            // Heuristic updates: if user wants 160p, we might set '160p30' if exact '160p' doesn't work?
+            // Actually, localStorage is aggressive. Let's try setting exactly what we want.
+            // If it fails, we might need a more complex "get available qualities" loop.
+
+            // Simple mapping for safety
+            // 'chunked' is the internal string Twitch uses for "Source" quality (maximum available).
+            // This ensures we always request the highest possible resolution and framerate 
+            // from the video server (e.g. 1080p60, 4K, etc).
+            const target = 'chunked';
+
+
+
+            if (currentSettings.default !== target) {
+                const newSettings = { ...currentSettings, default: target };
+                window.localStorage.setItem(qualityKey, JSON.stringify(newSettings));
+                console.log('[YTOT] Enforced quality:', target);
+            }
+        } catch (e) {
+            console.error('[YTOT] Failed to enforce quality:', e);
+        }
+    }
+
+    function startQualityEnforcement() {
+        if (state.qualityIntervalId) return;
+        // Run immediately
+        enforceQuality();
+        state.qualityIntervalId = setInterval(enforceQuality, CONFIG.QUALITY_CHECK_INTERVAL);
+        console.log('[YTOT] Quality enforcement started');
+    }
+
+    function stopQualityEnforcement() {
+        if (state.qualityIntervalId) {
+            clearInterval(state.qualityIntervalId);
+            state.qualityIntervalId = null;
+        }
+    }
+
+    // =====================
     // Lifecycle & Events
     // =====================
 
@@ -623,6 +689,18 @@
             state.autoSyncEnabled && state.youtubeVideoId ? startAutoSync() : stopAutoSync();
         };
 
+        const qualityCheckbox = document.getElementById('ytot-quality');
+        qualityCheckbox.onchange = (e) => {
+            state.forceHighestQuality = e.target.checked;
+            saveState('ytot_force_highest', state.forceHighestQuality);
+            if (state.forceHighestQuality) {
+                enforceQuality();
+                startQualityEnforcement();
+            } else {
+                stopQualityEnforcement();
+            }
+        };
+
         // Close on click outside
         document.addEventListener('click', (e) => {
             const wrapper = document.getElementById('ytot-nav-wrapper');
@@ -657,6 +735,14 @@
         if (savedAutoSync) {
             state.autoSyncEnabled = true;
             document.getElementById('ytot-autosync').checked = true;
+        }
+
+        const savedForceHighest = await loadState('ytot_force_highest');
+        if (savedForceHighest) {
+            state.forceHighestQuality = true;
+            const qualityCheckbox = document.getElementById('ytot-quality');
+            if (qualityCheckbox) qualityCheckbox.checked = true;
+            startQualityEnforcement();
         }
 
         renderHistory();

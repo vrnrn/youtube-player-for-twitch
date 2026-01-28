@@ -31,6 +31,7 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - **Auto-Restore**: Remembers your active YouTube stream if you reload the page
 - **Navigation Aware**: Handles switching between channels intelligently—keeps the stream when reloading, but resets when you click a different Twitch channel
 - **Per-Channel Memory**: Remembers the last YouTube URL you watched for every Twitch channel
+- **Force Highest Quality**: Optional setting to automatically enforce "Source" (maximum) quality on the underlying Twitch stream to ensure a crisp viewing experience.
 
 ## 🚀 Usage
 
@@ -45,6 +46,10 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 ### Syncing
 - Click **⚡ Sync Now** to jump to the live edge.
 - Enable **Auto-sync** to keep it synced automatically in the background.
+
+### Quality Control
+- Enable **Force Highest Quality (Source)** to automatically set the Twitch background stream to the maximum available resolution (e.g. 1080p60).
+
 
 ### Restoring Twitch
 - Click **Restore Twitch** to remove the YouTube player and unmute the original stream.
