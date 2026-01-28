@@ -221,7 +221,10 @@
 
         container.style.display = 'block';
         container.innerHTML = `
-            <div class="ytot-history-header">Recent Streams</div>
+            <div class="ytot-history-header">
+                <span>Recent Streams</span>
+                <button class="ytot-clear-history" id="ytot-clear-history" title="Clear History">Clear</button>
+            </div>
             <div class="ytot-history-list">
                 ${history.map(item => `
                     <div class="ytot-history-item" data-video-id="${item.videoId}">
@@ -231,6 +234,16 @@
                 `).join('')}
             </div>
         `;
+
+        // Clear button listener
+        const clearBtn = container.querySelector('#ytot-clear-history');
+        if (clearBtn) {
+            clearBtn.onclick = (e) => {
+                e.stopPropagation();
+                saveState('ytot_history', []);
+                renderHistory();
+            };
+        }
 
         // Add click listeners
         container.querySelectorAll('.ytot-history-item').forEach(el => {
@@ -657,7 +670,7 @@
     }
 
     // SPA Navigation Detection
-    setInterval(() => {
+    function handleNavigation() {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
             console.log('[YTOT] Navigation detected');
@@ -669,9 +682,21 @@
             spawnAttempts = 0;
 
             // Re-bind to new page
-            setTimeout(check, 1000);
+            setTimeout(check, 500);
         }
-    }, 1000);
+    }
+
+    // Observer for immediate detection (Title changes on nav)
+    const observer = new MutationObserver(() => {
+        handleNavigation();
+    });
+
+    if (document.head) {
+        observer.observe(document.head, { childList: true, subtree: true });
+    }
+
+    // Backup interval (slower check for robustness)
+    setInterval(handleNavigation, 2000);
 
     setTimeout(check, 1000);
 

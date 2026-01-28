@@ -333,11 +333,31 @@
 }
 
 .ytot-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 11px;
     color: #adadb8;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 8px 0;
+}
+
+.ytot-clear-history {
+    background: none;
+    border: none;
+    color: #adadb8;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+}
+
+.ytot-clear-history:hover {
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.1);
 }
 
 .ytot-history-list {
