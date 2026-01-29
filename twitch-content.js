@@ -205,28 +205,58 @@
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
     }
 
+    /**
+     * Saves history with sorting and trimming logic
+     * @param {Array} historyList
+     */
+    function saveAndRenderHistory(historyList) {
+        // Separate Pinned and Unpinned
+        const pinned = historyList.filter(h => h.pinned).sort((a, b) => b.timestamp - a.timestamp);
+        const unpinned = historyList.filter(h => !h.pinned).sort((a, b) => b.timestamp - a.timestamp);
+
+        // Keep max 5 unpinned
+        const trimmedUnpinned = unpinned.slice(0, 5);
+
+        // Recombine
+        const finalHistory = [...pinned, ...trimmedUnpinned];
+
+        saveState('ytot_history', finalHistory);
+        renderHistory();
+    }
+
     async function addToHistory(videoId, metadata) {
         if (!videoId) return;
 
-        const history = (await loadState('ytot_history')) || [];
+        let history = (await loadState('ytot_history')) || [];
+
+        // Check if existing item was pinned
+        const existingItem = history.find(h => h.videoId === videoId);
+        const isPinned = existingItem ? existingItem.pinned : false;
+
         const newItem = {
             videoId,
             title: metadata?.title || videoId,
             channel: metadata?.channel || 'Unknown Channel',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            pinned: isPinned
         };
 
         // Remove duplicates (by videoId)
-        const filtered = history.filter(h => h.videoId !== videoId);
+        history = history.filter(h => h.videoId !== videoId);
 
         // Add to top
-        filtered.unshift(newItem);
+        history.unshift(newItem);
 
-        // Keep max 5
-        const trimmed = filtered.slice(0, 5);
+        saveAndRenderHistory(history);
+    }
 
-        saveState('ytot_history', trimmed);
-        renderHistory();
+    async function togglePin(videoId) {
+        let history = (await loadState('ytot_history')) || [];
+        const item = history.find(h => h.videoId === videoId);
+        if (item) {
+            item.pinned = !item.pinned;
+            saveAndRenderHistory(history);
+        }
     }
 
     async function renderHistory() {
@@ -249,9 +279,14 @@
             </div>
             <div class="ytot-history-list">
                 ${history.map(item => `
-                    <div class="ytot-history-item" data-video-id="${item.videoId}">
-                        <div class="ytot-history-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-                        <div class="ytot-history-channel">${escapeHtml(item.channel)}</div>
+                    <div class="ytot-history-item ${item.pinned ? 'pinned' : ''}" data-video-id="${item.videoId}">
+                        <div class="ytot-history-info">
+                            <div class="ytot-history-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                            <div class="ytot-history-channel">${escapeHtml(item.channel)}</div>
+                        </div>
+                        <button class="ytot-pin-btn" title="${item.pinned ? 'Unpin' : 'Pin'}" data-video-id="${item.videoId}">
+                            ${item.pinned ? '📌' : '📍'}
+                        </button>
                     </div>
                 `).join('')}
             </div>
@@ -267,12 +302,21 @@
             };
         }
 
-        // Add click listeners
+        // Add click listeners for items
         container.querySelectorAll('.ytot-history-item').forEach(el => {
             el.onclick = () => {
                 const videoId = el.getAttribute('data-video-id');
                 const item = history.find(h => h.videoId === videoId);
                 injectYouTube(videoId, item);
+            };
+        });
+
+        // Add click listeners for pins
+        container.querySelectorAll('.ytot-pin-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const videoId = btn.getAttribute('data-video-id');
+                togglePin(videoId);
             };
         });
     }
@@ -297,6 +341,7 @@
 
     /**
      * Calculates Levenshtein distance for fuzzy string matching
+     * Optimized using Uint16Array and charCodeAt for performance
      */
     function levenshteinDistance(a, b) {
         if (a.length === 0) return b.length;
@@ -306,7 +351,7 @@
             [a, b] = [b, a];
         }
 
-        const row = new Array(a.length + 1);
+        const row = new Uint16Array(a.length + 1);
         for (let i = 0; i <= a.length; i++) {
             row[i] = i;
         }
@@ -317,7 +362,7 @@
 
             for (let j = 1; j <= a.length; j++) {
                 const temp = row[j];
-                const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
+                const cost = b.charCodeAt(i - 1) === a.charCodeAt(j - 1) ? 0 : 1;
 
                 row[j] = Math.min(
                     prevDiagonal + cost,
@@ -654,6 +699,24 @@
     // Lifecycle & Events
     // =====================
 
+    let globalListenersSetup = false;
+
+    function setupGlobalListeners() {
+        if (globalListenersSetup) return;
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('ytot-nav-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDropdown();
+        });
+
+        globalListenersSetup = true;
+    }
+
     function setupEventListeners() {
         const toggle = document.getElementById('ytot-toggle');
         const dropdown = document.getElementById('ytot-dropdown');
@@ -700,22 +763,14 @@
                 stopQualityEnforcement();
             }
         };
-
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('ytot-nav-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
-        });
     }
 
     let spawnAttempts = 0;
 
     async function init() {
         if (state.initialized) return;
+
+        setupGlobalListeners();
 
         // Try to insert into Twitch Top Nav
         const leftNav = document.querySelector('.top-nav__menu > div:first-child') ||

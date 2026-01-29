@@ -32,6 +32,7 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - **Navigation Aware**: Handles switching between channels intelligently—keeps the stream when reloading, but resets when you click a different Twitch channel
 - **Per-Channel Memory**: Remembers the last YouTube URL you watched for every Twitch channel
 - **Recent History**: Keeps track of the last 5 YouTube streams you've watched, allowing for quick access.
+- **Pin Favorites**: Pin your favorite channels in the history list to keep them permanently available.
 - **Force Highest Quality**: Optional setting to automatically enforce "Source" (maximum) quality on the underlying Twitch stream to ensure a crisp viewing experience.
 
 ## 🚀 Usage

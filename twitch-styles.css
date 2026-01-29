@@ -383,6 +383,9 @@
 }
 
 .ytot-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 8px;
     border-radius: 4px;
     cursor: pointer;
@@ -391,6 +394,12 @@
 
 .ytot-history-item:hover {
     background: #2f2f35;
+}
+
+.ytot-history-info {
+    flex: 1;
+    overflow: hidden;
+    margin-right: 8px;
 }
 
 .ytot-history-title {
@@ -405,4 +414,37 @@
 .ytot-history-channel {
     color: #adadb8;
     font-size: 11px;
+}
+
+.ytot-pin-btn {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ytot-history-item:hover .ytot-pin-btn,
+.ytot-history-item.pinned .ytot-pin-btn {
+    opacity: 1;
+}
+
+.ytot-pin-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.ytot-history-item.pinned {
+    background: rgba(145, 71, 255, 0.1);
+    border-left: 2px solid #9147ff;
+}
+
+.ytot-history-item.pinned:hover {
+    background: rgba(145, 71, 255, 0.2);
 }
