@@ -14,6 +14,12 @@
 (function () {
     'use strict';
 
+    const Logger = {
+        log: (...args) => console.log('[YTOT]', ...args),
+        error: (...args) => console.error('[YTOT]', ...args),
+        warn: (...args) => console.warn('[YTOT]', ...args)
+    };
+
     // Prevent double execution
     if (window.__ytOnTwitchLoaded) return;
     window.__ytOnTwitchLoaded = true;
@@ -26,7 +32,8 @@
         SYNC_SPEED: 2.0,               // Speed to catch up
         NORMAL_SPEED: 1.0,             // Normal playback speed
         CHECK_INTERVAL: 1500,          // Poll interval for nav bar
-        MAX_ATTEMPTS: 15,              // Max checks for nav bar before giving up
+        FAST_CHECK_INTERVAL: 250,      // Fast poll interval for initial load
+        MAX_ATTEMPTS: 60,              // Max checks for nav bar before giving up (increased for fast start)
         QUALITY_CHECK_INTERVAL: 5 * 60 * 1000 // 5 minutes
     };
 
@@ -105,7 +112,7 @@
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player">
+            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube">
                 <span class="ytot-icon">▶</span>
                 <span class="ytot-label">YouTube</span>
             </button>
@@ -147,7 +154,7 @@
                 
                 <!-- Actions -->
                 <div class="ytot-actions">
-                    <button class="ytot-sync-now" id="ytot-sync-now">⚡ Sync Now</button>
+                    <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">⚡ Sync Now</button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
                 
@@ -348,7 +355,7 @@
             });
 
             if (!response || response.error) {
-                console.error('[YTOT] Search error:', response?.error);
+                Logger.error('Search error:', response?.error);
                 throw new Error(response?.error || 'Search failed');
             }
 
@@ -372,7 +379,7 @@
             return { ...contents[0], approximate: true };
 
         } catch (e) {
-            console.error('[YTOT] Search error:', e);
+            Logger.error('Search error:', e);
             return null;
         }
     }
@@ -506,7 +513,7 @@
             startAutoSync();
         }
 
-        console.log('[YTOT] YouTube injected:', videoId);
+        Logger.log('YouTube injected:', videoId);
     }
 
     /**
@@ -581,7 +588,7 @@
         state.syncIntervalId = setInterval(() => {
             if (state.youtubeVideoId && !state.isSyncing) syncNow();
         }, CONFIG.SYNC_INTERVAL);
-        console.log('[YTOT] Auto-sync started');
+        Logger.log('Auto-sync started');
     }
 
     function stopAutoSync() {
@@ -628,10 +635,10 @@
             if (currentSettings.default !== target) {
                 const newSettings = { ...currentSettings, default: target };
                 window.localStorage.setItem(qualityKey, JSON.stringify(newSettings));
-                console.log('[YTOT] Enforced quality:', target);
+                Logger.log('Enforced quality:', target);
             }
         } catch (e) {
-            console.error('[YTOT] Failed to enforce quality:', e);
+            Logger.error('Failed to enforce quality:', e);
         }
     }
 
@@ -640,7 +647,7 @@
         // Run immediately
         enforceQuality();
         state.qualityIntervalId = setInterval(enforceQuality, CONFIG.QUALITY_CHECK_INTERVAL);
-        console.log('[YTOT] Quality enforcement started');
+        Logger.log('Quality enforcement started');
     }
 
     function stopQualityEnforcement() {
@@ -701,15 +708,6 @@
             }
         };
 
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('ytot-nav-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
-        });
     }
 
     let spawnAttempts = 0;
@@ -752,7 +750,7 @@
         if (channel) {
             const activeStream = await loadState(`ytot_active_${channel}`);
             if (activeStream) {
-                console.log('[YTOT] Restoring active stream:', activeStream);
+                Logger.log('Restoring active stream:', activeStream);
                 injectYouTube(activeStream);
             } else {
                 const savedVideoId = await loadState(`ytot_${channel}`);
@@ -767,7 +765,7 @@
         }
 
         state.initialized = true;
-        console.log('[YTOT] Initialized for:', channel);
+        Logger.log('Initialized for:', channel);
     }
 
     // =====================
@@ -781,7 +779,9 @@
             init();
         } else if (!state.initialized && spawnAttempts <= CONFIG.MAX_ATTEMPTS) {
             spawnAttempts++;
-            setTimeout(check, CONFIG.CHECK_INTERVAL);
+            // Fast Start: Check more frequently for the first few seconds
+            const delay = spawnAttempts <= 20 ? CONFIG.FAST_CHECK_INTERVAL : CONFIG.CHECK_INTERVAL;
+            setTimeout(check, delay);
         }
     }
 
@@ -789,7 +789,7 @@
     function handleNavigation() {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
-            console.log('[YTOT] Navigation detected');
+            Logger.log('Navigation detected');
 
             // Navigate away: clear UI but keep state
             removeYouTube(true);
@@ -814,6 +814,21 @@
     // Backup interval (slower check for robustness)
     setInterval(handleNavigation, 2000);
 
+    function setupGlobalListeners() {
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('ytot-nav-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDropdown();
+        });
+
+    }
+
+    setupGlobalListeners();
     setTimeout(check, 1000);
 
 })();
