@@ -169,7 +169,8 @@
 }
 
 .ytot-sync-now,
-.ytot-restore {
+.ytot-restore,
+.ytot-theater-btn {
     display: none;
     flex: 1;
     padding: 8px 12px;
@@ -179,6 +180,16 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
+}
+
+.ytot-theater-btn {
+    background: #3a3a3d;
+    color: #efeff1;
+    display: block; /* Always show in dropdown when active */
+}
+
+.ytot-theater-btn:hover {
+    background: #4a4a4d;
 }
 
 .ytot-sync-now {
@@ -236,6 +247,34 @@
     width: 100%;
     height: 100%;
     border: none;
+}
+
+#ytot-player-theater {
+    position: absolute;
+    bottom: 50px; /* Above YouTube controls */
+    right: 15px;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#ytot-youtube-wrapper:hover #ytot-player-theater {
+    opacity: 1;
+}
+
+#ytot-player-theater:hover {
+    background: rgba(145, 71, 255, 0.8); /* Twitch Purple */
+    transform: scale(1.1);
 }
 
 /* Auto-Find Section */

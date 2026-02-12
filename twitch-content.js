@@ -106,7 +106,7 @@
 
         wrapper.innerHTML = `
             <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player">
-                <span class="ytot-icon">▶</span>
+                <span class="ytot-icon">\u25B6</span>
                 <span class="ytot-label">YouTube</span>
             </button>
             
@@ -118,7 +118,7 @@
                 
                 <!-- Auto-Find Section -->
                 <div class="ytot-autofind" id="ytot-autofind-section">
-                    <button class="ytot-autofind-btn" id="ytot-autofind">🔍 Find YouTube Stream</button>
+                    <button class="ytot-autofind-btn" id="ytot-autofind">\uD83D\uDD0D Find YouTube Stream</button>
                     <div class="ytot-search-result" id="ytot-search-result"></div>
                 </div>
 
@@ -147,7 +147,8 @@
                 
                 <!-- Actions -->
                 <div class="ytot-actions">
-                    <button class="ytot-sync-now" id="ytot-sync-now">⚡ Sync Now</button>
+                    <button class="ytot-theater-btn" id="ytot-theater" title="Toggle Theater Mode (Alt+T)">\uD83C\uDFAD Theater</button>
+                    <button class="ytot-sync-now" id="ytot-sync-now">\u26A1 Sync Now</button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
                 
@@ -166,6 +167,7 @@
         uiCache.label = toggle?.querySelector('.ytot-label');
         uiCache.restore = document.getElementById('ytot-restore');
         uiCache.syncNow = document.getElementById('ytot-sync-now');
+        uiCache.theater = document.getElementById('ytot-theater');
     }
 
     /**
@@ -180,13 +182,13 @@
 
         if (isActive) {
             toggle?.classList.add('active');
-            if (icon) icon.textContent = '🔴';
+            if (icon) icon.textContent = '\uD83D\uDD34';
             if (label) label.textContent = 'Live';
             if (restore) restore.style.display = 'block';
             if (syncNow) syncNow.style.display = 'block';
         } else {
             toggle?.classList.remove('active');
-            if (icon) icon.textContent = '▶';
+            if (icon) icon.textContent = '\u25B6';
             if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'none';
             if (syncNow) syncNow.style.display = 'none';
@@ -203,6 +205,27 @@
 
     function closeDropdown() {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
+    }
+
+    /**
+     * Toggles Twitch theater mode by finding and clicking the native button
+     */
+    function toggleTheaterMode() {
+        const theaterBtn = document.querySelector('[data-a-target="player-theater-mode-button"]') ||
+                          document.querySelector('button[aria-label*="Theater Mode"]');
+
+        if (theaterBtn) {
+            theaterBtn.click();
+            console.log('[YTOT] Theater mode toggled');
+        } else {
+            console.warn('[YTOT] Theater mode button not found');
+            // Fallback: try to dispatch Alt+T to the document
+            document.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 't',
+                altKey: true,
+                bubbles: true
+            }));
+        }
     }
 
     async function addToHistory(videoId, metadata) {
@@ -339,7 +362,7 @@
         if (!channelName) return null;
 
         const resultDiv = document.getElementById('ytot-search-result');
-        resultDiv.innerHTML = '<div class="ytot-searching">🔍 Searching...</div>';
+        resultDiv.innerHTML = '<div class="ytot-searching">\uD83D\uDD0D Searching...</div>';
 
         try {
             const response = await chrome.runtime.sendMessage({
@@ -388,13 +411,13 @@
         const resultDiv = document.getElementById('ytot-search-result');
 
         if (result) {
-            const approxNote = result.approximate ? '<div class="ytot-result-note">⚠️ Best match (channel name differs)</div>' : '';
+            const approxNote = result.approximate ? '<div class="ytot-result-note">\u26A0\uFE0F Best match (channel name differs)</div>' : '';
             resultDiv.innerHTML = `
                 <div class="ytot-result-card">
                     ${approxNote}
                     <div class="ytot-result-title">${escapeHtml(result.title)}</div>
-                    <div class="ytot-result-channel">📺 ${escapeHtml(result.channel)}</div>
-                    <button class="ytot-result-use" data-video-id="${result.videoId}">▶ Use This Stream</button>
+                    <div class="ytot-result-channel">\uD83D\uDCFA ${escapeHtml(result.channel)}</div>
+                    <button class="ytot-result-use" data-video-id="${result.videoId}">\u25B6 Use This Stream</button>
                 </div>
             `;
             resultDiv.querySelector('.ytot-result-use').onclick = () => injectYouTube(result.videoId, result);
@@ -488,6 +511,17 @@
         iframe.setAttribute('allowfullscreen', 'true');
 
         wrapper.appendChild(iframe);
+
+        const theaterToggle = document.createElement('button');
+        theaterToggle.id = 'ytot-player-theater';
+        theaterToggle.innerHTML = '\uD83C\uDFAD';
+        theaterToggle.title = 'Toggle Theater Mode (Alt+T)';
+        theaterToggle.onclick = (e) => {
+            e.stopPropagation();
+            toggleTheaterMode();
+        };
+        wrapper.appendChild(theaterToggle);
+
         container.style.position = 'relative';
         container.appendChild(wrapper);
 
@@ -541,7 +575,7 @@
         if (!iframe) return;
 
         state.isSyncing = true;
-        updateStatus('⚡ Jumping to live...', 'syncing');
+        updateStatus('\u26A1 Jumping to live...', 'syncing');
 
         try {
             // Post commands to YouTube Embed API
@@ -554,7 +588,7 @@
 
             // 2. Speed up briefly
             setTimeout(() => {
-                updateStatus('⚡ Catching up at 2x...', 'syncing');
+                updateStatus('\u26A1 Catching up at 2x...', 'syncing');
                 sendCmd('setPlaybackRate', [CONFIG.SYNC_SPEED]);
 
                 // 3. Return to normal
@@ -683,6 +717,11 @@
         restore.onclick = () => removeYouTube(false); // Explicit removal
         syncNowBtn.onclick = syncNow;
 
+        const theaterBtn = document.getElementById('ytot-theater');
+        if (theaterBtn) {
+            theaterBtn.onclick = () => toggleTheaterMode();
+        }
+
         autoSyncCheckbox.onchange = (e) => {
             state.autoSyncEnabled = e.target.checked;
             saveState('ytot_autosync', state.autoSyncEnabled);
@@ -709,6 +748,32 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDropdown();
+
+            // Ignore shortcuts if typing in input/textarea/contenteditable
+            const target = e.target;
+            const isTyping = target.tagName === 'INPUT' ||
+                             target.tagName === 'TEXTAREA' ||
+                             target.isContentEditable;
+
+            if (isTyping) return;
+
+            // Alt+T: Toggle Theater Mode
+            if (e.altKey && (e.key === 't' || e.key === 'T')) {
+                e.preventDefault();
+                toggleTheaterMode();
+            }
+
+            // Alt+Y: Toggle Dropdown
+            if (e.altKey && (e.key === 'y' || e.key === 'Y')) {
+                e.preventDefault();
+                const dropdown = document.getElementById('ytot-dropdown');
+                if (dropdown) {
+                    dropdown.classList.toggle('visible');
+                    if (dropdown.classList.contains('visible')) {
+                        document.getElementById('ytot-url')?.focus();
+                    }
+                }
+            }
         });
     }
 
