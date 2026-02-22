@@ -1,13 +1,13 @@
 /**
  * YouTube on Twitch - Content Script
- * 
+ *
  * Features:
  * - Overlays YouTube player on Twitch stream
  * - Preserves Twitch chat
  * - Auto-finds YouTube stream based on Twitch channel name
  * - Syncs playback speed to catch up with live edge
  * - Persists state across page reloads and navigation
- * 
+ *
  * @author YouTube on Twitch Team
  */
 
@@ -51,8 +51,8 @@
 
     /**
      * Persist data to Chrome storage
-     * @param {string} key 
-     * @param {any} value 
+     * @param {string} key
+     * @param {any} value
      */
     function saveState(key, value) {
         if (!chrome.runtime?.id) return;
@@ -65,7 +65,7 @@
 
     /**
      * Retrieve data from Chrome storage
-     * @param {string} key 
+     * @param {string} key
      * @returns {Promise<any>}
      */
     function loadState(key) {
@@ -104,35 +104,35 @@
         const wrapper = document.createElement('div');
         wrapper.id = 'ytot-nav-wrapper';
 
-        wrapper.innerHTML = `
+        wrapper.innerHTML = /* html */`
             <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player">
-                <span class="ytot-icon">▶</span>
+                <span class="ytot-icon">\u25B6</span>
                 <span class="ytot-label">YouTube</span>
             </button>
-            
+
             <div class="ytot-dropdown" id="ytot-dropdown">
                 <div class="ytot-dropdown-header">
                     <span>Watch YouTube Stream</span>
                     <button class="ytot-close" id="ytot-close" aria-label="Close">×</button>
                 </div>
-                
+
                 <!-- Auto-Find Section -->
                 <div class="ytot-autofind" id="ytot-autofind-section">
-                    <button class="ytot-autofind-btn" id="ytot-autofind">🔍 Find YouTube Stream</button>
+                    <button class="ytot-autofind-btn" id="ytot-autofind">\uD83D\uDD0D Find YouTube Stream</button>
                     <div class="ytot-search-result" id="ytot-search-result"></div>
                 </div>
 
                 <!-- History Section -->
                 <div id="ytot-history-section" class="ytot-history-section"></div>
-                
+
                 <div class="ytot-divider">or paste URL</div>
-                
+
                 <!-- Manual Input -->
                 <div class="ytot-dropdown-body">
                     <input type="text" id="ytot-url" placeholder="Paste YouTube URL" spellcheck="false" />
                     <button class="ytot-go" id="ytot-go">Go</button>
                 </div>
-                
+
                 <!-- Options -->
                 <div class="ytot-options">
                     <label class="ytot-option">
@@ -144,13 +144,13 @@
                         <span>Force Highest Quality (Source)</span>
                     </label>
                 </div>
-                
+
                 <!-- Actions -->
                 <div class="ytot-actions">
-                    <button class="ytot-sync-now" id="ytot-sync-now">⚡ Sync Now</button>
+                    <button class="ytot-sync-now" id="ytot-sync-now">\u26A1 Sync Now</button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
-                
+
                 <div class="ytot-status" id="ytot-status"></div>
             </div>
         `;
@@ -170,7 +170,7 @@
 
     /**
      * Updates the toggle button appearance based on active state
-     * @param {boolean} isActive 
+     * @param {boolean} isActive
      */
     function updateToggleButton(isActive) {
         // Fallback if cache is empty (safety net)
@@ -180,13 +180,13 @@
 
         if (isActive) {
             toggle?.classList.add('active');
-            if (icon) icon.textContent = '🔴';
+            if (icon) icon.textContent = '\uD83D\uDD34';
             if (label) label.textContent = 'Live';
             if (restore) restore.style.display = 'block';
             if (syncNow) syncNow.style.display = 'block';
         } else {
             toggle?.classList.remove('active');
-            if (icon) icon.textContent = '▶';
+            if (icon) icon.textContent = '\u25B6';
             if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'none';
             if (syncNow) syncNow.style.display = 'none';
@@ -203,6 +203,27 @@
 
     function closeDropdown() {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
+    }
+
+    /**
+     * Toggles Twitch theater mode by finding and clicking the native button
+     */
+    function toggleTheaterMode() {
+        const theaterBtn = document.querySelector('div[data-a-target="player-controls"] button[aria-label*="Theatre Mode"]') ||
+            document.querySelector('section#channel-player button[aria-label*="Theatre Mode"]')
+
+        if (theaterBtn) {
+            theaterBtn.click();
+            console.log('[YTOT] Theater mode toggled');
+        } else {
+            console.warn('[YTOT] Theater mode button not found');
+            // Fallback: try to dispatch Alt+T to the document
+            document.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 't',
+                altKey: true,
+                bubbles: true
+            }));
+        }
     }
 
     async function addToHistory(videoId, metadata) {
@@ -283,7 +304,7 @@
 
     /**
      * Extracts YouTube Video ID from various URL formats
-     * @param {string} url 
+     * @param {string} url
      * @returns {string|null} Video ID
      */
     function extractVideoId(url) {
@@ -339,7 +360,7 @@
         if (!channelName) return null;
 
         const resultDiv = document.getElementById('ytot-search-result');
-        resultDiv.innerHTML = '<div class="ytot-searching">🔍 Searching...</div>';
+        resultDiv.innerHTML = '<div class="ytot-searching">\uD83D\uDD0D Searching...</div>';
 
         try {
             const response = await chrome.runtime.sendMessage({
@@ -388,13 +409,13 @@
         const resultDiv = document.getElementById('ytot-search-result');
 
         if (result) {
-            const approxNote = result.approximate ? '<div class="ytot-result-note">⚠️ Best match (channel name differs)</div>' : '';
+            const approxNote = result.approximate ? '<div class="ytot-result-note">\u26A0\uFE0F Best match (channel name differs)</div>' : '';
             resultDiv.innerHTML = `
                 <div class="ytot-result-card">
                     ${approxNote}
                     <div class="ytot-result-title">${escapeHtml(result.title)}</div>
-                    <div class="ytot-result-channel">📺 ${escapeHtml(result.channel)}</div>
-                    <button class="ytot-result-use" data-video-id="${result.videoId}">▶ Use This Stream</button>
+                    <div class="ytot-result-channel">\uD83D\uDCFA ${escapeHtml(result.channel)}</div>
+                    <button class="ytot-result-use" data-video-id="${result.videoId}">\u25B6 Use This Stream</button>
                 </div>
             `;
             resultDiv.querySelector('.ytot-result-use').onclick = () => injectYouTube(result.videoId, result);
@@ -437,7 +458,7 @@
 
     /**
      * Injects YouTube iframe over the Twitch player
-     * @param {string} videoId 
+     * @param {string} videoId
      * @param {object} metadata Optional metadata { title, channel }
      */
     function injectYouTube(videoId, metadata = null) {
@@ -485,9 +506,34 @@
         iframe.id = 'ytot-youtube-player';
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1`;
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
-        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.setAttribute('allow', 'fullscreen');
+        const sendToIframe = data => {
+            const msg = typeof data === 'string' ? { msg: data } : { ...data };
+            iframe.contentWindow?.postMessage(
+                { type: 'YPFT_IFRAME', ...msg },
+                'https://www.youtube.com',
+            );
+        };
+
+        window.addEventListener("message", receiveMessage, false);
+
+        function receiveMessage(event) {
+            if (
+                event.source !== iframe.contentWindow ||
+                event.origin !== 'https://www.youtube.com' ||
+                event.data?.type !== 'YPFT_IFRAME'
+            )
+                return;
+
+            if (event.data.iframeLoaded) {
+                sendToIframe({ loadTheaterButton: true });
+            } else if (event.data.toggleTheaterMode) {
+                toggleTheaterMode();
+            }
+        }
 
         wrapper.appendChild(iframe);
+
         container.style.position = 'relative';
         container.appendChild(wrapper);
 
@@ -541,7 +587,7 @@
         if (!iframe) return;
 
         state.isSyncing = true;
-        updateStatus('⚡ Jumping to live...', 'syncing');
+        updateStatus('\u26A1 Jumping to live...', 'syncing');
 
         try {
             // Post commands to YouTube Embed API
@@ -554,7 +600,7 @@
 
             // 2. Speed up briefly
             setTimeout(() => {
-                updateStatus('⚡ Catching up at 2x...', 'syncing');
+                updateStatus('\u26A1 Catching up at 2x...', 'syncing');
                 sendCmd('setPlaybackRate', [CONFIG.SYNC_SPEED]);
 
                 // 3. Return to normal
@@ -619,7 +665,7 @@
 
             // Simple mapping for safety
             // 'chunked' is the internal string Twitch uses for "Source" quality (maximum available).
-            // This ensures we always request the highest possible resolution and framerate 
+            // This ensures we always request the highest possible resolution and framerate
             // from the video server (e.g. 1080p60, 4K, etc).
             const target = 'chunked';
 
@@ -705,10 +751,6 @@
         document.addEventListener('click', (e) => {
             const wrapper = document.getElementById('ytot-nav-wrapper');
             if (wrapper && !wrapper.contains(e.target)) closeDropdown();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
         });
     }
 

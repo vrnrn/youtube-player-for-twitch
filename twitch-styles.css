@@ -1,11 +1,45 @@
 /* YouTube on Twitch - Styles */
 
+/* CSS Custom Properties */
+:root {
+    /* Primary Colors */
+    --ytot-purple: #9147ff;
+    --ytot-purple-hover: #772ce8;
+    --ytot-purple-light: #bf94ff;
+
+    /* Status Colors */
+    --ytot-success: #00c853;
+    --ytot-success-hover: #00a843;
+    --ytot-error: #ff5252;
+    --ytot-warning: #ffab00;
+    --ytot-info: #1f69ff;
+    --ytot-info-hover: #0050e6;
+
+    /* Background Colors */
+    --ytot-bg-primary: #18181b;
+    --ytot-bg-secondary: #0e0e10;
+    --ytot-bg-tertiary: #1f1f23;
+    --ytot-bg-hover: #2f2f35;
+    --ytot-bg-button: #3a3a3d;
+    --ytot-bg-button-hover: #4a4a4d;
+
+    /* Text Colors */
+    --ytot-text-primary: #efeff1;
+    --ytot-text-secondary: #dedee3;
+    --ytot-text-muted: #adadb8;
+    --ytot-text-placeholder: #636369;
+
+    /* Border Colors */
+    --ytot-border: #3a3a3d;
+    --ytot-border-section: #2f2f35;
+}
+
 /* Nav Button Wrapper */
 #ytot-nav-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    margin-left: 10px;
+    margin-inline-start: 10px;
 }
 
 /* Main Nav Button */
@@ -17,20 +51,20 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: #dedee3;
+    color: var(--ytot-text-secondary);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
-}
 
-.ytot-nav-btn:hover {
-    background: rgba(83, 83, 95, 0.48);
-    color: #fff;
-}
+    &:hover {
+        background: rgb(83 83 95 / 0.48);
+        color: white;
+    }
 
-.ytot-nav-btn.active {
-    color: #bf94ff;
+    &.active {
+        color: var(--ytot-purple-light);
+    }
 }
 
 .ytot-icon {
@@ -44,14 +78,14 @@
     top: calc(100% + 8px);
     left: 0;
     width: 300px;
-    background: #18181b;
+    background: var(--ytot-bg-primary);
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 20px rgb(0 0 0 / 0.6);
     z-index: 9999;
-}
 
-.ytot-dropdown.visible {
-    display: block;
+    &.visible {
+        display: block;
+    }
 }
 
 /* Dropdown Header */
@@ -60,8 +94,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 14px;
-    background: #0e0e10;
-    color: #efeff1;
+    background: var(--ytot-bg-secondary);
+    color: var(--ytot-text-primary);
     font-size: 13px;
     font-weight: 600;
 }
@@ -69,15 +103,15 @@
 .ytot-close {
     background: none;
     border: none;
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     font-size: 20px;
     cursor: pointer;
     padding: 0;
     line-height: 1;
-}
 
-.ytot-close:hover {
-    color: #fff;
+    &:hover {
+        color: white;
+    }
 }
 
 /* Dropdown Body */
@@ -90,25 +124,25 @@
 #ytot-url {
     flex: 1;
     padding: 10px 12px;
-    background: #0e0e10;
-    border: 1px solid #3a3a3d;
+    background: var(--ytot-bg-secondary);
+    border: 1px solid var(--ytot-border);
     border-radius: 6px;
-    color: #efeff1;
+    color: var(--ytot-text-primary);
     font-size: 13px;
     outline: none;
-}
 
-#ytot-url:focus {
-    border-color: #9147ff;
-}
+    &:focus {
+        border-color: var(--ytot-purple);
+    }
 
-#ytot-url::placeholder {
-    color: #636369;
+    &::placeholder {
+        color: var(--ytot-text-placeholder);
+    }
 }
 
 .ytot-go {
     padding: 10px 16px;
-    background: #9147ff;
+    background: var(--ytot-purple);
     border: none;
     border-radius: 6px;
     color: white;
@@ -116,48 +150,48 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
-}
 
-.ytot-go:hover {
-    background: #772ce8;
+    &:hover {
+        background: var(--ytot-purple-hover);
+    }
 }
 
 /* Options Section */
 .ytot-options {
     padding: 8px 14px;
-    border-top: 1px solid #2f2f35;
+    border-top: 1px solid var(--ytot-border-section);
 }
 
 .ytot-option {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     font-size: 12px;
     cursor: pointer;
-}
 
-.ytot-option:hover {
-    color: #efeff1;
-}
+    &:hover {
+        color: var(--ytot-text-primary);
+    }
 
-.ytot-option input[type="checkbox"] {
-    accent-color: #9147ff;
+    & input[type="checkbox"] {
+        accent-color: var(--ytot-purple);
+    }
 }
 
 .ytot-select {
-    background: #0e0e10;
-    border: 1px solid #3a3a3d;
+    background: var(--ytot-bg-secondary);
+    border: 1px solid var(--ytot-border);
     border-radius: 4px;
-    color: #efeff1;
+    color: var(--ytot-text-primary);
     font-size: 12px;
     padding: 4px 8px;
     outline: none;
     cursor: pointer;
-}
 
-.ytot-select:focus {
-    border-color: #9147ff;
+    &:focus {
+        border-color: var(--ytot-purple);
+    }
 }
 
 /* Actions Section */
@@ -165,11 +199,10 @@
     display: flex;
     gap: 8px;
     padding: 10px 14px;
-    border-top: 1px solid #2f2f35;
+    border-top: 1px solid var(--ytot-border-section);
 }
 
-.ytot-sync-now,
-.ytot-restore {
+:is(.ytot-sync-now, .ytot-restore) {
     display: none;
     flex: 1;
     padding: 8px 12px;
@@ -182,46 +215,46 @@
 }
 
 .ytot-sync-now {
-    background: #1f69ff;
+    background: var(--ytot-info);
     color: white;
-}
 
-.ytot-sync-now:hover {
-    background: #0050e6;
+    &:hover {
+        background: var(--ytot-info-hover);
+    }
 }
 
 .ytot-restore {
-    background: #3a3a3d;
-    color: #adadb8;
-}
+    background: var(--ytot-bg-button);
+    color: var(--ytot-text-muted);
 
-.ytot-restore:hover {
-    background: #4a4a4d;
-    color: #efeff1;
+    &:hover {
+        background: var(--ytot-bg-button-hover);
+        color: var(--ytot-text-primary);
+    }
 }
 
 /* Status */
 .ytot-status {
     padding: 0 14px 12px;
     font-size: 11px;
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     min-height: 14px;
-}
 
-.ytot-status:empty {
-    display: none;
-}
+    &:empty {
+        display: none;
+    }
 
-.ytot-status-success {
-    color: #00c853;
-}
+    &.ytot-status-success {
+        color: var(--ytot-success);
+    }
 
-.ytot-status-error {
-    color: #ff5252;
-}
+    &.ytot-status-error {
+        color: var(--ytot-error);
+    }
 
-.ytot-status-syncing {
-    color: #1f69ff;
+    &.ytot-status-syncing {
+        color: var(--ytot-info);
+    }
 }
 
 /* YouTube Player Wrapper */
@@ -229,7 +262,7 @@
     position: absolute;
     inset: 0;
     z-index: 9999;
-    background: #000;
+    background: black;
 }
 
 #ytot-youtube-player {
@@ -241,7 +274,7 @@
 /* Auto-Find Section */
 .ytot-autofind {
     padding: 12px 14px;
-    border-bottom: 1px solid #2f2f35;
+    border-bottom: 1px solid var(--ytot-border-section);
 }
 
 .ytot-autofind-btn {
@@ -255,17 +288,17 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
-}
 
-.ytot-autofind-btn:hover {
-    background: linear-gradient(135deg, #ff3333 0%, #dd0000 100%);
-    transform: translateY(-1px);
+    &:hover {
+        background: linear-gradient(135deg, #ff3333 0%, #dd0000 100%);
+        transform: translateY(-1px);
+    }
 }
 
 .ytot-divider {
     text-align: center;
     padding: 8px 14px;
-    color: #636369;
+    color: var(--ytot-text-placeholder);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -276,38 +309,38 @@
     padding: 0 14px 12px;
 }
 
-.ytot-searching {
-    color: #adadb8;
+:is(.ytot-searching, .ytot-no-result) {
     font-size: 12px;
     text-align: center;
     padding: 8px;
+}
+
+.ytot-searching {
+    color: var(--ytot-text-muted);
 }
 
 .ytot-no-result {
-    color: #ff5252;
-    font-size: 12px;
-    text-align: center;
-    padding: 8px;
+    color: var(--ytot-error);
 }
 
 .ytot-result-card {
-    background: #1f1f23;
+    background: var(--ytot-bg-tertiary);
     border-radius: 6px;
     padding: 10px;
-    margin-top: 10px;
+    margin-block-start: 10px;
 }
 
 .ytot-result-note {
-    color: #ffab00;
+    color: var(--ytot-warning);
     font-size: 11px;
-    margin-bottom: 6px;
+    margin-block-end: 6px;
 }
 
 .ytot-result-title {
-    color: #efeff1;
+    color: var(--ytot-text-primary);
     font-size: 13px;
     font-weight: 500;
-    margin-bottom: 4px;
+    margin-block-end: 4px;
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -318,15 +351,15 @@
 }
 
 .ytot-result-channel {
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     font-size: 11px;
-    margin-bottom: 10px;
+    margin-block-end: 10px;
 }
 
 .ytot-result-use {
     width: 100%;
     padding: 8px;
-    background: #00c853;
+    background: var(--ytot-success);
     border: none;
     border-radius: 4px;
     color: white;
@@ -334,17 +367,17 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
-}
 
-.ytot-result-use:hover {
-    background: #00a843;
+    &:hover {
+        background: var(--ytot-success-hover);
+    }
 }
 
 /* History Section */
 .ytot-history-section {
     display: none;
     padding: 0 14px;
-    border-bottom: 1px solid #2f2f35;
+    border-bottom: 1px solid var(--ytot-border-section);
 }
 
 .ytot-history-header {
@@ -352,34 +385,34 @@
     justify-content: space-between;
     align-items: center;
     font-size: 11px;
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin: 8px 0;
+    margin-block: 8px;
 }
 
 .ytot-clear-history {
     background: none;
     border: none;
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     font-size: 10px;
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;
     transition: all 0.15s;
     text-transform: uppercase;
-}
 
-.ytot-clear-history:hover {
-    color: #ff5252;
-    background: rgba(255, 82, 82, 0.1);
+    &:hover {
+        color: var(--ytot-error);
+        background: color-mix(in srgb, var(--ytot-error) 10%, transparent);
+    }
 }
 
 .ytot-history-list {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 12px;
+    margin-block-end: 12px;
 }
 
 .ytot-history-item {
@@ -387,22 +420,22 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background 0.1s;
-}
 
-.ytot-history-item:hover {
-    background: #2f2f35;
+    &:hover {
+        background: var(--ytot-bg-hover);
+    }
 }
 
 .ytot-history-title {
-    color: #efeff1;
+    color: var(--ytot-text-primary);
     font-size: 12px;
-    margin-bottom: 2px;
+    margin-block-end: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .ytot-history-channel {
-    color: #adadb8;
+    color: var(--ytot-text-muted);
     font-size: 11px;
 }

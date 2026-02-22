@@ -25,6 +25,19 @@
         "twitch-styles.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "all_frames": true,
+      "js": [
+        "youtube-content.js"
+      ],
+      "css": [
+        "youtube-styles.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "icons": {

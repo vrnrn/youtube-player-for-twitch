@@ -1,0 +1,21 @@
+button.ypft-theater-button {
+    position: relative;
+    inset-block-end: 8px;
+    inset-inline-start: 10px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.9;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
