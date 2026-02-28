@@ -396,7 +396,7 @@
         try {
             const response = await chrome.runtime.sendMessage({
                 type: 'SEARCH_YOUTUBE',
-                query: `${channelName} live`
+                query: channelName
             });
 
             if (!response || response.error) {
