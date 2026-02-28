@@ -18,7 +18,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             .catch(err => sendResponse({ error: err.message }));
         return true;
     }
+
+    if (request.type === 'CHECK_LIVE') {
+        isVideoLive(request.videoId)
+            .then(sendResponse)
+            .catch(err => sendResponse({ error: err.message }));
+        return true;
+    }
 });
+
+async function isVideoLive(videoId) {
+    try {
+        const url = `https://www.youtube.com/watch?v=${videoId}`;
+        const response = await fetch(url);
+        const html = await response.text();
+        return {
+            isLive: html.includes('showLiveChatParticipantsEndpoint'),
+        };
+        // html.includes('itemprop="isLiveBroadcast"') && !html.includes('itemprop="endDate"');
+    } catch (err) {
+        console.error('Live check error:', err);
+        return false; // Assume not live on error
+    }
+}
 
 async function handleVideoDetails(videoId) {
     try {
