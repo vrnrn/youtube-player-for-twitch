@@ -53,6 +53,10 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - Enable **Force Highest Quality (Source)** to automatically set the Twitch background stream to the maximum available resolution (e.g. 1080p60).
 
 
+### Keyboard Shortcuts
+- **`Alt + Y`**: Toggle the YouTube Player menu.
+- **`Alt + T`**: Toggle Twitch's Theater Mode.
+
 ### Restoring Twitch
 - Click **Restore Twitch** to remove the YouTube player and unmute the original stream.
 
