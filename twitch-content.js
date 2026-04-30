@@ -42,6 +42,9 @@
         /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
     ];
 
+    const CHANNEL_MATCH_REGEX = /^\/([a-zA-Z0-9_]+)/;
+    const NORMALIZE_REGEX = /[^a-z0-9]/g;
+
     // =====================
     // State Management
     // =====================
@@ -95,7 +98,7 @@
      */
     function getTwitchChannel() {
         // Matches /channelName at start of path
-        const match = window.location.pathname.match(/^\/([a-zA-Z0-9_]+)/);
+        const match = window.location.pathname.match(CHANNEL_MATCH_REGEX);
         return match ? match[1].toLowerCase() : null;
     }
 
@@ -113,19 +116,19 @@
 
         wrapper.innerHTML = `
             <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube">
-                <span class="ytot-icon">▶</span>
+                <span class="ytot-icon">\u25B6</span>
                 <span class="ytot-label">YouTube</span>
             </button>
             
             <div class="ytot-dropdown" id="ytot-dropdown">
                 <div class="ytot-dropdown-header">
                     <span>Watch YouTube Stream</span>
-                    <button class="ytot-close" id="ytot-close" aria-label="Close">×</button>
+                    <button class="ytot-close" id="ytot-close" aria-label="Close">\u00D7</button>
                 </div>
                 
                 <!-- Auto-Find Section -->
                 <div class="ytot-autofind" id="ytot-autofind-section">
-                    <button class="ytot-autofind-btn" id="ytot-autofind">🔍 Find YouTube Stream</button>
+                    <button class="ytot-autofind-btn" id="ytot-autofind">\uD83D\uDD0D Find YouTube Stream</button>
                     <div class="ytot-search-result" id="ytot-search-result"></div>
                 </div>
 
@@ -154,7 +157,7 @@
                 
                 <!-- Actions -->
                 <div class="ytot-actions">
-                    <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">⚡ Sync Now</button>
+                    <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">\u26A1 Sync Now</button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
                 
@@ -187,13 +190,13 @@
 
         if (isActive) {
             toggle?.classList.add('active');
-            if (icon) icon.textContent = '🔴';
+            if (icon) icon.textContent = '\uD83D\uDD34';
             if (label) label.textContent = 'Live';
             if (restore) restore.style.display = 'block';
             if (syncNow) syncNow.style.display = 'block';
         } else {
             toggle?.classList.remove('active');
-            if (icon) icon.textContent = '▶';
+            if (icon) icon.textContent = '\u25B6';
             if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'none';
             if (syncNow) syncNow.style.display = 'none';
@@ -292,7 +295,7 @@
                             <div class="ytot-history-channel">${escapeHtml(item.channel)}</div>
                         </div>
                         <button class="ytot-pin-btn" title="${item.pinned ? 'Unpin' : 'Pin'}" data-video-id="${item.videoId}">
-                            ${item.pinned ? '📌' : '📍'}
+                            ${item.pinned ? '\uD83D\uDCCC' : '\uD83D\uDCCD'}
                         </button>
                     </div>
                 `).join('')}
@@ -391,7 +394,7 @@
         if (!channelName) return null;
 
         const resultDiv = document.getElementById('ytot-search-result');
-        resultDiv.innerHTML = '<div class="ytot-searching">🔍 Searching...</div>';
+        resultDiv.innerHTML = '<div class="ytot-searching">\uD83D\uDD0D Searching...</div>';
 
         try {
             const response = await chrome.runtime.sendMessage({
@@ -408,11 +411,11 @@
             if (!contents || contents.length === 0) throw new Error('No results found');
 
             // Find best match
-            const normalizedChannel = channelName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const normalizedChannel = channelName.toLowerCase().replace(NORMALIZE_REGEX, '');
 
             // 1. Exact/Close Match
             for (const video of contents) {
-                const normalizedResult = video.channel.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const normalizedResult = video.channel.toLowerCase().replace(NORMALIZE_REGEX, '');
                 const isSimilar = normalizedResult.includes(normalizedChannel) ||
                     normalizedChannel.includes(normalizedResult) ||
                     levenshteinDistance(normalizedChannel, normalizedResult) <= 3;
@@ -440,13 +443,13 @@
         const resultDiv = document.getElementById('ytot-search-result');
 
         if (result) {
-            const approxNote = result.approximate ? '<div class="ytot-result-note">⚠️ Best match (channel name differs)</div>' : '';
+            const approxNote = result.approximate ? '<div class="ytot-result-note">\u26A0\uFE0F Best match (channel name differs)</div>' : '';
             resultDiv.innerHTML = `
                 <div class="ytot-result-card">
                     ${approxNote}
                     <div class="ytot-result-title">${escapeHtml(result.title)}</div>
-                    <div class="ytot-result-channel">📺 ${escapeHtml(result.channel)}</div>
-                    <button class="ytot-result-use" data-video-id="${result.videoId}">▶ Use This Stream</button>
+                    <div class="ytot-result-channel">\uD83D\uDCFA ${escapeHtml(result.channel)}</div>
+                    <button class="ytot-result-use" data-video-id="${result.videoId}">\u25B6 Use This Stream</button>
                 </div>
             `;
             resultDiv.querySelector('.ytot-result-use').onclick = () => injectYouTube(result.videoId, result);
@@ -591,7 +594,7 @@
         if (!iframe) return;
 
         state.isSyncing = true;
-        updateStatus('⚡ Jumping to live...', 'syncing');
+        updateStatus('\u26A1 Jumping to live...', 'syncing');
 
         try {
             // Post commands to YouTube Embed API
@@ -604,14 +607,14 @@
 
             // 2. Speed up briefly
             setTimeout(() => {
-                updateStatus('⚡ Catching up at 2x...', 'syncing');
+                updateStatus('\u26A1 Catching up at 2x...', 'syncing');
                 sendCmd('setPlaybackRate', [CONFIG.SYNC_SPEED]);
 
                 // 3. Return to normal
                 setTimeout(() => {
                     sendCmd('setPlaybackRate', [CONFIG.NORMAL_SPEED]);
                     state.isSyncing = false;
-                    updateStatus('✓ Synced to live', 'success');
+                    updateStatus('\u2713 Synced to live', 'success');
 
                     // Clear status message
                     setTimeout(() => {
@@ -716,7 +719,30 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
+            if (e.key === 'Escape') {
+                closeDropdown();
+                return;
+            }
+
+            // Ignore shortcuts if focused on input elements
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+                return;
+            }
+
+            // Alt+Y: Toggle YouTube Player dropdown
+            if (e.altKey && e.code === 'KeyY') {
+                e.preventDefault();
+                const dropdown = document.getElementById('ytot-dropdown');
+                if (dropdown) dropdown.classList.toggle('visible');
+            }
+
+            // Alt+T: Toggle Twitch Theater Mode
+            if (e.altKey && e.code === 'KeyT') {
+                e.preventDefault();
+                const theaterBtn = document.querySelector('[data-a-target="player-theater-mode-button"]') ||
+                    Array.from(document.querySelectorAll('button')).find(btn => btn.getAttribute('aria-label') && btn.getAttribute('aria-label').includes('Theater Mode'));
+                if (theaterBtn) theaterBtn.click();
+            }
         });
 
         globalListenersSetup = true;
@@ -876,21 +902,6 @@
     // Backup interval (slower check for robustness)
     setInterval(handleNavigation, 2000);
 
-    function setupGlobalListeners() {
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('ytot-nav-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
-        });
-
-        // Close on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
-        });
-
-    }
-
-    setupGlobalListeners();
     setTimeout(check, 1000);
 
 })();
