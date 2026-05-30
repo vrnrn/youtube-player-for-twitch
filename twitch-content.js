@@ -716,7 +716,28 @@
         });
 
         document.addEventListener('keydown', (e) => {
+            // Ignore if typing in an input, textarea, or contenteditable
+            const activeElement = document.activeElement;
+            if (activeElement) {
+                const tagName = activeElement.tagName.toLowerCase();
+                if (tagName === 'input' || tagName === 'textarea' || activeElement.isContentEditable) {
+                    return;
+                }
+            }
+
             if (e.key === 'Escape') closeDropdown();
+
+            if (e.altKey && e.code === 'KeyY') {
+                e.preventDefault();
+                const dropdown = document.getElementById('ytot-dropdown');
+                if (dropdown) dropdown.classList.toggle('visible');
+            }
+
+            if (e.altKey && e.code === 'KeyT') {
+                e.preventDefault();
+                const theaterBtn = document.querySelector('[data-a-target="player-theater-mode-button"], button[aria-label*="Theater Mode" i]');
+                if (theaterBtn) theaterBtn.click();
+            }
         });
 
         globalListenersSetup = true;
@@ -876,21 +897,6 @@
     // Backup interval (slower check for robustness)
     setInterval(handleNavigation, 2000);
 
-    function setupGlobalListeners() {
-        // Close on click outside
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('ytot-nav-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) closeDropdown();
-        });
-
-        // Close on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
-        });
-
-    }
-
-    setupGlobalListeners();
     setTimeout(check, 1000);
 
 })();
