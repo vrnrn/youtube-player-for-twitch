@@ -1,0 +1,84 @@
+name: Publish Chrome Web Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Optional successful main build run ID; blank selects the newest successful main build
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: chrome-web-store-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ github.repository == 'vrnrn/youtube-player-for-twitch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select successful main build
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_RUN_ID: ${{ inputs.build_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/chrome-web-store.yml" --jq .id)"
+
+          if [[ -n "$REQUESTED_RUN_ID" ]]; then
+            if [[ ! "$REQUESTED_RUN_ID" =~ ^[0-9]+$ ]]; then
+              echo "build_run_id must contain only digits." >&2
+              exit 1
+            fi
+            run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}")"
+            jq -e --argjson workflow_id "$workflow_id" --arg repository "$GITHUB_REPOSITORY" '.workflow_id == $workflow_id and .repository.full_name == $repository and .event == "push" and .head_branch == "main" and .status == "completed" and .conclusion == "success"' <<<"$run_json" >/dev/null || {
+                echo "The selected run must be a successful push build from main in this repository." >&2
+                exit 1
+              }
+          else
+            runs_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/chrome-web-store.yml/runs?branch=main&event=push&status=completed&per_page=100")"
+            run_json="$(jq -ce '[.workflow_runs[] | select(.conclusion == "success")][0] // empty' <<<"$runs_json")"
+            if [[ -z "$run_json" ]]; then
+              echo "No successful main build is available to publish." >&2
+              exit 1
+            fi
+          fi
+
+          run_id="$(jq -r .id <<<"$run_json")"
+          head_sha="$(jq -r .head_sha <<<"$run_json")"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+          echo "Selected successful main build run $run_id at $head_sha."
+
+      - name: Check out the selected build source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.head_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download the selected release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: chrome-extension-release
+          run-id: ${{ steps.source.outputs.run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          path: .
+
+      - name: Submit selected build to Chrome Web Store
+        env:
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+        run: npm run publish
