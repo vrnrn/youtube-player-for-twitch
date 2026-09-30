@@ -84,6 +84,8 @@ Pull requests targeting `main` run `npm test` and build `release.zip`. A push to
 
 To enable publishing, create Chrome Web Store API OAuth credentials for the Google account that owns the listing, authorize the `https://www.googleapis.com/auth/chromewebstore` scope, and add these repository Actions secrets: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, and `CWS_REFRESH_TOKEN`. This is a publisher-level write scope, not an extension-specific grant: it can operate on any Chrome Web Store item the authorized account can manage. Then add repository Actions variables `CWS_PUBLISHER_ID` and `CWS_PUBLISHING_ENABLED=true`. Keep credential entry in GitHub's secret fields; never commit or paste the values into chat. See Google's [Chrome Web Store API setup guide](https://developer.chrome.com/docs/webstore/using-api) for obtaining the credentials and publisher ID.
 
+Google OAuth refresh tokens for external apps in Testing expire after 7 days when using this Chrome Web Store scope. For reliable unattended publishing, use a production OAuth configuration and complete any verification Google requires for this sensitive scope (personal-use exceptions may apply). See Google's [refresh token expiration guidance](https://developers.google.com/identity/protocols/oauth2#expiration) and [sensitive-scope verification guidance](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification).
+
 The publish script checks the currently published and submitted Chrome Web Store versions before uploading, so a rerun or a version already submitted manually is skipped. A successful workflow means the update was submitted for review; Google controls when it becomes publicly available.
 
 ## 🛠 Tech Stack
