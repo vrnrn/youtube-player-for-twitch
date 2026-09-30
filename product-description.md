@@ -1,7 +1,6 @@
 What's New?
-- Added History section
-- Setting to default Twitch to highest setting available
-- Performance Improvements
+- Find streams from the streamer's linked YouTube channel
+- Fall back to Twitch channel-name search when no linked stream is live
 
 Does your favorite stream multi-stream to both Twitch and YouTube?
 This Chrome extension lets you overlay any YouTube livestream on top of a Twitch channel player, keeping the Twitch chat and interface intact. Perfect for when your favorite streamer switches platforms or when you want the superior YouTube video quality with Twitch's superior chat experience.
@@ -17,7 +16,7 @@ Autopauses and mutes the underlying Twitch player
 Supports 4K/60fps YouTube playback
 
 🔍 Auto-Find Stream
-Smart Search: Automatically finds the YouTube stream for the current Twitch channel
+Smart Search: Checks the streamer's linked YouTube channel first, then searches by Twitch channel name
 Fuzzy Matching: Intelligent matching works even if channel names differ slightly.
 Live Filter: Only suggests actual active livestreams
 

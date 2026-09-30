@@ -18,7 +18,7 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - Supports 4K/60fps YouTube playback
 
 ### 🔍 Auto-Find Stream
-- **Smart Search**: Automatically finds the YouTube stream for the current Twitch channel
+- **Smart Search**: Checks the streamer's linked YouTube channel first, then searches by Twitch channel name
 - **Fuzzy Matching**: Intelligent matching works even if channel names differ slightly (e.g. `burntpeanut` vs `TheBurntPeanut`)
 - **Live Filter**: Only suggests actual active livestreams
 
@@ -42,7 +42,7 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 3. Click the **▶ YouTube** button in the top navigation bar
 
 ### Finding a Stream
-- **Option A (Automatic)**: Click "🔍 Find YouTube Stream" to search for the streamer's YouTube live.
+- **Option A (Automatic)**: Click "🔍 Find YouTube Stream" to check the streamer's linked YouTube channel for a live stream. If no linked stream is live, the extension falls back to searching by Twitch channel name.
 - **Option B (Manual)**: Paste any YouTube URL (video, live, or embed link) and click "Go".
 
 ### Syncing
@@ -60,12 +60,31 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 
 1. Clone or download this repository
     ```bash
-    git clone https://github.com/yourusername/youtube-on-twitch.git
+    git clone https://github.com/vrnrn/youtube-player-for-twitch.git
     ```
 2. Open Chrome and navigate to `chrome://extensions`
 3. Toggle **Developer mode** in the top right
 4. Click **Load unpacked**
 5. Select the extension folder
+
+## Development
+
+Run the background-script tests and build the Chrome Web Store package with Node.js:
+
+```bash
+npm test
+npm run build
+```
+
+The build writes a validated `release.zip` in the repository root.
+
+### GitHub Actions release pipeline
+
+Pull requests targeting `main` run `npm test` and build `release.zip`. A push to `main` runs the same checks and submits the package to the Chrome Web Store for review only when the repository variable `CWS_PUBLISHING_ENABLED` is set to `true`. Pull request runs never receive publishing credentials. The workflow uses standard GitHub-hosted Ubuntu runners and does not store build artifacts.
+
+To enable publishing, create Chrome Web Store API OAuth credentials for the Google account that owns the listing, authorize the `https://www.googleapis.com/auth/chromewebstore` scope, and add these repository Actions secrets: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, and `CWS_REFRESH_TOKEN`. This is a publisher-level write scope, not an extension-specific grant: it can operate on any Chrome Web Store item the authorized account can manage. Then add repository Actions variables `CWS_PUBLISHER_ID` and `CWS_PUBLISHING_ENABLED=true`. Keep credential entry in GitHub's secret fields; never commit or paste the values into chat. See Google's [Chrome Web Store API setup guide](https://developer.chrome.com/docs/webstore/using-api) for obtaining the credentials and publisher ID.
+
+The publish script checks the currently published and submitted Chrome Web Store versions before uploading, so a rerun or a version already submitted manually is skipped. A successful workflow means the update was submitted for review; Google controls when it becomes publicly available.
 
 ## 🛠 Tech Stack
 

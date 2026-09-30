@@ -1,0 +1,10 @@
+{
+  "name": "youtube-player-for-twitch",
+  "version": "1.4.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "build": "sh scripts/build-release.sh",
+    "publish": "node scripts/publish-chrome-web-store.mjs"
+  }
+}

@@ -383,6 +383,21 @@
         return row[a.length];
     }
 
+    function getLinkedYouTubeChannel() {
+        const link = document.querySelector('.social-media-link a[href*="youtube.com"]');
+        if (!link?.href) return null;
+
+        try {
+            const url = new URL(link.href);
+            if (url.protocol !== 'https:' || !['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname.toLowerCase())) {
+                return null;
+            }
+            return url.href;
+        } catch (e) {
+            return null;
+        }
+    }
+
     /**
      * Searches YouTube for a livestream matching the Twitch channel name
      * Uses background script to bypass CORS
@@ -394,6 +409,22 @@
         resultDiv.innerHTML = '<div class="ytot-searching">🔍 Searching...</div>';
 
         try {
+            const linkedChannelUrl = getLinkedYouTubeChannel();
+            if (linkedChannelUrl) {
+                const linkedResponse = await chrome.runtime.sendMessage({
+                    type: 'SEARCH_YOUTUBE_CHANNEL',
+                    channelUrl: linkedChannelUrl
+                });
+
+                if (linkedResponse?.results?.length) {
+                    return { ...linkedResponse.results[0], linkedChannel: true };
+                }
+
+                if (linkedResponse?.error) {
+                    Logger.warn('Linked YouTube channel search failed:', linkedResponse.error);
+                }
+            }
+
             const response = await chrome.runtime.sendMessage({
                 type: 'SEARCH_YOUTUBE',
                 query: channelName
@@ -441,9 +472,11 @@
 
         if (result) {
             const approxNote = result.approximate ? '<div class="ytot-result-note">⚠️ Best match (channel name differs)</div>' : '';
+            const linkedNote = result.linkedChannel ? '<div class="ytot-result-note">🔗 Found on the streamer’s linked YouTube channel</div>' : '';
             resultDiv.innerHTML = `
                 <div class="ytot-result-card">
                     ${approxNote}
+                    ${linkedNote}
                     <div class="ytot-result-title">${escapeHtml(result.title)}</div>
                     <div class="ytot-result-channel">📺 ${escapeHtml(result.channel)}</div>
                     <button class="ytot-result-use" data-video-id="${result.videoId}">▶ Use This Stream</button>
