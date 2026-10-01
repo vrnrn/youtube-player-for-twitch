@@ -64,6 +64,17 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 ### Restoring Twitch
 - Click **Restore Twitch** to remove YouTube and restore the original Twitch pause, mute and volume settings.
 
+### Floating Chat
+- Open **Additional settings → Chat** in the YouTube menu and enable **Floating chat**. It defaults off; when enabled, it defaults to **Fullscreen only**. Use the **Fullscreen with chat** button on the player to expand YouTube with Twitch chat, or Twitch's own fullscreen control when watching Twitch.
+- Drag the chat header to move it and its bottom-right handle to resize it. Both controls also support arrow keys. **Chat appearance** offers always-on-player mode, background color/opacity, text size, compact spacing, click-through and a position/size reset.
+- This read-only overlay reuses the current Twitch chat, including badges and emotes already rendered there. Keep Twitch chat open; the overlay does not create its own chat connection or add emote providers. Send messages and use moderation controls in the normal Twitch chat.
+- Recent mirrored messages stay in memory only, capped at 60. Updates are batched and observation stops when the overlay is hidden. Preferences and position are stored locally. No new permissions or framework dependencies are added.
+- Inspired by [Floating Twitch Chat](https://github.com/xD33m/floating_twitch_chat), with an original implementation built for YPFT. See [verification notes](docs/floating-chat-qa.md).
+
+### Additional settings
+- Expand **Additional settings** in the YouTube menu for Playback, Chat and Player extras. The section defaults collapsed to keep the stream controls compact.
+- **Hide Twitch extensions** hides native player-extension overlays and buttons immediately, persists locally, and follows Twitch player replacement and navigation. It does not uninstall extensions or stop their code/network requests. YouTube and floating chat are unaffected.
+
 ## 📦 Installation (Developer Mode)
 
 1. Clone or download this repository

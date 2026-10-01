@@ -501,6 +501,12 @@
 .ytot-dropdown button, .ytot-dropdown input {
     font-family: inherit;
 }
+.ytot-dropdown button { text-align: center; }
+.ytot-button-icon { display: inline-block; flex: 0 0 16px; width: 16px; height: 16px; vertical-align: middle; }
+.ytot-autofind-btn { display: flex; justify-content: center; align-items: center; gap: 8px; }
+.ytot-sync-now .ytot-button-icon { margin-right: 5px; }
+.ytot-close { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; padding: 0; line-height: 1; }
+.ytot-close .ytot-button-icon { width: 18px; height: 18px; }
 
 .ytot-menu-title, .ytot-menu-subtitle, .ytot-option-title, .ytot-option-description {
     display: block;
@@ -627,4 +633,119 @@
 
 @media (prefers-reduced-motion: reduce) {
     #ytot-nav-wrapper * { transition: none; }
+}
+
+/* Floating chat is read-only; only its controls intercept player input. */
+#ytot-chat-root {
+    position: fixed;
+    z-index: 910;
+    pointer-events: none;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #f4effa;
+}
+#ytot-chat-root *, #ytot-chat-root *::before, #ytot-chat-root *::after { box-sizing: border-box; }
+#ytot-chat-root[hidden], #ytot-chat-root [hidden] { display: none !important; }
+#ytot-chat-root.ytot-chat-in-fullscreen { position: absolute; z-index: 2147483000; }
+.ytot-chat-panel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(213, 192, 246, 0.25);
+    border-radius: 10px;
+    pointer-events: auto;
+    contain: layout style paint;
+    line-height: 1.4;
+    text-shadow: 0 1px 2px #000;
+}
+.ytot-chat-header {
+    display: flex;
+    flex: 0 0 38px;
+    gap: 4px;
+    align-items: center;
+    background: rgba(18, 14, 24, 0.6);
+    padding: 4px 6px;
+}
+#ytot-chat-root button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #f4effa;
+    font-family: inherit;
+    text-align: center;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+}
+#ytot-chat-root button:hover { background: rgba(199, 169, 243, 0.18); }
+#ytot-chat-root button[aria-pressed="true"] { background: rgba(145, 71, 255, 0.35); color: #ddc4ff; }
+#ytot-chat-root svg { display: block; flex: 0 0 16px; width: 16px; height: 16px; }
+#ytot-chat-root button:focus-visible, .ytot-chat-messages:focus-visible {
+    outline: 2px solid #bf94ff;
+    outline-offset: -2px;
+}
+.ytot-chat-grip {
+    flex: 1;
+    gap: 6px;
+    padding: 5px 6px !important;
+    justify-content: flex-start !important;
+    height: 28px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: grab !important;
+    touch-action: none;
+}
+.ytot-chat-grip svg { opacity: 0.55; width: 12px !important; flex-basis: 12px !important; }
+.ytot-chat-grip:active { cursor: grabbing !important; }
+.ytot-chat-tool { width: 28px; height: 28px; }
+.ytot-chat-messages { position: relative; flex: 1; min-height: 0; padding: 6px 10px 14px; overflow: auto; scrollbar-width: thin; overflow-anchor: none; }
+.ytot-chat-line { padding: 3px 0; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.ytot-chat-author { font-weight: 700; }
+.ytot-chat-emote { display: inline-block; height: 1.65em; max-width: 5em; vertical-align: middle; object-fit: contain; margin: -2px 1px 0; }
+.ytot-chat-badge { height: 1em; width: 1em; vertical-align: baseline; margin-right: 4px; }
+.ytot-chat-empty { position: absolute; top: 45px; left: 12px; right: 12px; font-size: 12px; color: #d5c5e8; }
+.ytot-chat-compact .ytot-chat-line { padding: 0; line-height: 1.2; }
+.ytot-chat-through { pointer-events: none; }
+.ytot-chat-through .ytot-chat-header { pointer-events: auto; }
+.ytot-chat-through .ytot-chat-messages { pointer-events: none; }
+.ytot-chat-resize { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; cursor: nwse-resize !important; touch-action: none; }
+.ytot-chat-latest { position: absolute; right: 27px; bottom: 5px; padding: 5px 8px !important; font-size: 11px; background: #5b279c !important; }
+.ytot-chat-fullscreen { position: absolute; bottom: 54px; right: 12px; width: 34px; height: 34px; background: rgba(18, 14, 24, 0.75) !important; opacity: 0.65; }
+.ytot-chat-fullscreen svg { width: 20px !important; height: 20px !important; flex-basis: 20px !important; }
+#ytot-chat-root .ytot-chat-fullscreen:hover, #ytot-chat-root .ytot-chat-fullscreen:focus-visible { opacity: 1; }
+#ytot-youtube-wrapper:fullscreen { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; visibility: visible !important; background: #000; }
+.ytot-chat-settings { margin: 4px 0 10px; padding: 8px 10px; border: 1px solid #40364f; border-radius: 8px; background: #1d1725; font-size: 12px; }
+.ytot-chat-settings summary { cursor: pointer; color: #d6c0f5; }
+.ytot-chat-setting { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0; }
+.ytot-chat-setting input[type="range"] { width: 140px; accent-color: #a66bff; }
+.ytot-chat-setting input[type="color"] { width: 38px; height: 25px; padding: 0; border: 1px solid #655c72; border-radius: 5px; background: none; }
+.ytot-chat-setting select { max-width: 175px; background: #100e16; border: 1px solid #40384c; border-radius: 5px; color: #eee8f6; padding: 4px; }
+
+/* Native disclosure supports keyboard navigation and more settings groups. */
+.ytot-additional-settings { border-top: 1px solid #40364f; margin: 14px 0 10px; }
+.ytot-additional-settings > summary {
+    cursor: pointer; padding: 13px 0; color: #d6c0f5; font-size: 13px; font-weight: 600;
+}
+.ytot-additional-settings > summary:focus-visible, .ytot-chat-settings > summary:focus-visible {
+    outline: 2px solid #bf94ff; outline-offset: 3px; border-radius: 4px;
+}
+.ytot-settings-body { padding-bottom: 4px; }
+.ytot-settings-group + .ytot-settings-group { border-top: 1px solid #40364f; padding-top: 12px; margin-top: 12px; }
+
+/* Hide only Twitch player extensions, including replacements inserted by Twitch.
+   This does not disable browser extensions or intercept third-party traffic. */
+html[data-ypft-hide-extensions] :is(.video-player, .video-player__container, [data-a-target="video-player-layout"])
+    :is(.extension-view, .extension-view__iframe, .extension-overlay, .extensions-dock,
+        .extension-taskbar, [data-a-target="player-extension-overlay"], [data-a-target="extensions-dock"]) {
+    display: none !important;
+    pointer-events: none !important;
 }

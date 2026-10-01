@@ -3,19 +3,19 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 const original = fs.readFileSync(`${__dirname}/../twitch-content.js`, 'utf8');
-const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton };\n})();');
-function fixture({ enabled = false, failure = null, running = null } = {}) {
-    const elements = new Map(), calls = [], timers = [], stored = {}, attrs = new Map();
+const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility };\n})();');
+function fixture({ enabled = false, failure = null, running = null, saved = {} } = {}) {
+    const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [];
     const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], classList: { add() {}, remove() {}, toggle() {} },
         appendChild(child) { this.children.push(child); elements.set(child.id, child); },
         remove() { this.removed = true; elements.delete(this.id); },
         setAttribute() {}, querySelector() { return null; }, querySelectorAll() { return []; }
     });
-    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now']) elements.set(id, element('div'));
+    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-hide-extensions']) elements.set(id, element('div'));
     if (running) attrs.set('data-ypft-vaft', running);
     const document = {
         body: element('body'), head: null,
-        documentElement: { getAttribute: k => attrs.get(k) ?? null },
+        documentElement: { getAttribute: k => attrs.get(k) ?? null, setAttribute: (k, v) => attrs.set(k, v), removeAttribute: k => attrs.delete(k) },
         createElement: element, getElementById: id => elements.get(id), querySelector() { return null; }, addEventListener() {}
     };
     const local = new Map([['video-quality', '{"default":"160p30","other":"kept"}']]);
@@ -33,13 +33,13 @@ function fixture({ enabled = false, failure = null, running = null } = {}) {
         } }, storage: { local: {
             async set(data) { calls.push({ persist: data }); Object.assign(stored, data); },
             get(keys, callback) { callback(stored); }
-        }, onChanged: { addListener() {} } } },
+        }, onChanged: { addListener(listener) { storageListeners.push(listener); } } } },
         document, MutationObserver: class { observe() {} },
         setTimeout(fn) { timers.push(fn); return timers.length; }, setInterval() { return 1; }, clearInterval() {},
         console: { log() {}, error() {} }
     });
     vm.runInContext(source, context);
-    return { api: context.window.testContent, document, elements, calls, timers, stored, local };
+    return { api: context.window.testContent, document, elements, calls, timers, stored, local, attrs, storageListeners };
 }
 test('menu explains opt-in reload and uses interruption-blocking terminology', () => {
     const f = fixture();
@@ -91,4 +91,36 @@ test('quality preference preserves other Twitch keys and never writes YouTube se
     f.api.enforceQuality();
     assert.deepEqual(JSON.parse(f.local.get('video-quality')), { default: 'chunked', other: 'kept' });
     assert.equal(f.local.size, 1);
+});
+
+test('additional settings is a collapsed native disclosure grouping every optional feature', () => {
+    const menu = fixture().api.createNavButton().innerHTML;
+    const start = menu.indexOf('<details class="ytot-additional-settings"');
+    const end = menu.indexOf('<!-- Actions -->');
+    assert.ok(start > 0 && end > start);
+    assert.doesNotMatch(menu.slice(start, menu.indexOf('>', start)), /\bopen\b/);
+    const settings = menu.slice(start, end);
+    for (const id of ['ytot-autosync', 'ytot-quality', 'ytot-chat-toggle', 'ytot-hide-extensions', 'ytot-vaft'])
+        assert.ok(settings.includes('id="' + id + '"'), id);
+    assert.match(settings, /Additional settings/);
+    assert.equal((settings.match(/class="ytot-settings-group"/g) || []).length, 3);
+});
+test('native extension visibility restores local preference, changes across tabs and switches off cleanly', async () => {
+    const f = fixture({ saved: { ytot_hide_extensions: true } });
+    await Promise.resolve();
+    assert.equal(f.attrs.has('data-ypft-hide-extensions'), true);
+    assert.equal(f.elements.get('ytot-hide-extensions').checked, true);
+    f.storageListeners[0]({ ytot_hide_extensions: { newValue: false } }, 'sync');
+    assert.equal(f.attrs.has('data-ypft-hide-extensions'), true);
+    f.storageListeners[0]({ ytot_hide_extensions: { newValue: false } }, 'local');
+    assert.equal(f.attrs.has('data-ypft-hide-extensions'), false);
+    assert.equal(f.elements.get('ytot-hide-extensions').checked, false);
+    assert.equal(f.calls.includes('reload-page'), false);
+    assert.equal(f.calls.some(call => call?.release || call?.own), false);
+});
+test('delayed visibility restore does not overwrite a newer local choice', async () => {
+    const f = fixture({ saved: { ytot_hide_extensions: true } });
+    f.api.applyExtensionVisibility(false);
+    await Promise.resolve();
+    assert.equal(f.attrs.has('data-ypft-hide-extensions'), false);
 });

@@ -15,7 +15,9 @@ zip -X -q -r release.zip \
     vendor/vaft/LICENSE \
     vendor/vaft/README.md \
     docs/vaft-qa.md \
+    docs/floating-chat-qa.md \
     twitch-playback.js \
+    twitch-chat.js \
     twitch-content.js \
     twitch-styles.css \
     icons \

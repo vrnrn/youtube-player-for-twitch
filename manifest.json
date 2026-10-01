@@ -22,6 +22,7 @@
       ],
       "js": [
         "twitch-playback.js",
+        "twitch-chat.js",
         "twitch-content.js"
       ],
       "css": [

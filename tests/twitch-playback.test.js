@@ -27,7 +27,7 @@ function fixture(initial = {}) {
         requestAnimationFrame: fn => { fn(); return 1; }, cancelAnimationFrame() {}
     });
     vm.runInContext(source, context);
-    return { owner: context.window.__ypftPlayback, element, attrs, events, intervals, observers, replace,
+    return { owner: context.window.__ypftPlayback, document, element, attrs, events, intervals, observers, replace,
         get video() { return current; },
         sync() { for (const fn of intervals.values()) fn(); }, disappear() { player = null; }
     };
@@ -49,6 +49,21 @@ test('YouTube owns only Twitch media and restores prior pause, mute and volume',
         assert.ok(f.observers.every(o => o.disconnected));
         assert.equal(f.events.size, 0);
     }
+});
+test('YouTube wrapper fullscreen keeps media ownership without overwriting fullscreen geometry', () => {
+    const f = fixture();
+    f.owner.own(f.element);
+    f.document.fullscreenElement = f.element;
+    f.element.style.width = 'fullscreen-width';
+    f.replace({ paused: false, muted: false });
+    f.sync();
+    assert.equal(f.element.style.width, 'fullscreen-width');
+    assert.equal(f.video.paused, true);
+    assert.equal(f.video.muted, true);
+    f.document.fullscreenElement = null;
+    f.sync();
+    assert.equal(f.element.style.width, '900px');
+    f.owner.release();
 });
 test('replacement video is held and restored from the original intent, with stable overlay', () => {
     const f = fixture({ paused: true, muted: true, volume: 0.12 });

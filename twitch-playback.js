@@ -25,6 +25,10 @@
         document.documentElement.setAttribute('data-ypft-playback', 'youtube');
         const player = container();
         hold(player?.querySelector('video'));
+        if (document.fullscreenElement === overlay) {
+            overlay.style.visibility = 'visible';
+            return;
+        }
         if (!player) {
             overlay.style.visibility = 'hidden';
             return;
