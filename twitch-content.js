@@ -103,6 +103,7 @@
     // =====================
     const MENU_ICONS = {
         close: 'm6 6 12 12M18 6 6 18',
+        chevron: 'm6 9 6 6 6-6',
         search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
         sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7'
     };
@@ -150,56 +151,56 @@
                 
                 <!-- Options -->
                 <details class="ytot-additional-settings" id="ytot-additional-settings">
-                    <summary>Additional settings</summary>
+                    <summary><span>Additional settings</span>${menuIcon('chevron')}</summary>
                     <div class="ytot-settings-body">
                         <section class="ytot-settings-group" aria-label="Playback settings">
-                        <div class="ytot-section-label">Playback</div>
-                        <label class="ytot-option">
-                            <input type="checkbox" role="switch" id="ytot-autosync" />
-                            <span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up every 10 minutes</span></span>
-                        </label>
-                        <label class="ytot-option">
-                            <input type="checkbox" role="switch" id="ytot-quality" />
-                            <span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep Twitch set to Source</span></span>
-                        </label>
+                            <div class="ytot-section-label">Playback</div>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-autosync" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up every 10 minutes</span></span>
+                            </label>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-quality" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep Twitch set to Source</span></span>
+                            </label>
                         </section>
                         <section class="ytot-settings-group" aria-label="Floating chat settings">
-                        <div class="ytot-section-label">Chat</div>
-                        <label class="ytot-option">
-                            <input type="checkbox" role="switch" id="ytot-chat-toggle" />
-                            <span class="ytot-option-copy"><span class="ytot-option-title">Floating chat</span></span>
-                        </label>
-                        <details class="ytot-chat-settings" id="ytot-chat-settings" hidden>
-                            <summary>Chat appearance</summary>
-                            <label class="ytot-chat-setting">Show <select id="ytot-chat-mode"><option value="fullscreen">Fullscreen only</option><option value="always">Always on player</option></select></label>
-                            <label class="ytot-chat-setting">Background <input type="color" id="ytot-chat-color" aria-label="Chat background color" /></label>
-                            <label class="ytot-chat-setting">Opacity <input type="range" id="ytot-chat-opacity" min="0" max="100" step="5" aria-label="Chat background opacity" /></label>
-                            <label class="ytot-chat-setting">Text size <input type="range" id="ytot-chat-font" min="11" max="24" aria-label="Chat text size" /></label>
-                            <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-compact" /><span>Compact</span></label>
-                            <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-through" /><span>Click-through</span></label>
-                            <button type="button" class="ytot-vaft-reload" id="ytot-chat-reset">Reset position &amp; size</button>
-                        </details>
+                            <div class="ytot-section-label">Chat</div>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-chat-toggle" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Floating chat</span></span>
+                            </label>
+                            <details class="ytot-chat-settings" id="ytot-chat-settings" hidden>
+                                <summary><span>Chat appearance</span>${menuIcon('chevron')}</summary>
+                                <label class="ytot-chat-setting">Show <select id="ytot-chat-mode"><option value="fullscreen">Fullscreen only</option><option value="always">Always on player</option></select></label>
+                                <label class="ytot-chat-setting">Background <input type="color" id="ytot-chat-color" aria-label="Chat background color" /></label>
+                                <label class="ytot-chat-setting">Opacity <input type="range" id="ytot-chat-opacity" min="0" max="100" step="5" aria-label="Chat background opacity" /></label>
+                                <label class="ytot-chat-setting">Text size <input type="range" id="ytot-chat-font" min="11" max="24" aria-label="Chat text size" /></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-compact" /><span>Compact</span></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-through" /><span>Click-through</span></label>
+                                <button type="button" class="ytot-vaft-reload" id="ytot-chat-reset">Reset position &amp; size</button>
+                            </details>
                         </section>
                         <section class="ytot-settings-group" aria-label="Player extras">
-                        <div class="ytot-section-label">Player extras</div>
-                        <label class="ytot-option">
-                            <input type="checkbox" role="switch" id="ytot-hide-extensions" />
-                            <span class="ytot-option-copy"><span class="ytot-option-title">Hide Twitch extensions</span></span>
-                        </label>
-                        <div class="ytot-vaft-card">
+                            <div class="ytot-section-label">Player extras</div>
                             <label class="ytot-option">
-                                <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
-                                <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span></span>
+                                <input type="checkbox" role="switch" id="ytot-hide-extensions" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Hide Twitch extensions</span></span>
                             </label>
-                            <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
-                            <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
-                        </div>
+                            <div class="ytot-vaft-card">
+                                <label class="ytot-option">
+                                    <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
+                                    <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span></span>
+                                </label>
+                                <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
+                                <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
+                            </div>
                         </section>
                     </div>
                 </details>
                 
                 <!-- Actions -->
-                <div class="ytot-actions">
+                <div class="ytot-actions" id="ytot-actions" hidden>
                     <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">${menuIcon('sync')}<span>Sync Now</span></button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
@@ -303,6 +304,7 @@
         uiCache.label = toggle?.querySelector('.ytot-label');
         uiCache.restore = document.getElementById('ytot-restore');
         uiCache.syncNow = document.getElementById('ytot-sync-now');
+        uiCache.actions = document.getElementById('ytot-actions');
     }
 
     /**
@@ -313,7 +315,8 @@
         // Fallback if cache is empty (safety net)
         if (!uiCache.toggle) refreshDOMCache();
 
-        const { toggle, icon, label, restore, syncNow } = uiCache;
+        const { toggle, icon, label, restore, syncNow, actions } = uiCache;
+        if (actions) actions.hidden = !isActive;
 
         if (isActive) {
             toggle?.classList.add('active');
@@ -929,7 +932,9 @@
         if (!chat || !toggle) return;
         const settings = chat.settings();
         toggle.checked = settings.enabled;
-        document.getElementById('ytot-chat-settings').hidden = !settings.enabled;
+        const appearance = document.getElementById('ytot-chat-settings');
+        appearance.hidden = !settings.enabled;
+        if (!settings.enabled) appearance.open = false;
         document.getElementById('ytot-chat-mode').value = settings.fullscreenOnly ? 'fullscreen' : 'always';
         document.getElementById('ytot-chat-opacity').value = settings.opacity;
         document.getElementById('ytot-chat-font').value = settings.fontSize;

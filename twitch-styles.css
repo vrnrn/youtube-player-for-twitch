@@ -65,7 +65,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px;
+    padding: 14px 18px;
     background: linear-gradient(115deg, #272033, #19161f);
     color: #efeff1;
     font-size: 13px;
@@ -131,12 +131,6 @@
 
 .ytot-go:hover {
     background: #772ce8;
-}
-
-/* Options Section */
-.ytot-options {
-    padding: 16px 18px;
-    border-top: 1px solid #302936;
 }
 
 .ytot-option {
@@ -513,14 +507,14 @@
 }
 
 .ytot-menu-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 650;
     letter-spacing: -0.25px;
 }
 
 .ytot-menu-subtitle {
     margin-top: 3px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 400;
     color: #b4a8c5;
 }
@@ -730,16 +724,52 @@
 .ytot-chat-setting input[type="color"] { width: 38px; height: 25px; padding: 0; border: 1px solid #655c72; border-radius: 5px; background: none; }
 .ytot-chat-setting select { max-width: 175px; background: #100e16; border: 1px solid #40384c; border-radius: 5px; color: #eee8f6; padding: 4px; }
 
-/* Native disclosure supports keyboard navigation and more settings groups. */
-.ytot-additional-settings { border-top: 1px solid #40364f; margin: 14px 0 10px; }
-.ytot-additional-settings > summary {
-    cursor: pointer; padding: 13px 0; color: #d6c0f5; font-size: 13px; font-weight: 600;
+/* Twitch styles details and [hidden]; keep the menu's own state authoritative. */
+#ytot-nav-wrapper [hidden],
+#ytot-dropdown details:not([open]) > :not(summary) { display: none !important; }
+
+/* Native disclosures retain keyboard support; inset groups share a compact rhythm. */
+#ytot-dropdown .ytot-additional-settings { margin: 0; border-top: 1px solid #302936; }
+#ytot-dropdown .ytot-additional-settings > summary,
+#ytot-dropdown .ytot-chat-settings > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 18px;
+    list-style: none;
+    cursor: pointer;
+    color: #d6c0f5;
+    font: 600 12px/1.4 system-ui, -apple-system, sans-serif;
 }
-.ytot-additional-settings > summary:focus-visible, .ytot-chat-settings > summary:focus-visible {
-    outline: 2px solid #bf94ff; outline-offset: 3px; border-radius: 4px;
+#ytot-dropdown summary::-webkit-details-marker { display: none; }
+#ytot-dropdown summary::marker { content: ''; }
+#ytot-dropdown summary:hover { color: #f4effa; background: #ffffff06; }
+#ytot-dropdown summary > .ytot-button-icon { width: 14px; height: 14px; flex-basis: 14px; opacity: 0.7; }
+#ytot-dropdown details[open] > summary > .ytot-button-icon { transform: rotate(180deg); }
+#ytot-dropdown summary:focus-visible {
+    outline: 2px solid #bf94ff; outline-offset: -3px; border-radius: 6px;
 }
-.ytot-settings-body { padding-bottom: 4px; }
-.ytot-settings-group + .ytot-settings-group { border-top: 1px solid #40364f; padding-top: 12px; margin-top: 12px; }
+#ytot-dropdown .ytot-settings-body { padding: 0 18px 14px; }
+#ytot-dropdown .ytot-settings-group { margin: 0; padding: 0; }
+#ytot-dropdown .ytot-settings-group + .ytot-settings-group {
+    border-top: 1px solid #302936; padding-top: 10px; margin-top: 10px;
+}
+#ytot-dropdown .ytot-section-label { margin: 0 0 2px; font-size: 9px; letter-spacing: 1px; }
+#ytot-dropdown .ytot-option { min-height: 36px; padding: 7px 0; gap: 10px; line-height: 1.35; }
+#ytot-dropdown .ytot-option-copy { flex: 1; }
+#ytot-dropdown .ytot-option-title { font-size: 12px; font-weight: 500; }
+#ytot-dropdown .ytot-option-description { margin-top: 2px; font-size: 10px; }
+#ytot-dropdown .ytot-chat-settings { margin: 4px 0 0; padding: 0; background: #1d1924; border-radius: 7px; }
+#ytot-dropdown .ytot-chat-settings > summary { padding: 8px 10px; font-weight: 500; }
+#ytot-dropdown .ytot-chat-setting,
+#ytot-dropdown .ytot-chat-settings > .ytot-option { margin: 8px 10px; }
+#ytot-dropdown .ytot-chat-settings > button { margin: 2px 10px 10px; }
+#ytot-dropdown .ytot-vaft-card { margin-top: 4px; padding: 3px 10px 9px; border-radius: 7px; background: #211a2b; }
+#ytot-dropdown .ytot-vaft-card .ytot-option { gap: 8px; }
+#ytot-dropdown .ytot-vaft-status { font-size: 10px; padding-top: 3px; }
+#ytot-dropdown .ytot-vaft-status::before { top: 7px; width: 5px; height: 5px; }
 
 /* Hide only Twitch player extensions, including replacements inserted by Twitch.
    This does not disable browser extensions or intercept third-party traffic. */

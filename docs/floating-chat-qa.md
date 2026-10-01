@@ -27,7 +27,7 @@ fullscreen overlay and appearance controls. YPFT's implementation is original.
 
 ## Automated checks
 
-On September 30, 2026, `npm test` passed all 48 tests; `npm run build` validated the archive and `git diff --check` passed. Tests cover:
+On September 30, 2026, `npm test` passed all 49 tests; `npm run build` validated the archive and `git diff --check` passed. Tests cover:
 
 - Default off, invalid preferences, cross-tab settings, no network client.
 - Bounded rendering, inert text, HTTPS images, omitted scripts/unsafe URLs.
@@ -57,3 +57,7 @@ The menu uses a collapsed native disclosure with Playback, Chat and Player extra
 
 Native Twitch chat must remain available in the page. Additional emote providers
 are supported only when they already render messages in that native feed.
+
+## Menu spacing follow-up
+
+The user's desktop Chrome screenshot exposed missing inset spacing after the settings container changed, a hidden chat-appearance disclosure being styled visible, and an empty inactive action footer. The follow-up restores shared group padding, compact rows, scoped disclosure/chevron styling and menu-specific hidden and collapsed-disclosure rules. Turning chat off closes its appearance disclosure; the action footer is shown only while YouTube is active. Automated tests cover those state transitions. Final visual inspection is still pending because integrated-browser controls are unavailable in this session; no other browser was used.

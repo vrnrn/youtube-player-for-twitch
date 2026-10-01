@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 const original = fs.readFileSync(`${__dirname}/../twitch-content.js`, 'utf8');
-const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility };\n})();');
+const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls };\n})();');
 function fixture({ enabled = false, failure = null, running = null, saved = {} } = {}) {
     const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [];
     const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], classList: { add() {}, remove() {}, toggle() {} },
@@ -11,7 +11,7 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
         remove() { this.removed = true; elements.delete(this.id); },
         setAttribute() {}, querySelector() { return null; }, querySelectorAll() { return []; }
     });
-    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-hide-extensions']) elements.set(id, element('div'));
+    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset']) elements.set(id, element('div'));
     if (running) attrs.set('data-ypft-vaft', running);
     const document = {
         body: element('body'), head: null,
@@ -39,7 +39,7 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
         console: { log() {}, error() {} }
     });
     vm.runInContext(source, context);
-    return { api: context.window.testContent, document, elements, calls, timers, stored, local, attrs, storageListeners };
+    return { api: context.window.testContent, document, elements, calls, timers, stored, local, attrs, storageListeners, window: context.window };
 }
 test('menu explains opt-in reload and uses interruption-blocking terminology', () => {
     const f = fixture();
@@ -75,6 +75,7 @@ test('YouTube injection uses untouched iframe URL/API and a body portal; restore
     const wrapper = f.elements.get('ytot-youtube-wrapper');
     assert.equal(f.document.body.children[0], wrapper);
     assert.equal(f.calls.find(c => c.own)?.own, wrapper);
+    assert.equal(f.elements.get('ytot-actions').hidden, false);
     const messages = [];
     iframe.contentWindow = { postMessage(data, origin) { messages.push({ data: JSON.parse(data), origin }); } };
     f.api.syncNow();
@@ -84,6 +85,7 @@ test('YouTube injection uses untouched iframe URL/API and a body portal; restore
     assert.equal(wrapper.removed, true);
     assert.equal(f.calls.find(c => c.release)?.release.navigation, false);
     assert.equal(f.api.state.youtubeVideoId, null);
+    assert.equal(f.elements.get('ytot-actions').hidden, true);
 });
 test('quality preference preserves other Twitch keys and never writes YouTube settings', () => {
     const f = fixture();
@@ -123,4 +125,34 @@ test('delayed visibility restore does not overwrite a newer local choice', async
     f.api.applyExtensionVisibility(false);
     await Promise.resolve();
     assert.equal(f.attrs.has('data-ypft-hide-extensions'), false);
+});
+
+test('chat appearance follows enablement and collapses when turned off through the menu', () => {
+    const f = fixture();
+    let settings = { enabled: false, fullscreenOnly: true, opacity: 70, fontSize: 14,
+        color: '#18151f', compact: false, clickThrough: false };
+    f.window.__ypftChat = {
+        settings: () => ({ ...settings }),
+        configure(value, save) {
+            assert.equal(save, true);
+            settings = value;
+            f.api.renderChatControls();
+        }
+    };
+    const appearance = f.elements.get('ytot-chat-settings');
+    appearance.open = true;
+    f.api.setupChatControls();
+    assert.equal(appearance.hidden, true);
+    assert.equal(appearance.open, false);
+    const toggle = f.elements.get('ytot-chat-toggle');
+    toggle.onchange({ target: { checked: true } });
+    assert.equal(appearance.hidden, false);
+    appearance.open = true;
+    f.elements.get('ytot-chat-opacity').onchange({ target: { value: '35' } });
+    assert.equal(settings.opacity, 35);
+    assert.equal(appearance.open, true);
+    toggle.onchange({ target: { checked: false } });
+    assert.equal(appearance.hidden, true);
+    assert.equal(appearance.open, false);
+    assert.equal(settings.opacity, 35);
 });
