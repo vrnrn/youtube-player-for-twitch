@@ -629,7 +629,7 @@
         try {
             // Post commands to YouTube Embed API
             const sendCmd = (func, args) => {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), 'https://www.youtube.com');
             };
 
             // 1. Jump to live
@@ -737,11 +737,7 @@
     // Lifecycle & Events
     // =====================
 
-    let globalListenersSetup = false;
-
     function setupGlobalListeners() {
-        if (globalListenersSetup) return;
-
         // Close on click outside
         document.addEventListener('click', (e) => {
             const wrapper = document.getElementById('ytot-nav-wrapper');
@@ -751,8 +747,6 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeDropdown();
         });
-
-        globalListenersSetup = true;
     }
 
     function setupEventListeners() {

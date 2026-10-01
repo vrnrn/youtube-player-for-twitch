@@ -124,6 +124,12 @@ function getText(value) {
     return '';
 }
 
+async function fetchYouTubePage(url) {
+    const response = await fetch(url, { credentials: 'omit' });
+    if (!response.ok) throw new Error(`YouTube returned HTTP ${response.status}`);
+    return response.text();
+}
+
 function findLiveChannelStream(data) {
     const video = collectVideoRenderers(data).find(isLiveVideo);
     if (!video?.videoId) return null;
@@ -142,10 +148,7 @@ async function handleChannelSearch(channelUrl) {
     if (!streamsUrl) return { error: 'Invalid YouTube channel URL' };
 
     try {
-        const response = await fetch(streamsUrl, { credentials: 'omit' });
-        if (!response.ok) return { error: `YouTube returned HTTP ${response.status}` };
-
-        const data = parseInitialData(await response.text());
+        const data = parseInitialData(await fetchYouTubePage(streamsUrl));
         if (!data) return { error: 'Could not parse YouTube channel streams' };
 
         const stream = findLiveChannelStream(data);
@@ -159,8 +162,7 @@ async function handleChannelSearch(channelUrl) {
 async function handleVideoDetails(videoId) {
     try {
         const url = `https://www.youtube.com/watch?v=${videoId}`;
-        const response = await fetch(url);
-        const html = await response.text();
+        const html = await fetchYouTubePage(url);
 
         // Try to find ytInitialPlayerResponse
         let match = html.match(/var ytInitialPlayerResponse\s*=\s*({.*?});/);
@@ -200,8 +202,7 @@ async function handleVideoDetails(videoId) {
 async function handleSearch(query) {
     try {
         const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgJAAQ%3D%3D`;
-        const response = await fetch(searchUrl);
-        const html = await response.text();
+        const html = await fetchYouTubePage(searchUrl);
 
         const data = parseInitialData(html);
         if (!data) return { error: 'Could not parse YouTube results' };

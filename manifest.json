@@ -7,7 +7,6 @@
     "storage"
   ],
   "host_permissions": [
-    "https://www.twitch.tv/*",
     "https://www.youtube.com/*"
   ],
   "background": {
