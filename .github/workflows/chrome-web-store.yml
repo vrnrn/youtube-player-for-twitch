@@ -9,13 +9,11 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
-  verify-and-release:
+  verify-and-build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -28,10 +26,18 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Assign build version
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        id: version
+        run: |
+          node scripts/set-build-version.mjs
+          version="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync("manifest.json", "utf8")).version)')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Build and validate release ZIP
         run: npm run build
 
-      - name: Store release artifact
+      - name: Store release assets for publishing
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v4
         with:
@@ -40,4 +46,37 @@ jobs:
             manifest.json
             release.zip
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 1
+
+  create-github-release:
+    needs: verify-and-build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: chrome-extension-release
+          path: release-assets
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.verify-and-build.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v${RELEASE_VERSION}"
+
+          if ! gh release view "$tag" --json tagName >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --target "$GITHUB_SHA" \
+              --title "$tag" \
+              --notes "Automated build from main commit $GITHUB_SHA. Chrome Web Store submission is started manually from the Publish Chrome Web Store workflow."
+          fi
+
+          gh release upload "$tag" \
+            release-assets/manifest.json \
+            release-assets/release.zip \
+            --clobber
