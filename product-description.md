@@ -33,3 +33,11 @@ Recent History: Keeps track of the last 5 YouTube streams you've watched, allowi
 
 📺 Twitch Improvements
 Force Highest Quality: Optional setting to automatically enforce "Source" (maximum) quality on the underlying Twitch stream to ensure a crisp viewing experience.
+
+Experimental Twitch Interruption Blocking (VAFT): Off by default and marked Experimental in the menu. Opt in from the YouTube menu to filter Twitch advertising segments using bundled TwitchAdSolutions VAFT and alternate Twitch playback tokens/playlists. Changing the setting reloads Twitch. Disable another VAFT installation first. YouTube playback is separate, and Twitch recovery is suspended while YouTube is active. This feature requires Twitch host access and script registration permission, contains no remote updater or telemetry, and may temporarily reduce Twitch quality during interruptions. Availability and effectiveness depend on Twitch; Chrome Web Store acceptance of this new integration has not been verified.
+
+
+💬 Floating Chat
+Optional, draggable and resizable Twitch chat over your player, including YouTube fullscreen. Customize transparency, background, text size and compact mode, or let clicks pass through. Uses your existing Twitch chat and keeps only recent messages in memory. Off by default, with no extra permissions.
+
+Additional settings: A collapsible menu groups Playback, Chat and Player extras. An optional saved setting hides native Twitch player-extension overlays and buttons without affecting YouTube or floating chat. It does not prevent those extensions from loading code or making requests.

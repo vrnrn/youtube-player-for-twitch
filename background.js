@@ -223,3 +223,77 @@ async function handleSearch(query) {
         return { error: err.message };
     }
 }
+
+// VAFT is registered before navigation, never injected late into a running player.
+const VAFT_KEY = 'ytot_vaft_enabled';
+const VAFT_SCRIPT = {
+    id: 'ypft-vaft',
+    matches: ['https://www.twitch.tv/*'],
+    js: ['vaft-main.js', 'vendor/vaft/vaft.js'],
+    runAt: 'document_start',
+    world: 'MAIN',
+    allFrames: false,
+    persistAcrossSessions: true
+};
+let vaftQueue = Promise.resolve();
+function queueVaft(operation) {
+    const result = vaftQueue.then(operation);
+    vaftQueue = result.catch(() => {});
+    return result;
+}
+async function applyVaftRegistration(enabled) {
+    const scripts = await chrome.scripting.getRegisteredContentScripts({ ids: [VAFT_SCRIPT.id] });
+    if (enabled) {
+        if (scripts.length) await chrome.scripting.updateContentScripts([VAFT_SCRIPT]);
+        else await chrome.scripting.registerContentScripts([VAFT_SCRIPT]);
+    } else if (scripts.length) {
+        await chrome.scripting.unregisterContentScripts({ ids: [VAFT_SCRIPT.id] });
+    }
+}
+async function reconcileVaft() {
+    const stored = await chrome.storage.local.get(VAFT_KEY);
+    const enabled = stored[VAFT_KEY] === true;
+    await applyVaftRegistration(enabled);
+    return { enabled, registered: enabled };
+}
+async function setVaft(enabled) {
+    const stored = await chrome.storage.local.get(VAFT_KEY);
+    const previous = stored[VAFT_KEY] === true;
+    try {
+        await applyVaftRegistration(enabled);
+        await chrome.storage.local.set({ [VAFT_KEY]: enabled });
+    } catch (error) {
+        // Do not acknowledge/reload a change that failed to persist.
+        try { await applyVaftRegistration(previous); }
+        catch (rollbackError) { console.error('VAFT registration rollback failed:', rollbackError); }
+        throw error;
+    }
+    return { enabled, registered: enabled, reloadRequired: true };
+}
+function wakeVaft() {
+    return queueVaft(reconcileVaft).catch(error => console.error('VAFT reconciliation failed:', error));
+}
+// Optional chaining only supports the old background test harness; real Chrome has these APIs.
+chrome.runtime.onInstalled?.addListener(wakeVaft);
+chrome.runtime.onStartup?.addListener(wakeVaft);
+chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area === 'local' && changes[VAFT_KEY]) return wakeVaft();
+});
+if (chrome.scripting) wakeVaft();
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (!['GET_VAFT_SETTINGS', 'SET_VAFT_SETTINGS'].includes(request?.type)) return;
+    // No page-message bridge, fetch proxy, external messages, or iframe controls.
+    const url = sender.url || sender.tab?.url;
+    if (sender.id !== chrome.runtime.id || sender.frameId !== 0 ||
+        !/^https:\/\/www\.twitch\.tv\//.test(url || '')) {
+        sendResponse({ error: 'VAFT settings are only available on Twitch.' });
+        return;
+    }
+    if (request.type === 'SET_VAFT_SETTINGS' && typeof request.enabled !== 'boolean') {
+        sendResponse({ error: 'Invalid VAFT preference.' });
+        return;
+    }
+    queueVaft(() => request.type === 'SET_VAFT_SETTINGS' ? setVaft(request.enabled) : reconcileVaft())
+        .then(sendResponse, error => sendResponse({ error: error.message }));
+    return true;
+});

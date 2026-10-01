@@ -39,12 +39,12 @@ function makePage(contents, assignment = 'var ytInitialData') {
 }
 
 function createBackground(fetchImpl) {
-    let messageListener;
+    const messageListeners = [];
     vm.runInNewContext(backgroundScript, {
         chrome: {
             runtime: {
                 onMessage: {
-                    addListener(listener) { messageListener = listener; }
+                    addListener(listener) { messageListeners.push(listener); }
                 }
             }
         },
@@ -53,10 +53,10 @@ function createBackground(fetchImpl) {
         console: { error() {}, log() {}, warn() {} }
     }, { filename: 'background.js' });
 
-    assert.equal(typeof messageListener, 'function', 'background script should register its message listener');
+    assert.ok(messageListeners.length, 'background script should register its message listeners');
     return request => new Promise((resolve, reject) => {
         try {
-            const keepsChannelOpen = messageListener(request, {}, resolve);
+            const keepsChannelOpen = messageListeners.some(listener => listener(request, {}, resolve) === true);
             assert.equal(keepsChannelOpen, true, 'async message should keep the response channel open');
         } catch (error) {
             reject(error);

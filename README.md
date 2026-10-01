@@ -50,11 +50,30 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - Enable **Auto-sync** to keep it synced automatically in the background.
 
 ### Quality Control
-- Enable **Force Highest Quality (Source)** to automatically set the Twitch background stream to the maximum available resolution (e.g. 1080p60).
+- Enable **Highest Twitch quality** to keep the Twitch background stream set to Source (e.g. 1080p60).
+
+### Experimental Twitch Interruption Blocking (VAFT)
+- **Experimental and off by default.** In the YouTube navigation menu, enable **Interruption blocking**, marked **Experimental**. Changing it saves the preference and reloads Twitch so its player hooks start early or are fully removed.
+- This bundles the pinned TwitchAdSolutions VAFT v37.0.0 algorithm, which filters Twitch advertising segments and requests alternate Twitch playback tokens/playlists. It runs only on Twitch; YouTube requests and the embedded player retain their own behavior.
+- If another VAFT installation is active, disable that individual script before enabling the integrated option, then reload Twitch. Leave unrelated scripts/extensions enabled. The integrated version skips an already-detected VAFT or Worker wrapper.
+- Twitch recovery is suspended while YouTube owns playback. Restore Twitch preserves your original pause, mute and volume settings, including after a toggle reload. Already-open Twitch tabs show a reload action when their hooks differ from the saved setting.
+- The feature adds `scripting` and `https://www.twitch.tv/*` host permission for persistent MAIN-world registration at `document_start`. It adds no all-sites access, media-host privileges, telemetry or remote updater. Chrome 102+ is required.
+- Worker startup and YouTube coordination were checked in the integrated browser. Actual interruption efficacy, real HEVC fallback and Chrome Web Store acceptance remain unverified. VAFT still dynamically evaluates Twitch's player worker source in a Blob worker. Temporary alternate-playlist quality reductions are possible. See [source and adapter notes](vendor/vaft/README.md) and [verification checklist](docs/vaft-qa.md).
 
 
 ### Restoring Twitch
-- Click **Restore Twitch** to remove the YouTube player and unmute the original stream.
+- Click **Restore Twitch** to remove YouTube and restore the original Twitch pause, mute and volume settings.
+
+### Floating Chat
+- Open **Additional settings → Chat** in the YouTube menu and enable **Floating chat**. It defaults off; when enabled, it defaults to **Fullscreen only**. Use the **Fullscreen with chat** button on the player to expand YouTube with Twitch chat, or Twitch's own fullscreen control when watching Twitch.
+- Drag the chat header to move it and its bottom-right handle to resize it. Both controls also support arrow keys. **Chat appearance** offers always-on-player mode, background color/opacity, text size, compact spacing, click-through and a position/size reset.
+- This read-only overlay reuses the current Twitch chat, including badges and emotes already rendered there. Keep Twitch chat open; the overlay does not create its own chat connection or add emote providers. Send messages and use moderation controls in the normal Twitch chat.
+- Recent mirrored messages stay in memory only, capped at 60. Updates are batched and observation stops when the overlay is hidden. Preferences and position are stored locally. No new permissions or framework dependencies are added.
+- Inspired by [Floating Twitch Chat](https://github.com/xD33m/floating_twitch_chat), with an original implementation built for YPFT. See [verification notes](docs/floating-chat-qa.md).
+
+### Additional settings
+- Expand **Additional settings** in the YouTube menu for Playback, Chat and Player extras. The section defaults collapsed to keep the stream controls compact.
+- **Hide Twitch extensions** hides native player-extension overlays and buttons immediately, persists locally, and follows Twitch player replacement and navigation. It does not uninstall extensions or stop their code/network requests. YouTube and floating chat are unaffected.
 
 ## 📦 Installation (Developer Mode)
 
@@ -69,14 +88,14 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 
 ## Development
 
-Run the background-script tests and build the Chrome Web Store package with Node.js:
+Run the extension tests and build the package with Node.js:
 
 ```bash
 npm test
 npm run build
 ```
 
-The build writes a validated `release.zip` in the repository root.
+The build writes a validated `release.zip` in the repository root and checks that the bundled VAFT adapter matches its pinned, reviewed source. It does not publish or submit the feature. Regenerate the adapter offline with `node scripts/prepare-vaft.mjs` after reviewing any adapter change.
 
 ### GitHub Actions release pipeline
 
@@ -99,7 +118,7 @@ The publish script checks the currently published and submitted Chrome Web Store
 
 ## 📄 License
 
-MIT License. Free to use and modify.
+MIT License. Free to use and modify. Bundled VAFT retains the TwitchAdSolutions Contributors' [MIT license](vendor/vaft/LICENSE).
 
 ---
 

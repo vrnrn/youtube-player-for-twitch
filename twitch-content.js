@@ -48,7 +48,6 @@
     const state = {
         initialized: false,
         youtubeVideoId: null,
-        twitchVideo: null,
         autoSyncEnabled: false,
         syncIntervalId: null,
         isSyncing: false,
@@ -102,6 +101,13 @@
     // =====================
     // UI Components
     // =====================
+    const MENU_ICONS = {
+        close: 'm6 6 12 12M18 6 6 18',
+        chevron: 'm6 9 6 6 6-6',
+        search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
+        sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7'
+    };
+    const menuIcon = name => '<svg class="ytot-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + MENU_ICONS[name] + '"></path></svg>';
 
     /**
      * Creates the main navigation button and dropdown menu
@@ -112,20 +118,23 @@
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube">
+            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube" aria-haspopup="true" aria-expanded="false" aria-controls="ytot-dropdown">
                 <span class="ytot-icon">▶</span>
                 <span class="ytot-label">YouTube</span>
             </button>
             
             <div class="ytot-dropdown" id="ytot-dropdown">
                 <div class="ytot-dropdown-header">
-                    <span>Watch YouTube Stream</span>
-                    <button class="ytot-close" id="ytot-close" aria-label="Close">×</button>
+                    <div>
+                        <span class="ytot-menu-title">YouTube on Twitch</span>
+                        <span class="ytot-menu-subtitle">Your stream, with Twitch chat</span>
+                    </div>
+                    <button class="ytot-close" id="ytot-close" aria-label="Close">${menuIcon('close')}</button>
                 </div>
                 
                 <!-- Auto-Find Section -->
                 <div class="ytot-autofind" id="ytot-autofind-section">
-                    <button class="ytot-autofind-btn" id="ytot-autofind">🔍 Find YouTube Stream</button>
+                    <button class="ytot-autofind-btn" id="ytot-autofind">${menuIcon('search')}<span>Find YouTube Stream</span></button>
                     <div class="ytot-search-result" id="ytot-search-result"></div>
                 </div>
 
@@ -141,20 +150,58 @@
                 </div>
                 
                 <!-- Options -->
-                <div class="ytot-options">
-                    <label class="ytot-option">
-                        <input type="checkbox" id="ytot-autosync" />
-                        <span>Auto-sync (catch up every 10 min)</span>
-                    </label>
-                    <label class="ytot-option">
-                        <input type="checkbox" id="ytot-quality" />
-                        <span>Force Highest Quality (Source)</span>
-                    </label>
-                </div>
+                <details class="ytot-additional-settings" id="ytot-additional-settings">
+                    <summary><span>Additional settings</span>${menuIcon('chevron')}</summary>
+                    <div class="ytot-settings-body">
+                        <section class="ytot-settings-group" aria-label="Playback settings">
+                            <div class="ytot-section-label">Playback</div>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-autosync" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up every 10 minutes</span></span>
+                            </label>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-quality" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep Twitch set to Source</span></span>
+                            </label>
+                        </section>
+                        <section class="ytot-settings-group" aria-label="Floating chat settings">
+                            <div class="ytot-section-label">Chat</div>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-chat-toggle" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Floating chat</span></span>
+                            </label>
+                            <details class="ytot-chat-settings" id="ytot-chat-settings" hidden>
+                                <summary><span>Chat appearance</span>${menuIcon('chevron')}</summary>
+                                <label class="ytot-chat-setting">Show <select id="ytot-chat-mode"><option value="fullscreen">Fullscreen only</option><option value="always">Always on player</option></select></label>
+                                <label class="ytot-chat-setting">Background <input type="color" id="ytot-chat-color" aria-label="Chat background color" /></label>
+                                <label class="ytot-chat-setting">Opacity <input type="range" id="ytot-chat-opacity" min="0" max="100" step="5" aria-label="Chat background opacity" /></label>
+                                <label class="ytot-chat-setting">Text size <input type="range" id="ytot-chat-font" min="11" max="24" aria-label="Chat text size" /></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-compact" /><span>Compact</span></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-through" /><span>Click-through</span></label>
+                                <button type="button" class="ytot-vaft-reload" id="ytot-chat-reset">Reset position &amp; size</button>
+                            </details>
+                        </section>
+                        <section class="ytot-settings-group" aria-label="Player extras">
+                            <div class="ytot-section-label">Player extras</div>
+                            <label class="ytot-option">
+                                <input type="checkbox" role="switch" id="ytot-hide-extensions" />
+                                <span class="ytot-option-copy"><span class="ytot-option-title">Hide Twitch extensions</span></span>
+                            </label>
+                            <div class="ytot-vaft-card">
+                                <label class="ytot-option">
+                                    <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
+                                    <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span></span>
+                                </label>
+                                <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
+                                <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
+                            </div>
+                        </section>
+                    </div>
+                </details>
                 
                 <!-- Actions -->
-                <div class="ytot-actions">
-                    <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">⚡ Sync Now</button>
+                <div class="ytot-actions" id="ytot-actions" hidden>
+                    <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">${menuIcon('sync')}<span>Sync Now</span></button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
                 
@@ -164,7 +211,91 @@
         return wrapper;
     }
 
+    // A root attribute makes this preference survive native player/SPA replacement
+    // without observing or changing third-party iframe documents.
+    const HIDE_EXTENSIONS_KEY = 'ytot_hide_extensions';
+    let hideExtensions = false;
+    let extensionsRevision = 0;
+    function applyExtensionVisibility(value) {
+        hideExtensions = value === true;
+        extensionsRevision++;
+        if (hideExtensions) document.documentElement.setAttribute('data-ypft-hide-extensions', '');
+        else document.documentElement.removeAttribute('data-ypft-hide-extensions');
+        const toggle = document.getElementById('ytot-hide-extensions');
+        if (toggle) toggle.checked = hideExtensions;
+    }
+    const initialExtensionsRevision = extensionsRevision;
+    loadState(HIDE_EXTENSIONS_KEY).then(value => {
+        if (extensionsRevision === initialExtensionsRevision) applyExtensionVisibility(value);
+    });
+
     const uiCache = {};
+    let vaftEnabled = null;
+    let vaftBusy = false;
+    let vaftPending = null;
+    let vaftError = '';
+
+    function renderVaftSetting() {
+        const checkbox = document.getElementById('ytot-vaft');
+        const status = document.getElementById('ytot-vaft-status');
+        if (!checkbox || !status) return;
+        checkbox.disabled = vaftBusy || vaftEnabled === null;
+        checkbox.checked = vaftBusy && vaftPending !== null ? vaftPending : vaftEnabled === true;
+        const running = document.documentElement.getAttribute('data-ypft-vaft');
+        if (vaftError) status.textContent = vaftError;
+        else if (vaftBusy) status.textContent = 'Saving… Twitch will reload.';
+        else if (vaftEnabled === null) status.textContent = 'Checking setting…';
+        else if (!vaftEnabled) status.textContent = running ? 'Off · reload to apply.' : 'Off · changes reload Twitch.';
+        else if (running === 'conflict') status.textContent = 'Another playback hook detected.';
+        else if (running === 'error') status.textContent = 'Could not start. Turn off to retry.';
+        else if (running === 'worker-ready') status.textContent = 'On · changes reload Twitch.';
+        else if (running === 'hooks-ready') status.textContent = 'On · waiting for Twitch.';
+        else status.textContent = 'On · reload to apply.';
+        status.dataset.state = vaftError || running === 'error' ? 'error' :
+            running === 'conflict' ? 'warning' : vaftBusy ? 'pending' : vaftEnabled ? 'on' : 'off';
+        const needsReload = !vaftBusy && (vaftError || (vaftEnabled !== null &&
+            (vaftEnabled ? !running || running === 'conflict' || running === 'error' : !!running)));
+        const reload = document.getElementById('ytot-vaft-reload');
+        reload.hidden = !needsReload;
+        reload.textContent = vaftError ? 'Reload Twitch to retry' : 'Reload Twitch to apply';
+    }
+
+    async function loadVaftSetting() {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'GET_VAFT_SETTINGS' });
+            if (!response || response.error) throw new Error(response?.error || 'Could not read VAFT setting.');
+            vaftEnabled = response.enabled;
+            vaftError = '';
+        } catch (error) { vaftError = `${error.message} Reload Twitch to retry.`; }
+        renderVaftSetting();
+    }
+
+    async function changeVaftSetting(enabled) {
+        if (vaftBusy) return;
+        vaftBusy = true;
+        vaftPending = enabled;
+        vaftError = '';
+        renderVaftSetting();
+        try {
+            if (state.youtubeVideoId) await chrome.storage.local.set({
+                [`ytot_active_${getTwitchChannel()}`]: state.youtubeVideoId,
+                [`ytot_playback_${getTwitchChannel()}`]: window.__ypftPlayback.snapshot()
+            });
+            const response = await chrome.runtime.sendMessage({ type: 'SET_VAFT_SETTINGS', enabled });
+            if (!response || response.error || response.enabled !== enabled || response.registered !== enabled) {
+                throw new Error(response?.error || 'VAFT registration was not confirmed.');
+            }
+            vaftEnabled = enabled;
+            const status = document.getElementById('ytot-vaft-status');
+            if (status) status.textContent = 'Saved. Reloading Twitch…';
+            location.reload();
+        } catch (error) {
+            vaftBusy = false;
+            vaftPending = null;
+            vaftError = `VAFT change failed: ${error.message}`;
+            renderVaftSetting();
+        }
+    }
 
     function refreshDOMCache() {
         const toggle = document.getElementById('ytot-toggle');
@@ -173,6 +304,7 @@
         uiCache.label = toggle?.querySelector('.ytot-label');
         uiCache.restore = document.getElementById('ytot-restore');
         uiCache.syncNow = document.getElementById('ytot-sync-now');
+        uiCache.actions = document.getElementById('ytot-actions');
     }
 
     /**
@@ -183,7 +315,8 @@
         // Fallback if cache is empty (safety net)
         if (!uiCache.toggle) refreshDOMCache();
 
-        const { toggle, icon, label, restore, syncNow } = uiCache;
+        const { toggle, icon, label, restore, syncNow, actions } = uiCache;
+        if (actions) actions.hidden = !isActive;
 
         if (isActive) {
             toggle?.classList.add('active');
@@ -210,6 +343,7 @@
 
     function closeDropdown() {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
+        document.getElementById('ytot-toggle')?.setAttribute('aria-expanded', 'false');
     }
 
     /**
@@ -499,33 +633,11 @@
     // =====================
 
     /**
-     * Pauses and mutes the Twitch player
-     */
-    function pauseTwitch() {
-        const video = document.querySelector('video');
-        if (video) {
-            video.pause();
-            video.muted = true;
-            state.twitchVideo = video;
-        }
-    }
-
-    /**
-     * Resumes the Twitch player
-     */
-    function resumeTwitch() {
-        if (state.twitchVideo) {
-            state.twitchVideo.muted = false;
-            state.twitchVideo.play().catch(() => { });
-        }
-    }
-
-    /**
      * Injects YouTube iframe over the Twitch player
      * @param {string} videoId 
      * @param {object} metadata Optional metadata { title, channel }
      */
-    function injectYouTube(videoId, metadata = null) {
+    function injectYouTube(videoId, metadata = null, restoredPlayback = null) {
         if (!videoId) return;
 
         // Update History
@@ -548,14 +660,12 @@
         }
 
         // Try multiple selectors to support Twitch layout changes
-        const container = document.querySelector('[data-a-target="video-player-layout"], .video-player__container, .video-player');
+        const container = window.__ypftPlayback.container();
 
         if (!container) {
             updateStatus('Error: Player not found', 'error');
             return;
         }
-
-        pauseTwitch();
 
         // Cleanup existing
         document.getElementById('ytot-youtube-wrapper')?.remove();
@@ -571,14 +681,18 @@
         iframe.setAttribute('allowfullscreen', 'true');
 
         wrapper.appendChild(iframe);
-        container.style.position = 'relative';
-        container.appendChild(wrapper);
+        // A stable portal avoids reloading the YouTube iframe when React replaces
+        // Twitch's player. Ownership is published before mounting the iframe.
+        window.__ypftPlayback.own(wrapper, restoredPlayback);
+        document.body.appendChild(wrapper);
+        window.__ypftChat?.sync();
 
         // Update state
         state.youtubeVideoId = videoId;
         const channel = getTwitchChannel();
         saveState(`ytot_${channel}`, videoId);
         saveState(`ytot_active_${channel}`, videoId); // Mark as active for persistence
+        saveState(`ytot_playback_${channel}`, window.__ypftPlayback.snapshot());
 
         // UI Updates
         updateToggleButton(true);
@@ -598,7 +712,8 @@
      */
     function removeYouTube(keepState = false) {
         document.getElementById('ytot-youtube-wrapper')?.remove();
-        resumeTwitch();
+        window.__ypftPlayback.release({ navigation: keepState });
+        window.__ypftChat?.sync();
         stopAutoSync();
 
         state.youtubeVideoId = null;
@@ -608,6 +723,7 @@
         // Clean up active state only if user explicitly requested removal
         if (!keepState) {
             saveState(`ytot_active_${getTwitchChannel()}`, null);
+            saveState(`ytot_playback_${getTwitchChannel()}`, null);
         }
     }
 
@@ -750,6 +866,13 @@
     }
 
     function setupEventListeners() {
+        setupChatControls();
+        const extensionsToggle = document.getElementById('ytot-hide-extensions');
+        extensionsToggle.checked = hideExtensions;
+        extensionsToggle.onchange = event => {
+            applyExtensionVisibility(event.target.checked);
+            saveState(HIDE_EXTENSIONS_KEY, hideExtensions);
+        };
         const toggle = document.getElementById('ytot-toggle');
         const dropdown = document.getElementById('ytot-dropdown');
         const close = document.getElementById('ytot-close');
@@ -761,7 +884,10 @@
         const autoFindBtn = document.getElementById('ytot-autofind');
 
         autoFindBtn.onclick = handleAutoFind;
-        toggle.onclick = () => dropdown.classList.toggle('visible');
+        toggle.onclick = () => {
+            const visible = dropdown.classList.toggle('visible');
+            toggle.setAttribute('aria-expanded', String(visible));
+        };
         close.onclick = closeDropdown;
 
         const handleGo = () => {
@@ -795,9 +921,52 @@
                 stopQualityEnforcement();
             }
         };
+        document.getElementById('ytot-vaft').onchange = e => changeVaftSetting(e.target.checked);
+        document.getElementById('ytot-vaft-reload').onclick = () => location.reload();
+        loadVaftSetting();
     }
 
+    function renderChatControls() {
+        const chat = window.__ypftChat;
+        const toggle = document.getElementById('ytot-chat-toggle');
+        if (!chat || !toggle) return;
+        const settings = chat.settings();
+        toggle.checked = settings.enabled;
+        const appearance = document.getElementById('ytot-chat-settings');
+        appearance.hidden = !settings.enabled;
+        if (!settings.enabled) appearance.open = false;
+        document.getElementById('ytot-chat-mode').value = settings.fullscreenOnly ? 'fullscreen' : 'always';
+        document.getElementById('ytot-chat-opacity').value = settings.opacity;
+        document.getElementById('ytot-chat-font').value = settings.fontSize;
+        document.getElementById('ytot-chat-color').value = settings.color;
+        document.getElementById('ytot-chat-compact').checked = settings.compact;
+        document.getElementById('ytot-chat-through').checked = settings.clickThrough;
+    }
+    function setupChatControls() {
+        const chat = window.__ypftChat;
+        const toggle = document.getElementById('ytot-chat-toggle');
+        if (!toggle) return;
+        toggle.disabled = !chat;
+        if (!chat) return;
+        const update = changes => chat.configure({ ...chat.settings(), ...changes }, true);
+        toggle.onchange = event => update({ enabled: event.target.checked });
+        for (const [id, key, kind] of [
+            ['ytot-chat-mode', 'fullscreenOnly', 'mode'], ['ytot-chat-opacity', 'opacity', 'number'],
+            ['ytot-chat-font', 'fontSize', 'number'], ['ytot-chat-color', 'color', 'value'],
+            ['ytot-chat-compact', 'compact', 'boolean'], ['ytot-chat-through', 'clickThrough', 'boolean']
+        ]) {
+            document.getElementById(id).onchange = event => update({ [key]:
+                kind === 'mode' ? event.target.value === 'fullscreen' :
+                kind === 'number' ? Number(event.target.value) :
+                kind === 'boolean' ? event.target.checked : event.target.value });
+        }
+        document.getElementById('ytot-chat-reset').onclick = () => update({ x: 1, y: 0.15, width: 320, height: 0.55 });
+        renderChatControls();
+    }
+    document.addEventListener('ypft-chat-setting', renderChatControls);
+
     let spawnAttempts = 0;
+    let initGeneration = 0;
 
     async function init() {
         if (state.initialized) return;
@@ -807,6 +976,9 @@
             document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
 
         if (!leftNav) return;
+        state.initialized = true;
+        const generation = ++initGeneration;
+        const channel = getTwitchChannel();
 
         // Clean up any stale elements
         document.getElementById('ytot-nav-wrapper')?.remove();
@@ -816,13 +988,15 @@
         refreshDOMCache();
 
         // Restore Settings
-        const savedAutoSync = await loadState('ytot_autosync');
+        const [savedAutoSync, savedForceHighest] = await Promise.all([
+            loadState('ytot_autosync'), loadState('ytot_force_highest')
+        ]);
+        if (generation !== initGeneration || channel !== getTwitchChannel()) return;
         if (savedAutoSync) {
             state.autoSyncEnabled = true;
             document.getElementById('ytot-autosync').checked = true;
         }
 
-        const savedForceHighest = await loadState('ytot_force_highest');
         if (savedForceHighest) {
             state.forceHighestQuality = true;
             const qualityCheckbox = document.getElementById('ytot-quality');
@@ -833,14 +1007,21 @@
         renderHistory();
 
         // Restore Active Stream or Last Used
-        const channel = getTwitchChannel();
         if (channel) {
-            const activeStream = await loadState(`ytot_active_${channel}`);
+            const [activeStream, savedVideoId, restoredPlayback] = await Promise.all([
+                loadState(`ytot_active_${channel}`), loadState(`ytot_${channel}`), loadState(`ytot_playback_${channel}`)
+            ]);
+            if (generation !== initGeneration || channel !== getTwitchChannel()) return;
             if (activeStream) {
                 Logger.log('Restoring active stream:', activeStream);
-                injectYouTube(activeStream);
+                const restoreWhenReady = (attempt = 0) => {
+                    if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId) return;
+                    if (window.__ypftPlayback.container()) injectYouTube(activeStream, null, restoredPlayback);
+                    else if (attempt < 40) setTimeout(() => restoreWhenReady(attempt + 1), 250);
+                    else updateStatus('Twitch player was not ready. Reopen your saved YouTube stream.', 'error');
+                };
+                restoreWhenReady();
             } else {
-                const savedVideoId = await loadState(`ytot_${channel}`);
                 if (savedVideoId) {
                     const urlInput = document.getElementById('ytot-url');
                     if (urlInput) {
@@ -880,6 +1061,7 @@
 
             // Navigate away: clear UI but keep state
             removeYouTube(true);
+            initGeneration++;
             state.initialized = false;
             state.youtubeVideoId = null;
             spawnAttempts = 0;
@@ -899,7 +1081,29 @@
     }
 
     // Backup interval (slower check for robustness)
-    setInterval(handleNavigation, 2000);
+    new MutationObserver(renderVaftSetting).observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-ypft-vaft']
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes[HIDE_EXTENSIONS_KEY]) {
+            applyExtensionVisibility(changes[HIDE_EXTENSIONS_KEY].newValue);
+        }
+        if (area === 'local' && changes.ytot_vaft_enabled && !vaftBusy) {
+            vaftEnabled = changes.ytot_vaft_enabled.newValue === true;
+            vaftError = '';
+            renderVaftSetting();
+        }
+    });
+
+    setInterval(() => {
+        handleNavigation();
+        window.__ypftChat?.sync();
+        if (state.initialized && !document.getElementById('ytot-nav-wrapper')) {
+            state.initialized = false;
+            spawnAttempts = 0;
+            check();
+        }
+    }, 2000);
 
     setupGlobalListeners();
     setTimeout(check, 1000);

@@ -2,12 +2,15 @@
   "manifest_version": 3,
   "name": "YouTube Player for Twitch",
   "version": "1.4.0",
+  "minimum_chrome_version": "102",
   "description": "Watch YouTube livestreams with Twitch chat - the best of both worlds",
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
-    "https://www.youtube.com/*"
+    "https://www.youtube.com/*",
+    "https://www.twitch.tv/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -18,6 +21,8 @@
         "https://www.twitch.tv/*"
       ],
       "js": [
+        "twitch-playback.js",
+        "twitch-chat.js",
         "twitch-content.js"
       ],
       "css": [
