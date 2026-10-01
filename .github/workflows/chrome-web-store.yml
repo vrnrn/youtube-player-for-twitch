@@ -1,4 +1,4 @@
-name: Chrome Web Store
+name: Build Chrome Extension & Create GitHub Release
 
 on:
   pull_request:
@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   verify-and-build:
+    name: Verify and build extension
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -49,6 +50,7 @@ jobs:
           retention-days: 1
 
   create-github-release:
+    name: Create GitHub release
     needs: verify-and-build
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
