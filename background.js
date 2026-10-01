@@ -203,40 +203,17 @@ async function handleSearch(query) {
         const response = await fetch(searchUrl);
         const html = await response.text();
 
-        // extract ytInitialData
-        // Try multiple regex patterns to be robust
-        let match = html.match(/var ytInitialData\s*=\s*({.*?});/);
-        if (!match) {
-            match = html.match(/window\["ytInitialData"\]\s*=\s*({.*?});/);
-        }
+        const data = parseInitialData(html);
+        if (!data) return { error: 'Could not parse YouTube results' };
 
-        if (!match) return { error: 'Could not parse YouTube results' };
-
-        const data = JSON.parse(match[1]);
-        const contents = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
-            ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
-
-        if (!contents) return { error: 'No results found' };
-
-        // Map results to a simplified format
-        const results = [];
-        for (const item of contents) {
-            const v = item.videoRenderer;
-            if (!v) continue;
-
-            const isLive = v.badges?.some(b =>
-                b.metadataBadgeRenderer?.label?.toLowerCase().includes('live')
-            );
-
-            if (isLive) {
-                results.push({
-                    videoId: v.videoId,
-                    title: v.title?.runs?.[0]?.text || '',
-                    channel: v.ownerText?.runs?.[0]?.text || '',
-                    isLive: true
-                });
-            }
-        }
+        const results = collectVideoRenderers(data)
+            .filter(video => video.videoId && isLiveVideo(video))
+            .map(video => ({
+                videoId: video.videoId,
+                title: getText(video.title),
+                channel: getText(video.ownerText) || getText(video.shortBylineText),
+                isLive: true
+            }));
 
         return { results };
 
