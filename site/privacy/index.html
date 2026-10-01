@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Privacy information for the YouTube Player for Twitch Chrome extension and its maintainer-only publishing workflow.">
+    <title>Privacy Policy · YouTube Player for Twitch</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">YouTube Player for Twitch</a>
+      <nav aria-label="Main navigation">
+        <a href="/">App information</a>
+      </nav>
+    </header>
+
+    <main class="policy">
+      <p class="eyebrow">Privacy</p>
+      <h1>Privacy Policy</h1>
+      <p class="lede">Last updated September 30, 2026</p>
+      <p>This policy describes the YouTube Player for Twitch Chrome extension, this information site, and the separate workflow used by the maintainer to submit extension releases.</p>
+
+      <h2>Information stored by the extension</h2>
+      <p>The extension does not require an account. It stores its settings and playback state in Chrome’s extension-local storage on your device. This includes Auto-sync and quality preferences, remembered YouTube video IDs for Twitch channels, and the current active video ID for a channel.</p>
+      <p>Recent-stream history can include a YouTube video ID, its title and channel name, the time it was added, and whether you pinned it. The history list can be cleared from the extension. The extension’s local storage is cleared when the extension is removed. When you enable Force Highest Quality, the extension also reads and updates Twitch’s local video-quality preference in your browser.</p>
+
+      <h2>Requests to YouTube and Twitch</h2>
+      <p>When you search for a stream, the extension reads the current Twitch channel name and, when available, the YouTube channel link shown on that Twitch page. It requests YouTube search results, public channel-stream information, or video-page details as needed. The search term, linked channel URL, and selected video ID may be included in those requests. Playback loads the selected video using YouTube’s embedded player.</p>
+      <p>These requests go from your browser to YouTube; the extension does not proxy them through a developer-operated server. YouTube may receive ordinary request information and process it under <a href="https://policies.google.com/privacy">Google’s Privacy Policy</a> and <a href="https://www.youtube.com/howyoutubeworks/user-settings/privacy/">YouTube’s privacy information</a>. Twitch also processes your use of Twitch under its <a href="https://www.twitch.tv/p/en/legal/privacy-notice/">Privacy Notice</a>.</p>
+
+      <h2>Sharing by the extension</h2>
+      <p>The extension does not send its locally stored settings, playback state, or stream history to the developer. The current extension source contains no developer analytics, advertising, or telemetry service.</p>
+
+      <h2>Maintainer-only publishing workflow</h2>
+      <p>Separately from extension use, the maintainer uses GitHub Actions to prepare extension releases. When publishing is enabled, the workflow can use the maintainer’s Google OAuth client credentials and refresh token stored as GitHub repository secrets. On a push to the main branch while publishing is enabled, the workflow exchanges those credentials with Google for an access token and uses the Chrome Web Store API to check the target item’s status and submit the extension package and version for review.</p>
+      <p>The workflow is configured to target this extension’s Chrome Web Store item. The Google OAuth permission itself is publisher-wide and can operate on other Chrome Web Store items that the authorized account manages. These publishing credentials and release requests are maintainer data; they are not collected from extension users or included in the extension package. Google and GitHub process this information under their own <a href="https://policies.google.com/privacy">privacy policy</a> and <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">privacy statement</a>.</p>
+
+      <h2>This information site</h2>
+      <p>This static site does not provide accounts or forms and does not include analytics, advertising pixels, or other developer tracking code. It is hosted by Cloudflare. When visitors access the site, Cloudflare may process information such as IP addresses, traffic-routing data, system configuration information, and other information about traffic to and from the site. See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s Privacy Policy</a>.</p>
+
+      <h2>Your choices</h2>
+      <p>You can clear the extension’s recent-stream history from its menu. Removing the extension clears its extension-local storage. You can also choose whether to use YouTube or Twitch features and review the privacy controls offered by those services.</p>
+
+      <h2>Contact</h2>
+      <p>For questions about this policy or the extension, contact <a href="mailto:ypftsupport@vrnrn.com">ypftsupport@vrnrn.com</a>.</p>
+
+      <p class="back-link"><a href="/">Back to YouTube Player for Twitch</a></p>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Varun Rana</span>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="mailto:ypftsupport@vrnrn.com">Support: ypftsupport@vrnrn.com</a>
+    </footer>
+  </body>
+</html>
