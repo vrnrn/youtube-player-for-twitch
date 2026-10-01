@@ -50,11 +50,19 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 - Enable **Auto-sync** to keep it synced automatically in the background.
 
 ### Quality Control
-- Enable **Force Highest Quality (Source)** to automatically set the Twitch background stream to the maximum available resolution (e.g. 1080p60).
+- Enable **Highest Twitch quality** to keep the Twitch background stream set to Source (e.g. 1080p60).
+
+### Experimental Twitch Interruption Blocking (VAFT)
+- **Experimental and off by default.** In the YouTube navigation menu, enable **Interruption blocking**, marked **Experimental**. Changing it saves the preference and reloads Twitch so its player hooks start early or are fully removed.
+- This bundles the pinned TwitchAdSolutions VAFT v37.0.0 algorithm, which filters Twitch advertising segments and requests alternate Twitch playback tokens/playlists. It runs only on Twitch; YouTube requests and the embedded player retain their own behavior.
+- If you use the Tampermonkey VAFT userscript, disable that script's entry in the Tampermonkey dashboard before enabling the integrated option, then reload Twitch. Leave unrelated scripts/extensions enabled. The integrated version skips an already-detected VAFT or Worker wrapper.
+- Twitch recovery is suspended while YouTube owns playback. Restore Twitch preserves your original pause, mute and volume settings, including after a toggle reload. Already-open Twitch tabs show a reload action when their hooks differ from the saved setting.
+- The feature adds `scripting` and `https://www.twitch.tv/*` host permission for persistent MAIN-world registration at `document_start`. It adds no all-sites access, media-host privileges, telemetry or remote updater. Chrome 102+ is required.
+- Worker startup and YouTube coordination were checked in the integrated browser. Actual interruption efficacy, real HEVC fallback and Chrome Web Store acceptance remain unverified. VAFT still dynamically evaluates Twitch's player worker source in a Blob worker. Temporary alternate-playlist quality reductions are possible. See [source and adapter notes](vendor/vaft/README.md) and [verification checklist](docs/vaft-qa.md).
 
 
 ### Restoring Twitch
-- Click **Restore Twitch** to remove the YouTube player and unmute the original stream.
+- Click **Restore Twitch** to remove YouTube and restore the original Twitch pause, mute and volume settings.
 
 ## 📦 Installation (Developer Mode)
 
@@ -69,14 +77,14 @@ A Chrome extension that lets you overlay any YouTube livestream on top of a Twit
 
 ## Development
 
-Run the background-script tests and build the Chrome Web Store package with Node.js:
+Run the extension tests and build the package with Node.js:
 
 ```bash
 npm test
 npm run build
 ```
 
-The build writes a validated `release.zip` in the repository root.
+The build writes a validated `release.zip` in the repository root and checks that the bundled VAFT adapter matches its pinned, reviewed source. It does not publish or submit the feature. Regenerate the adapter offline with `node scripts/prepare-vaft.mjs` after reviewing any adapter change.
 
 ### GitHub Actions release pipeline
 
@@ -99,7 +107,7 @@ The publish script checks the currently published and submitted Chrome Web Store
 
 ## 📄 License
 
-MIT License. Free to use and modify.
+MIT License. Free to use and modify. Bundled VAFT retains the TwitchAdSolutions Contributors' [MIT license](vendor/vaft/LICENSE).
 
 ---
 

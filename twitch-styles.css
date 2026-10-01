@@ -16,7 +16,7 @@
     padding: 8px 12px;
     background: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: #dedee3;
     font-size: 13px;
     font-weight: 600;
@@ -43,10 +43,16 @@
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    width: 300px;
-    background: #18181b;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    width: 360px;
+    max-height: calc(100vh - 76px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #18161e;
+    border: 1px solid #37313f;
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
     z-index: 9999;
 }
 
@@ -59,8 +65,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 14px;
-    background: #0e0e10;
+    padding: 18px;
+    background: linear-gradient(115deg, #272033, #19161f);
     color: #efeff1;
     font-size: 13px;
     font-weight: 600;
@@ -70,29 +76,34 @@
     background: none;
     border: none;
     color: #adadb8;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     padding: 0;
     line-height: 1;
 }
 
 .ytot-close:hover {
     color: #fff;
+    background: #ffffff0d;
 }
 
 /* Dropdown Body */
 .ytot-dropdown-body {
     display: flex;
     gap: 8px;
-    padding: 12px 14px;
+    padding: 14px 18px;
 }
 
 #ytot-url {
     flex: 1;
-    padding: 10px 12px;
-    background: #0e0e10;
-    border: 1px solid #3a3a3d;
-    border-radius: 6px;
+    min-width: 0;
+    padding: 11px 12px;
+    background: #100e16;
+    border: 1px solid #40384c;
+    border-radius: 8px;
     color: #efeff1;
     font-size: 13px;
     outline: none;
@@ -103,14 +114,14 @@
 }
 
 #ytot-url::placeholder {
-    color: #636369;
+    color: #aaa2b6;
 }
 
 .ytot-go {
     padding: 10px 16px;
     background: #9147ff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     font-size: 13px;
     font-weight: 600;
@@ -124,16 +135,17 @@
 
 /* Options Section */
 .ytot-options {
-    padding: 8px 14px;
-    border-top: 1px solid #2f2f35;
+    padding: 16px 18px;
+    border-top: 1px solid #302936;
 }
 
 .ytot-option {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: #adadb8;
-    font-size: 12px;
+    gap: 12px;
+    padding: 10px 0;
+    color: #eee8f6;
+    font-size: 13px;
     cursor: pointer;
 }
 
@@ -142,13 +154,24 @@
 }
 
 .ytot-option input[type="checkbox"] {
-    accent-color: #9147ff;
+    appearance: none;
+    order: 2;
+    position: relative;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 21px;
+    margin: 0 0 0 auto;
+    border: 1px solid #655c72;
+    border-radius: 12px;
+    background: #39323f;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
 }
 
 .ytot-select {
-    background: #0e0e10;
-    border: 1px solid #3a3a3d;
-    border-radius: 4px;
+    background: #100e16;
+    border: 1px solid #40384c;
+    border-radius: 8px;
     color: #efeff1;
     font-size: 12px;
     padding: 4px 8px;
@@ -164,8 +187,8 @@
 .ytot-actions {
     display: flex;
     gap: 8px;
-    padding: 10px 14px;
-    border-top: 1px solid #2f2f35;
+    padding: 14px 18px;
+    border-top: 1px solid #302936;
 }
 
 .ytot-sync-now,
@@ -174,7 +197,7 @@
     flex: 1;
     padding: 8px 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -182,12 +205,12 @@
 }
 
 .ytot-sync-now {
-    background: #1f69ff;
+    background: #9147ff;
     color: white;
 }
 
 .ytot-sync-now:hover {
-    background: #0050e6;
+    background: #a66bff;
 }
 
 .ytot-restore {
@@ -202,7 +225,7 @@
 
 /* Status */
 .ytot-status {
-    padding: 0 14px 12px;
+    padding: 0 18px 14px;
     font-size: 11px;
     color: #adadb8;
     min-height: 14px;
@@ -213,7 +236,7 @@
 }
 
 .ytot-status-success {
-    color: #00c853;
+    color: #85dfb4;
 }
 
 .ytot-status-error {
@@ -221,15 +244,32 @@
 }
 
 .ytot-status-syncing {
-    color: #1f69ff;
+    color: #c6a0ff;
 }
 
 /* YouTube Player Wrapper */
 #ytot-youtube-wrapper {
-    position: absolute;
-    inset: 0;
-    z-index: 9999;
+    position: fixed;
+    z-index: 900;
     background: #000;
+}
+
+.ytot-vaft-status {
+    color: #adadb8;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 6px 0 0 14px;
+    position: relative;
+}
+
+.ytot-vaft-reload {
+    margin: 10px 0 0;
+    border: 1px solid #53535f;
+    border-radius: 8px;
+    background: #26262c;
+    color: #efeff1;
+    cursor: pointer;
+    padding: 5px 8px;
 }
 
 #ytot-youtube-player {
@@ -240,16 +280,16 @@
 
 /* Auto-Find Section */
 .ytot-autofind {
-    padding: 12px 14px;
-    border-bottom: 1px solid #2f2f35;
+    padding: 14px 18px;
+    border-bottom: 1px solid #302936;
 }
 
 .ytot-autofind-btn {
     width: 100%;
     padding: 10px 14px;
-    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    background: #9147ff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     font-size: 13px;
     font-weight: 600;
@@ -258,14 +298,13 @@
 }
 
 .ytot-autofind-btn:hover {
-    background: linear-gradient(135deg, #ff3333 0%, #dd0000 100%);
-    transform: translateY(-1px);
+    background: #a66bff;
 }
 
 .ytot-divider {
     text-align: center;
-    padding: 8px 14px;
-    color: #636369;
+    padding: 10px 18px 0;
+    color: #aaa2b6;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -273,7 +312,11 @@
 
 /* Search Results */
 .ytot-search-result {
-    padding: 0 14px 12px;
+    padding: 0;
+}
+
+.ytot-search-result:empty {
+    display: none;
 }
 
 .ytot-searching {
@@ -291,8 +334,9 @@
 }
 
 .ytot-result-card {
-    background: #1f1f23;
-    border-radius: 6px;
+    background: #241f2c;
+    border: 1px solid #40364f;
+    border-radius: 8px;
     padding: 10px;
     margin-top: 10px;
 }
@@ -326,9 +370,9 @@
 .ytot-result-use {
     width: 100%;
     padding: 8px;
-    background: #00c853;
+    background: #9147ff;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     color: white;
     font-size: 12px;
     font-weight: 600;
@@ -337,14 +381,14 @@
 }
 
 .ytot-result-use:hover {
-    background: #00a843;
+    background: #a66bff;
 }
 
 /* History Section */
 .ytot-history-section {
     display: none;
-    padding: 0 14px;
-    border-bottom: 1px solid #2f2f35;
+    padding: 0 18px;
+    border-bottom: 1px solid #302936;
 }
 
 .ytot-history-header {
@@ -365,7 +409,7 @@
     font-size: 10px;
     cursor: pointer;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: all 0.15s;
     text-transform: uppercase;
 }
@@ -386,8 +430,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.1s;
 }
@@ -424,7 +468,7 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.2s, transform 0.2s;
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -447,4 +491,140 @@
 
 .ytot-history-item.pinned:hover {
     background: rgba(145, 71, 255, 0.2);
+}
+
+/* Menu hierarchy and accessible switches */
+.ytot-dropdown *, .ytot-dropdown *::before, .ytot-dropdown *::after {
+    box-sizing: border-box;
+}
+
+.ytot-dropdown button, .ytot-dropdown input {
+    font-family: inherit;
+}
+
+.ytot-menu-title, .ytot-menu-subtitle, .ytot-option-title, .ytot-option-description {
+    display: block;
+}
+
+.ytot-menu-title {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -0.25px;
+}
+
+.ytot-menu-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #b4a8c5;
+}
+
+.ytot-section-label {
+    margin-bottom: 5px;
+    font-size: 10px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #b4a8c5;
+}
+
+.ytot-option-copy {
+    min-width: 0;
+}
+
+.ytot-option-title {
+    font-weight: 550;
+}
+
+.ytot-option-description {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #b4a8c5;
+}
+
+.ytot-option input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #f4effa;
+    transition: transform 0.15s;
+}
+
+.ytot-option input[type="checkbox"]:checked {
+    border-color: #a66bff;
+    background: #9147ff;
+}
+
+.ytot-option input[type="checkbox"]:checked::before {
+    transform: translateX(15px);
+}
+
+.ytot-option input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.ytot-vaft-card {
+    margin-top: 10px;
+    padding: 4px 12px 12px;
+    background: #221b2c;
+    border: 1px solid #443253;
+    border-radius: 10px;
+}
+
+.ytot-badge {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 5px;
+    border: 1px solid #6e4e8a;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.4px;
+    color: #d4b8f6;
+    vertical-align: 1px;
+}
+
+.ytot-vaft-status::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #a79bae;
+}
+
+.ytot-vaft-status[data-state="on"]::before { background: #85dfb4; }
+.ytot-vaft-status[data-state="pending"]::before { background: #c6a0ff; }
+.ytot-vaft-status[data-state="warning"]::before { background: #f4bd65; }
+.ytot-vaft-status[data-state="error"]::before { background: #ff8e8e; }
+
+.ytot-dropdown button:focus-visible, .ytot-dropdown input:focus-visible {
+    outline: 2px solid #bf94ff;
+    outline-offset: 3px;
+}
+
+.ytot-history-item:focus-within .ytot-pin-btn {
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .ytot-dropdown {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: 56px;
+        width: auto;
+        max-height: calc(100vh - 72px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #ytot-nav-wrapper * { transition: none; }
 }

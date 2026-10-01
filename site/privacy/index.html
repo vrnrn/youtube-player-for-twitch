@@ -18,16 +18,19 @@
     <main class="policy">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="lede">Last updated September 30, 2026</p>
+      <p class="lede">Last updated October 1, 2026</p>
       <p>This policy describes the YouTube Player for Twitch Chrome extension, this information site, and the separate workflow used by the maintainer to submit extension releases.</p>
 
       <h2>Information stored by the extension</h2>
       <p>The extension does not require an account. It stores its settings and playback state in Chrome’s extension-local storage on your device. This includes Auto-sync and quality preferences, remembered YouTube video IDs for Twitch channels, and the current active video ID for a channel.</p>
       <p>Recent-stream history can include a YouTube video ID, its title and channel name, the time it was added, and whether you pinned it. The history list can be cleared from the extension. The extension’s local storage is cleared when the extension is removed. When you enable Force Highest Quality, the extension also reads and updates Twitch’s local video-quality preference in your browser.</p>
+      <p>The optional experimental VAFT interruption-blocking preference is also stored locally and defaults to off. While YouTube is active, the extension remembers the original Twitch pause, mute and volume settings for that channel so it can restore them after a page reload or player replacement.</p>
 
       <h2>Requests to YouTube and Twitch</h2>
       <p>When you search for a stream, the extension reads the current Twitch channel name and, when available, the YouTube channel link shown on that Twitch page. It requests YouTube search results, public channel-stream information, or video-page details as needed. The search term, linked channel URL, and selected video ID may be included in those requests. Playback loads the selected video using YouTube’s embedded player.</p>
       <p>These requests go from your browser to YouTube; the extension does not proxy them through a developer-operated server. YouTube may receive ordinary request information and process it under <a href="https://policies.google.com/privacy">Google’s Privacy Policy</a> and <a href="https://www.youtube.com/howyoutubeworks/user-settings/privacy/">YouTube’s privacy information</a>. Twitch also processes your use of Twitch under its <a href="https://www.twitch.tv/p/en/legal/privacy-notice/">Privacy Notice</a>.</p>
+      <p>If you enable experimental VAFT interruption blocking, the bundled TwitchAdSolutions algorithm filters Twitch advertising segments and requests alternate Twitch playback tokens and playlists through your browser’s existing Twitch player context. It may use Twitch’s ordinary client, device, session, authorization and integrity headers for requests to Twitch’s GraphQL endpoint; these values are not sent to the developer or stored in extension history. It also handles Twitch media playlists and segments on Twitch’s video-delivery domains. It reads Twitch’s player-worker source in the page context and runs it in a locally created worker with playlist hooks. There is no runtime download of VAFT updates, developer proxy or telemetry. VAFT does not run in the YouTube iframe or on YouTube pages.</p>
+      <p>To register these optional hooks before Twitch’s player starts, the extension requests Chrome’s scripting permission and host access only to <code>https://www.twitch.tv/*</code>, in addition to its existing YouTube access. Changing the preference reloads Twitch. Other open Twitch tabs need a reload to apply the change.</p>
 
       <h2>Sharing by the extension</h2>
       <p>The extension does not send its locally stored settings, playback state, or stream history to the developer. The current extension source contains no developer analytics, advertising, or telemetry service.</p>
@@ -41,6 +44,7 @@
 
       <h2>Your choices</h2>
       <p>You can clear the extension’s recent-stream history from its menu. Removing the extension clears its extension-local storage. You can also choose whether to use YouTube or Twitch features and review the privacy controls offered by those services.</p>
+      <p>You can turn VAFT interruption blocking off in the YouTube menu; after the Twitch page reloads, its integrated hooks are removed. If you already use a Tampermonkey VAFT userscript, disable that individual script before enabling the integrated option so two installations do not compete. The extension does not change other extensions or userscripts.</p>
 
       <h2>Contact</h2>
       <p>For questions about this policy or the extension, contact <a href="mailto:ypftsupport@vrnrn.com">ypftsupport@vrnrn.com</a>.</p>

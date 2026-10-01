@@ -48,7 +48,6 @@
     const state = {
         initialized: false,
         youtubeVideoId: null,
-        twitchVideo: null,
         autoSyncEnabled: false,
         syncIntervalId: null,
         isSyncing: false,
@@ -112,14 +111,17 @@
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube">
+            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube" aria-haspopup="true" aria-expanded="false" aria-controls="ytot-dropdown">
                 <span class="ytot-icon">▶</span>
                 <span class="ytot-label">YouTube</span>
             </button>
             
             <div class="ytot-dropdown" id="ytot-dropdown">
                 <div class="ytot-dropdown-header">
-                    <span>Watch YouTube Stream</span>
+                    <div>
+                        <span class="ytot-menu-title">YouTube on Twitch</span>
+                        <span class="ytot-menu-subtitle">Your stream, with Twitch chat</span>
+                    </div>
                     <button class="ytot-close" id="ytot-close" aria-label="Close">×</button>
                 </div>
                 
@@ -142,14 +144,23 @@
                 
                 <!-- Options -->
                 <div class="ytot-options">
+                    <div class="ytot-section-label">Playback settings</div>
                     <label class="ytot-option">
-                        <input type="checkbox" id="ytot-autosync" />
-                        <span>Auto-sync (catch up every 10 min)</span>
+                        <input type="checkbox" role="switch" id="ytot-autosync" />
+                        <span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up every 10 minutes</span></span>
                     </label>
                     <label class="ytot-option">
-                        <input type="checkbox" id="ytot-quality" />
-                        <span>Force Highest Quality (Source)</span>
+                        <input type="checkbox" role="switch" id="ytot-quality" />
+                        <span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep Twitch set to Source</span></span>
                     </label>
+                    <div class="ytot-vaft-card">
+                        <label class="ytot-option">
+                            <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
+                            <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span><span class="ytot-option-description">VAFT · Twitch only · reloads Twitch when changed</span></span>
+                        </label>
+                        <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking VAFT setting…</div>
+                        <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
+                    </div>
                 </div>
                 
                 <!-- Actions -->
@@ -165,6 +176,72 @@
     }
 
     const uiCache = {};
+    let vaftEnabled = null;
+    let vaftBusy = false;
+    let vaftPending = null;
+    let vaftError = '';
+
+    function renderVaftSetting() {
+        const checkbox = document.getElementById('ytot-vaft');
+        const status = document.getElementById('ytot-vaft-status');
+        if (!checkbox || !status) return;
+        checkbox.disabled = vaftBusy || vaftEnabled === null;
+        checkbox.checked = vaftBusy && vaftPending !== null ? vaftPending : vaftEnabled === true;
+        const running = document.documentElement.getAttribute('data-ypft-vaft');
+        if (vaftError) status.textContent = vaftError;
+        else if (vaftBusy) status.textContent = 'Saving VAFT setting… Twitch will reload.';
+        else if (vaftEnabled === null) status.textContent = 'Checking VAFT setting…';
+        else if (!vaftEnabled) status.textContent = running ? 'Off for new pages. Reload this Twitch tab to remove its hooks.' : 'Off. Enabling reloads Twitch. Disable the Tampermonkey VAFT script first.';
+        else if (running === 'conflict') status.textContent = 'Another VAFT or Worker hook was found; integrated VAFT skipped. Disable the Tampermonkey VAFT script, then reload Twitch.';
+        else if (running === 'error') status.textContent = 'VAFT failed on this page. Turn it off to reload Twitch without VAFT.';
+        else if (running === 'worker-ready') status.textContent = 'On for Twitch. Interruption blocking is best effort.';
+        else if (running === 'hooks-ready') status.textContent = 'On. Waiting for Twitch playback.';
+        else status.textContent = 'On for new pages. Reload this Twitch tab to start VAFT.';
+        status.dataset.state = vaftError || running === 'error' ? 'error' :
+            running === 'conflict' ? 'warning' : vaftBusy ? 'pending' : vaftEnabled ? 'on' : 'off';
+        const needsReload = !vaftBusy && (vaftError || (vaftEnabled !== null &&
+            (vaftEnabled ? !running || running === 'conflict' || running === 'error' : !!running)));
+        const reload = document.getElementById('ytot-vaft-reload');
+        reload.hidden = !needsReload;
+        reload.textContent = vaftError ? 'Reload Twitch to retry' : 'Reload Twitch to apply';
+    }
+
+    async function loadVaftSetting() {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'GET_VAFT_SETTINGS' });
+            if (!response || response.error) throw new Error(response?.error || 'Could not read VAFT setting.');
+            vaftEnabled = response.enabled;
+            vaftError = '';
+        } catch (error) { vaftError = `${error.message} Reload Twitch to retry.`; }
+        renderVaftSetting();
+    }
+
+    async function changeVaftSetting(enabled) {
+        if (vaftBusy) return;
+        vaftBusy = true;
+        vaftPending = enabled;
+        vaftError = '';
+        renderVaftSetting();
+        try {
+            if (state.youtubeVideoId) await chrome.storage.local.set({
+                [`ytot_active_${getTwitchChannel()}`]: state.youtubeVideoId,
+                [`ytot_playback_${getTwitchChannel()}`]: window.__ypftPlayback.snapshot()
+            });
+            const response = await chrome.runtime.sendMessage({ type: 'SET_VAFT_SETTINGS', enabled });
+            if (!response || response.error || response.enabled !== enabled || response.registered !== enabled) {
+                throw new Error(response?.error || 'VAFT registration was not confirmed.');
+            }
+            vaftEnabled = enabled;
+            const status = document.getElementById('ytot-vaft-status');
+            if (status) status.textContent = 'Saved. Reloading Twitch…';
+            location.reload();
+        } catch (error) {
+            vaftBusy = false;
+            vaftPending = null;
+            vaftError = `VAFT change failed: ${error.message}`;
+            renderVaftSetting();
+        }
+    }
 
     function refreshDOMCache() {
         const toggle = document.getElementById('ytot-toggle');
@@ -210,6 +287,7 @@
 
     function closeDropdown() {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
+        document.getElementById('ytot-toggle')?.setAttribute('aria-expanded', 'false');
     }
 
     /**
@@ -499,33 +577,11 @@
     // =====================
 
     /**
-     * Pauses and mutes the Twitch player
-     */
-    function pauseTwitch() {
-        const video = document.querySelector('video');
-        if (video) {
-            video.pause();
-            video.muted = true;
-            state.twitchVideo = video;
-        }
-    }
-
-    /**
-     * Resumes the Twitch player
-     */
-    function resumeTwitch() {
-        if (state.twitchVideo) {
-            state.twitchVideo.muted = false;
-            state.twitchVideo.play().catch(() => { });
-        }
-    }
-
-    /**
      * Injects YouTube iframe over the Twitch player
      * @param {string} videoId 
      * @param {object} metadata Optional metadata { title, channel }
      */
-    function injectYouTube(videoId, metadata = null) {
+    function injectYouTube(videoId, metadata = null, restoredPlayback = null) {
         if (!videoId) return;
 
         // Update History
@@ -548,14 +604,12 @@
         }
 
         // Try multiple selectors to support Twitch layout changes
-        const container = document.querySelector('[data-a-target="video-player-layout"], .video-player__container, .video-player');
+        const container = window.__ypftPlayback.container();
 
         if (!container) {
             updateStatus('Error: Player not found', 'error');
             return;
         }
-
-        pauseTwitch();
 
         // Cleanup existing
         document.getElementById('ytot-youtube-wrapper')?.remove();
@@ -571,14 +625,17 @@
         iframe.setAttribute('allowfullscreen', 'true');
 
         wrapper.appendChild(iframe);
-        container.style.position = 'relative';
-        container.appendChild(wrapper);
+        // A stable portal avoids reloading the YouTube iframe when React replaces
+        // Twitch's player. Ownership is published before mounting the iframe.
+        window.__ypftPlayback.own(wrapper, restoredPlayback);
+        document.body.appendChild(wrapper);
 
         // Update state
         state.youtubeVideoId = videoId;
         const channel = getTwitchChannel();
         saveState(`ytot_${channel}`, videoId);
         saveState(`ytot_active_${channel}`, videoId); // Mark as active for persistence
+        saveState(`ytot_playback_${channel}`, window.__ypftPlayback.snapshot());
 
         // UI Updates
         updateToggleButton(true);
@@ -598,7 +655,7 @@
      */
     function removeYouTube(keepState = false) {
         document.getElementById('ytot-youtube-wrapper')?.remove();
-        resumeTwitch();
+        window.__ypftPlayback.release({ navigation: keepState });
         stopAutoSync();
 
         state.youtubeVideoId = null;
@@ -608,6 +665,7 @@
         // Clean up active state only if user explicitly requested removal
         if (!keepState) {
             saveState(`ytot_active_${getTwitchChannel()}`, null);
+            saveState(`ytot_playback_${getTwitchChannel()}`, null);
         }
     }
 
@@ -761,7 +819,10 @@
         const autoFindBtn = document.getElementById('ytot-autofind');
 
         autoFindBtn.onclick = handleAutoFind;
-        toggle.onclick = () => dropdown.classList.toggle('visible');
+        toggle.onclick = () => {
+            const visible = dropdown.classList.toggle('visible');
+            toggle.setAttribute('aria-expanded', String(visible));
+        };
         close.onclick = closeDropdown;
 
         const handleGo = () => {
@@ -795,9 +856,13 @@
                 stopQualityEnforcement();
             }
         };
+        document.getElementById('ytot-vaft').onchange = e => changeVaftSetting(e.target.checked);
+        document.getElementById('ytot-vaft-reload').onclick = () => location.reload();
+        loadVaftSetting();
     }
 
     let spawnAttempts = 0;
+    let initGeneration = 0;
 
     async function init() {
         if (state.initialized) return;
@@ -807,6 +872,9 @@
             document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
 
         if (!leftNav) return;
+        state.initialized = true;
+        const generation = ++initGeneration;
+        const channel = getTwitchChannel();
 
         // Clean up any stale elements
         document.getElementById('ytot-nav-wrapper')?.remove();
@@ -816,13 +884,15 @@
         refreshDOMCache();
 
         // Restore Settings
-        const savedAutoSync = await loadState('ytot_autosync');
+        const [savedAutoSync, savedForceHighest] = await Promise.all([
+            loadState('ytot_autosync'), loadState('ytot_force_highest')
+        ]);
+        if (generation !== initGeneration || channel !== getTwitchChannel()) return;
         if (savedAutoSync) {
             state.autoSyncEnabled = true;
             document.getElementById('ytot-autosync').checked = true;
         }
 
-        const savedForceHighest = await loadState('ytot_force_highest');
         if (savedForceHighest) {
             state.forceHighestQuality = true;
             const qualityCheckbox = document.getElementById('ytot-quality');
@@ -833,14 +903,21 @@
         renderHistory();
 
         // Restore Active Stream or Last Used
-        const channel = getTwitchChannel();
         if (channel) {
-            const activeStream = await loadState(`ytot_active_${channel}`);
+            const [activeStream, savedVideoId, restoredPlayback] = await Promise.all([
+                loadState(`ytot_active_${channel}`), loadState(`ytot_${channel}`), loadState(`ytot_playback_${channel}`)
+            ]);
+            if (generation !== initGeneration || channel !== getTwitchChannel()) return;
             if (activeStream) {
                 Logger.log('Restoring active stream:', activeStream);
-                injectYouTube(activeStream);
+                const restoreWhenReady = (attempt = 0) => {
+                    if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId) return;
+                    if (window.__ypftPlayback.container()) injectYouTube(activeStream, null, restoredPlayback);
+                    else if (attempt < 40) setTimeout(() => restoreWhenReady(attempt + 1), 250);
+                    else updateStatus('Twitch player was not ready. Reopen your saved YouTube stream.', 'error');
+                };
+                restoreWhenReady();
             } else {
-                const savedVideoId = await loadState(`ytot_${channel}`);
                 if (savedVideoId) {
                     const urlInput = document.getElementById('ytot-url');
                     if (urlInput) {
@@ -880,6 +957,7 @@
 
             // Navigate away: clear UI but keep state
             removeYouTube(true);
+            initGeneration++;
             state.initialized = false;
             state.youtubeVideoId = null;
             spawnAttempts = 0;
@@ -899,7 +977,25 @@
     }
 
     // Backup interval (slower check for robustness)
-    setInterval(handleNavigation, 2000);
+    new MutationObserver(renderVaftSetting).observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-ypft-vaft']
+    });
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.ytot_vaft_enabled && !vaftBusy) {
+            vaftEnabled = changes.ytot_vaft_enabled.newValue === true;
+            vaftError = '';
+            renderVaftSetting();
+        }
+    });
+
+    setInterval(() => {
+        handleNavigation();
+        if (state.initialized && !document.getElementById('ytot-nav-wrapper')) {
+            state.initialized = false;
+            spawnAttempts = 0;
+            check();
+        }
+    }, 2000);
 
     setupGlobalListeners();
     setTimeout(check, 1000);
