@@ -46,7 +46,7 @@ test('menu explains opt-in reload and uses interruption-blocking terminology', (
     const menu = f.api.createNavButton().innerHTML;
     assert.match(menu, /Interruption blocking/);
     assert.match(menu, /ytot-badge">Experimental/);
-    assert.match(menu, /reloads Twitch when changed/);
+    assert.match(menu, /Reload Twitch to apply/);
     assert.match(menu, /id="ytot-vaft" disabled/);
     assert.doesNotMatch(menu, /ad blocking/i);
 });

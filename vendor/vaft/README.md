@@ -76,9 +76,8 @@ Upstream's alternative tokens can reduce quality during advertising interruption
 including HEVC/HVC1 fallback to AVC where available. Twitch changes can break this
 pinned implementation. When it fails, turn the option off and reload Twitch.
 
-Before enabling, disable **only** the TwitchAdSolutions (vaft) script in your
-Tampermonkey dashboard, then reload Twitch. Do not disable Tampermonkey or unrelated
-scripts/extensions. Existing scripts that load after YPFT may independently
+Before enabling, disable **only** any other TwitchAdSolutions (vaft) installation,
+then reload Twitch. Leave unrelated scripts/extensions enabled. Existing scripts that load after YPFT may independently
 replace hooks; the integration cannot control their lifecycle. Test with exactly
 one VAFT installation enabled.
 

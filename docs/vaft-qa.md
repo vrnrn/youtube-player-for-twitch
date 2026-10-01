@@ -21,7 +21,7 @@ not against live Twitch advertisements. They cover:
 - Quality changes written by isolated YPFT remain visible to VAFT's MAIN-world
   localStorage wrapper; unrelated saved quality fields survive enforcement.
 
-## Recorded verification — October 1, 2026
+## Recorded verification — September 30, 2026
 
 `npm test`: **38 tests passed**. Pinned-source/adapter verification and release
 ZIP integrity passed. These fixtures do not establish live interruption efficacy.
@@ -54,7 +54,7 @@ tab in the same integrated browser completed the menu and fullscreen checks.
 ## Required live checks before release
 
 Use the **integrated/in-app browser only**. Load the unpacked reviewed build,
-disable the Tampermonkey VAFT userscript (leave other scripts enabled), and reload
+disable any other VAFT userscript (leave other scripts enabled), and reload
 Twitch. The automation tool cannot open `chrome://extensions` because its URL policy
 allows HTTP(S) pages only; the user can perform the Load unpacked step in the
 integrated browser. An isolated UI fixture can verify menu/layout interactions,
@@ -83,13 +83,13 @@ results without tokens/cookies. Verify:
    enforcement on/off; Source/HEVC 2K/4K paths and temporary AVC backup quality.
 7. YouTube-only page and embedded YouTube player: no VAFT registration/hooks; normal
    network/player API behavior, sync, fullscreen, theater layout and chat interaction.
-8. Existing Tampermonkey VAFT: conflict reported if it loads first; only one hook
+8. Existing VAFT userscript: conflict reported if it loads first; only one hook
    installation. Disable its VAFT entry before efficacy tests, then reload.
 
 Still required before release: actual advertising interruption efficacy and
 transition/recovery behavior, real HEVC/HVC1 playback and fallback quality,
 focus/background transitions, browser restart and live extension-update
 reconciliation, genuine Twitch player/container recreation, and live duplicate
-Tampermonkey ordering. Lifecycle and recovery fixtures cover the corresponding
+userscript ordering. Lifecycle and recovery fixtures cover the corresponding
 logic but cannot replace these checks. Chrome Web Store acceptance remains
 unverified; review dynamic Twitch worker evaluation before publication.

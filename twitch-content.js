@@ -156,9 +156,9 @@
                     <div class="ytot-vaft-card">
                         <label class="ytot-option">
                             <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
-                            <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span><span class="ytot-option-description">VAFT · Twitch only · reloads Twitch when changed</span></span>
+                            <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span></span>
                         </label>
-                        <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking VAFT setting…</div>
+                        <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
                         <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
                     </div>
                 </div>
@@ -189,14 +189,14 @@
         checkbox.checked = vaftBusy && vaftPending !== null ? vaftPending : vaftEnabled === true;
         const running = document.documentElement.getAttribute('data-ypft-vaft');
         if (vaftError) status.textContent = vaftError;
-        else if (vaftBusy) status.textContent = 'Saving VAFT setting… Twitch will reload.';
-        else if (vaftEnabled === null) status.textContent = 'Checking VAFT setting…';
-        else if (!vaftEnabled) status.textContent = running ? 'Off for new pages. Reload this Twitch tab to remove its hooks.' : 'Off. Enabling reloads Twitch. Disable the Tampermonkey VAFT script first.';
-        else if (running === 'conflict') status.textContent = 'Another VAFT or Worker hook was found; integrated VAFT skipped. Disable the Tampermonkey VAFT script, then reload Twitch.';
-        else if (running === 'error') status.textContent = 'VAFT failed on this page. Turn it off to reload Twitch without VAFT.';
-        else if (running === 'worker-ready') status.textContent = 'On for Twitch. Interruption blocking is best effort.';
-        else if (running === 'hooks-ready') status.textContent = 'On. Waiting for Twitch playback.';
-        else status.textContent = 'On for new pages. Reload this Twitch tab to start VAFT.';
+        else if (vaftBusy) status.textContent = 'Saving… Twitch will reload.';
+        else if (vaftEnabled === null) status.textContent = 'Checking setting…';
+        else if (!vaftEnabled) status.textContent = running ? 'Off · reload to apply.' : 'Off · changes reload Twitch.';
+        else if (running === 'conflict') status.textContent = 'Another playback hook detected.';
+        else if (running === 'error') status.textContent = 'Could not start. Turn off to retry.';
+        else if (running === 'worker-ready') status.textContent = 'On · changes reload Twitch.';
+        else if (running === 'hooks-ready') status.textContent = 'On · waiting for Twitch.';
+        else status.textContent = 'On · reload to apply.';
         status.dataset.state = vaftError || running === 'error' ? 'error' :
             running === 'conflict' ? 'warning' : vaftBusy ? 'pending' : vaftEnabled ? 'on' : 'off';
         const needsReload = !vaftBusy && (vaftError || (vaftEnabled !== null &&
