@@ -1,39 +1,730 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="YouTube Player for Twitch finds YouTube livestreams linked from Twitch channels so you can watch with Twitch chat.">
-    <title>YouTube Player for Twitch</title>
-    <link rel="stylesheet" href="/style.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0b10" />
+    <meta
+      name="description"
+      content="Your video on YouTube. Your people on Twitch. A free, open-source Chrome extension for watching YouTube livestreams inside Twitch, with stream discovery and floating chat."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="YouTube Player for Twitch — Your stream. Your community."
+    />
+    <meta
+      property="og:description"
+      content="Watch YouTube livestreams without leaving your Twitch community. Free and open source, with floating chat, stream discovery, and live catch-up."
+    />
+    <meta
+      property="og:url"
+      content="https://youtube-player-for-twitch.vrnrn.com/"
+    />
+    <meta
+      property="og:image"
+      content="https://youtube-player-for-twitch.vrnrn.com/assets/social-preview.jpg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://youtube-player-for-twitch.vrnrn.com/" />
+    <link rel="icon" href="/assets/mark.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="/assets/manrope-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/site.js" defer></script>
+    <title>YouTube Player for Twitch — Your stream. Your community.</title>
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <svg
+      class="symbol-library"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M5 12h14m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="i-play" viewBox="0 0 24 24">
+          <path d="m9 5 11 7-11 7Z" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24">
+          <path d="M4 4h16v12h-9l-6 4v-4H4Z" />
+          <path d="M8 9h8m-8 3h5" />
+        </symbol>
+        <symbol id="i-expand" viewBox="0 0 24 24">
+          <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />
+        </symbol>
+        <symbol id="i-sync" viewBox="0 0 24 24">
+          <path
+            d="M20 10a8 8 0 0 0-14-5L3 8m0-5v5h5m-4 6a8 8 0 0 0 14 5l3-3m0 5v-5h-5"
+          />
+        </symbol>
+        <symbol id="i-bookmark" viewBox="0 0 24 24">
+          <path d="M6 4h12v17l-6-4-6 4Z" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6" />
+        </symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24">
+          <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z" />
+          <path d="m8 12 3 3 5-6" />
+        </symbol>
+        <symbol id="i-code" viewBox="0 0 24 24">
+          <path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18" />
+        </symbol>
+        <symbol id="i-volume" viewBox="0 0 24 24">
+          <path
+            d="M3 9v6h4l5 4V5L7 9Zm13-1a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"
+          />
+        </symbol>
+        <symbol id="i-chrome" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 8h9M8.5 14 4 6m10 9-4 7" />
+        </symbol>
+        <symbol id="i-github" viewBox="0 0 24 24">
+          <path
+            d="M9 19c-4 1-4-2-6-2m12 5v-4c0-1-.3-2-1-2.5 3-.4 6-1.5 6-6a5 5 0 0 0-1.5-3.5A5 5 0 0 0 18.4 2S17 1.6 14 3a13 13 0 0 0-6 0C5 1.6 3.6 2 3.6 2a5 5 0 0 0-.1 4A5 5 0 0 0 2 9.5c0 4.5 3 5.6 6 6-.7.5-1 1.5-1 2.5v4"
+          />
+        </symbol>
+      </defs>
+    </svg>
+
     <header class="site-header">
-      <a class="wordmark" href="/">YouTube Player for Twitch</a>
-      <nav aria-label="Main navigation">
-        <a href="/privacy/">Privacy</a>
-      </nav>
+      <div class="header-inner">
+        <a class="wordmark" href="/" aria-label="YouTube Player for Twitch home"
+          ><img src="/assets/mark.svg" alt="" width="36" height="36" /><span
+            >YouTube Player<span class="wordmark-sub">for Twitch</span></span
+          ></a
+        >
+        <nav aria-label="Main navigation">
+          <a href="#features">Features</a
+          ><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a
+          ><a
+            class="nav-github"
+            href="https://github.com/vrnrn/youtube-player-for-twitch"
+            aria-label="Source code on GitHub"
+            ><svg class="icon" aria-hidden="true"><use href="#i-github" /></svg
+          ></a>
+        </nav>
+        <a
+          class="button button-small button-outline nav-install"
+          href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"
+          >Add to Chrome
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg
+        ></a>
+      </div>
     </header>
 
-    <main class="hero">
-      <p class="eyebrow">Chrome extension</p>
-      <h1>Watch YouTube livestreams with Twitch chat.</h1>
-      <p class="lede">Find a streamer’s linked YouTube channel first, then fall back to a YouTube search by Twitch channel name. Play the stream alongside Twitch chat and controls.</p>
-      <div class="actions">
-        <a class="button" href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad">Chrome Web Store</a>
-        <a class="text-link" href="https://github.com/vrnrn/youtube-player-for-twitch">Source code on GitHub</a>
-      </div>
-      <section class="details" aria-labelledby="about-title">
-        <h2 id="about-title">About the extension</h2>
-        <p>YouTube Player for Twitch adds a YouTube player to Twitch channel pages. It can look for live streams on the channel’s linked YouTube page, search by channel name when needed, and remember recent streams and playback preferences in Chrome.</p>
-        <p>The extension is developed and maintained by Varun Rana. This site provides app information and the extension’s <a href="/privacy/">Privacy Policy</a>.</p>
+    <main id="main">
+      <section class="hero section-shell" aria-labelledby="hero-title">
+        <p class="hero-kicker">
+          <span class="status-dot"></span> TWO PLATFORMS. ONE PLACE.
+        </p>
+        <h1 id="hero-title">
+          Your video on YouTube.<br /><span>Your people on Twitch.</span>
+        </h1>
+        <p class="hero-description">
+          Watch the YouTube stream. Keep the Twitch chat.<br />A little
+          extension that brings your favorites together.
+        </p>
+        <div class="actions hero-actions">
+          <a
+            class="button button-primary"
+            href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"
+            ><svg class="icon" aria-hidden="true"><use href="#i-chrome" /></svg>
+            Add to Chrome
+            <svg class="icon button-arrow" aria-hidden="true">
+              <use href="#i-arrow" /></svg></a
+          ><a class="button button-quiet" href="#demo"
+            ><svg class="icon" aria-hidden="true"><use href="#i-play" /></svg>
+            See how it works</a
+          >
+        </div>
+        <p class="hero-facts">
+          <span>Free to use</span><span>Open source</span
+          ><span>No extra account</span>
+        </p>
+        <figure class="demo" id="demo">
+          <div class="demo-toolbar" hidden>
+            <span class="demo-label"
+              ><span class="status-dot"></span> TRY THE VIEW</span
+            >
+            <div
+              class="demo-switch"
+              role="group"
+              aria-label="Illustrated player layout"
+            >
+              <button type="button" data-layout="side" aria-pressed="true">
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-chat" />
+                </svg>
+                Twitch chat</button
+              ><button
+                type="button"
+                data-layout="floating"
+                aria-pressed="false"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-expand" />
+                </svg>
+                Fullscreen + chat
+              </button>
+            </div>
+          </div>
+          <div class="browser-window" data-demo-window>
+            <div class="browser-chrome" aria-hidden="true">
+              <span class="window-dots"><i></i><i></i><i></i></span
+              ><span class="browser-address"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-shield" />
+                </svg>
+                twitch.tv / your-favorite-streamer</span
+              ><span class="browser-more">···</span>
+            </div>
+            <div class="mock-navigation" aria-hidden="true">
+              <span class="mock-twitch"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-chat" />
+                </svg>
+                <b>Browse</b><span>Following</span></span
+              ><span class="extension-pill"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-play" />
+                </svg>
+                YouTube <span class="status-dot"></span> Live</span
+              >
+            </div>
+            <div class="stream-layout" aria-hidden="true">
+              <div class="mock-video">
+                <img
+                  class="stream-art"
+                  src="/assets/adventure-stream.jpg"
+                  alt=""
+                  width="1400"
+                  height="788"
+                  fetchpriority="high"
+                />
+                <div class="video-topline">
+                  <span class="live-badge">LIVE</span
+                  ><span class="youtube-badge"
+                    ><svg class="icon" aria-hidden="true">
+                      <use href="#i-play" />
+                    </svg>
+                    Playing on YouTube</span
+                  >
+                </div>
+                <div class="floating-chat">
+                  <div class="floating-chat-title">
+                    <svg class="icon" aria-hidden="true">
+                      <use href="#i-chat" />
+                    </svg>
+                    Twitch chat <span>···</span>
+                  </div>
+                  <p>
+                    <b class="chat-purple">pixelpilot</b> this view is unreal
+                  </p>
+                  <p><b class="chat-green">mossy</b> we made it 🌿</p>
+                  <p><b class="chat-orange">lunar</b> chat never left 💜</p>
+                  <p><b class="chat-blue">riverstone</b> one more adventure?</p>
+                </div>
+                <div class="video-controls">
+                  <span class="pause-symbol">Ⅱ</span
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="#i-volume" /></svg
+                  ><span class="live-indicator"><span></span> LIVE</span
+                  ><span class="video-control-spacer"></span
+                  ><span class="quality-label">HD</span
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="#i-expand" />
+                  </svg>
+                </div>
+                <div class="video-progress"></div>
+              </div>
+              <div class="channel-chat">
+                <div class="chat-heading">
+                  <svg class="icon" aria-hidden="true">
+                    <use href="#i-chat" />
+                  </svg>
+                  STREAM CHAT <span>⌄</span>
+                </div>
+                <div class="chat-messages">
+                  <p>
+                    <b class="chat-purple">pixelpilot</b
+                    ><span>this view is unreal</span>
+                  </p>
+                  <p>
+                    <b class="chat-green">mossy</b><span>we made it 🌿</span>
+                  </p>
+                  <p>
+                    <b class="chat-orange">lunar</b><span>the colors!!</span>
+                  </p>
+                  <p>
+                    <b class="chat-blue">riverstone</b
+                    ><span>one more adventure?</span>
+                  </p>
+                  <p>
+                    <b class="chat-pink">softglow</b
+                    ><span>YouTube video + this chat 💜</span>
+                  </p>
+                  <p>
+                    <b class="chat-green">mossy</b
+                    ><span>best of both worlds</span>
+                  </p>
+                  <p>
+                    <b class="chat-purple">pixelpilot</b
+                    ><span>let’s keep going ✨</span>
+                  </p>
+                </div>
+                <div class="chat-compose">
+                  <span>Send a message</span><span class="chat-send">Chat</span>
+                </div>
+              </div>
+            </div>
+            <div class="stream-footer" aria-hidden="true">
+              <span class="stream-avatar">p</span>
+              <div>
+                <b
+                  >your-favorite-streamer
+                  <span class="verified-mark">✓</span></b
+                ><span>A new world, the same community.</span>
+              </div>
+              <span class="stream-footer-tag"
+                >YouTube video. Twitch energy.</span
+              >
+            </div>
+          </div>
+          <figcaption>
+            <span data-demo-caption role="status"
+              >YouTube handles the stream. Twitch keeps the conversation.</span
+            ><span class="illustration-note"
+              >Illustrated preview · sample stream and chat</span
+            >
+          </figcaption>
+        </figure>
+        <div class="benefit-strip">
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-play" /></svg
+            ><span>YouTube’s player</span>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-chat" /></svg
+            ><span>Twitch’s community</span>
+          </div>
+          <div>
+            <svg class="icon" aria-hidden="true"><use href="#i-check" /></svg
+            ><span>One browser tab</span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="features section-shell"
+        id="features"
+        aria-labelledby="features-title"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">A BETTER WAY TO WATCH</p>
+            <h2 id="features-title">
+              The stream you want.<br />The chat you love.
+            </h2>
+          </div>
+          <p>
+            Some things are better together. Keep your Twitch channel, chat,
+            badges, and channel points while YouTube takes care of the video.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card discovery-card">
+            <div class="feature-copy">
+              <span class="feature-icon"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-search" /></svg
+              ></span>
+              <h3>Find the stream. Skip the search.</h3>
+              <p>
+                Checks the streamer’s linked YouTube channel first, then
+                searches by Twitch name. Or paste a link and go.
+              </p>
+            </div>
+            <div class="discovery-preview" aria-hidden="true">
+              <div class="mini-window-title">
+                <img src="/assets/mark.svg" alt="" width="22" height="22" />
+                YouTube on Twitch <span>×</span>
+              </div>
+              <div class="find-stream-preview">
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-search" />
+                </svg>
+                Find YouTube Stream <span>↗</span>
+              </div>
+              <div class="found-stream">
+                <img
+                  src="/assets/adventure-stream.jpg"
+                  alt=""
+                  width="94"
+                  height="64"
+                  loading="lazy"
+                />
+                <div>
+                  <span class="found-label"
+                    ><span class="status-dot"></span> LIVE STREAM FOUND</span
+                  ><b>A new world, the same community</b
+                  ><span>From the linked YouTube channel</span>
+                </div>
+              </div>
+              <div class="use-stream-preview">
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-play" />
+                </svg>
+                Use This Stream
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-arrow" />
+                </svg>
+              </div>
+            </div>
+          </article>
+          <article class="feature-card floating-card">
+            <div class="feature-copy">
+              <span class="feature-icon"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-chat" /></svg
+              ></span>
+              <h3>Go fullscreen. Bring chat along.</h3>
+              <p>
+                Keep the reactions in view with optional floating chat. Move it,
+                resize it, and make it feel like yours.
+              </p>
+            </div>
+            <div class="floating-preview" aria-hidden="true">
+              <img
+                src="/assets/adventure-stream.jpg"
+                alt=""
+                width="1400"
+                height="788"
+                loading="lazy"
+              />
+              <div class="floating-preview-chat">
+                <span
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="#i-chat" />
+                  </svg>
+                  Twitch chat</span
+                >
+                <p><b class="chat-purple">pixelpilot</b> this view is unreal</p>
+                <p><b class="chat-green">mossy</b> we made it 🌿</p>
+                <p><b class="chat-orange">lunar</b> chat never left 💜</p>
+              </div>
+              <span class="preview-fullscreen"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#i-expand" /></svg
+              ></span>
+            </div>
+          </article>
+        </div>
+        <div class="small-features">
+          <article>
+            <svg class="icon" aria-hidden="true"><use href="#i-sync" /></svg>
+            <h3>A little closer to live.</h3>
+            <p>
+              Catch up with Sync Now, or let auto-sync do it every 10 minutes.
+              Less delay, more of the moment.
+            </p>
+          </article>
+          <article>
+            <svg class="icon" aria-hidden="true">
+              <use href="#i-bookmark" />
+            </svg>
+            <h3>Your favorites, remembered.</h3>
+            <p>
+              Pick up after a reload, revisit recent streams, and pin the ones
+              you keep coming back to.
+            </p>
+          </article>
+          <article>
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+            <h3>Switch back in a click.</h3>
+            <p>
+              Restore Twitch brings back its player with your original pause,
+              mute, and volume settings.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section
+        class="how-section"
+        id="how-it-works"
+        aria-labelledby="how-title"
+      >
+        <div class="section-shell">
+          <div class="center-heading">
+            <p class="eyebrow">LESS SETUP. MORE STREAM.</p>
+            <h2 id="how-title">Three steps. You’re in.</h2>
+            <p>No new account. No complicated setup. Just your browser.</p>
+          </div>
+          <ol class="steps">
+            <li>
+              <span class="step-number">01</span>
+              <h3>Add it to Chrome.</h3>
+              <p>Install the free extension from the Chrome Web Store.</p>
+              <a
+                href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"
+                >Get the extension
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-arrow" /></svg
+              ></a>
+            </li>
+            <li>
+              <span class="step-number">02</span>
+              <h3>Open your Twitch channel.</h3>
+              <p>
+                Head to the streamer you want to watch. Click
+                <span class="inline-control">▶ YouTube</span> in the top
+                navigation.
+              </p>
+            </li>
+            <li>
+              <span class="step-number">03</span>
+              <h3>Find it. Play it. Stay in chat.</h3>
+              <p>
+                Choose <strong>Find YouTube Stream → Use This Stream</strong>,
+                or paste a YouTube link and click <strong>Go</strong>.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="in-action section-shell" aria-labelledby="action-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">RIGHT WHERE YOU BELONG</p>
+            <h2 id="action-title">Feels right at home.</h2>
+          </div>
+          <p>
+            It’s still your Twitch channel. Just with another way to watch.
+            Here’s the extension on a real channel page.
+          </p>
+        </div>
+        <figure class="real-screenshot">
+          <a
+            href="/assets/extension-screenshot.png"
+            aria-label="View full-size extension screenshot"
+            ><img
+              src="/assets/extension-screenshot.png"
+              alt="Real extension screenshot showing the YouTube stream discovery menu on a Twitch channel, with the game stream in the center and Twitch chat on the right."
+              width="1280"
+              height="800"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            Actual extension screenshot from the
+            <a
+              href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"
+              >Chrome Web Store listing</a
+            >. The menu may vary by version.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section
+        class="trust-section section-shell"
+        aria-labelledby="trust-title"
+      >
+        <div class="trust-copy">
+          <span class="feature-icon"
+            ><svg class="icon" aria-hidden="true"><use href="#i-code" /></svg
+          ></span>
+          <div>
+            <p class="eyebrow">SMALL EXTENSION. OPEN BOOK.</p>
+            <h2 id="trust-title">Built for viewers. Out in the open.</h2>
+            <p>
+              Free, open source, and made by
+              <a href="https://vrnrn.com/">vrnrn</a>. Settings and stream
+              history stay on your device. No developer analytics or telemetry.
+            </p>
+          </div>
+        </div>
+        <a
+          class="button button-outline"
+          href="https://github.com/vrnrn/youtube-player-for-twitch"
+          ><svg class="icon" aria-hidden="true"><use href="#i-github" /></svg>
+          Explore the code
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg
+        ></a>
+      </section>
+
+      <section
+        class="faq-section section-shell"
+        id="faq"
+        aria-labelledby="faq-title"
+      >
+        <div class="faq-intro">
+          <p class="eyebrow">A FEW THINGS TO KNOW</p>
+          <h2 id="faq-title">Good questions.</h2>
+          <p>
+            Still curious?
+            <a href="mailto:ypftsupport@vrnrn.com"
+              >Say hello
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg
+            ></a>
+          </p>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>
+              Is it really free?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                Yes. The extension is free to use and open source under the MIT
+                license. You don’t need a separate account for the extension.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>
+              Does the streamer need to be on both platforms?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                To watch the same live broadcast with its Twitch community, the
+                streamer needs a matching YouTube stream. You can also paste
+                another YouTube video or livestream URL. Automatic discovery
+                checks the linked YouTube channel first; fallback search may
+                suggest an approximate match, so check the title and channel
+                before playing.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>
+              Can I still chat, use emotes, and earn channel points?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                The normal Twitch chat and channel interface stay available,
+                including badges, emotes, and channel points. Twitch controls
+                your account’s access and rewards. Floating chat is a read-only
+                mirror; send messages and use moderation tools in the normal
+                chat.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>
+              Will video and chat be perfectly in sync?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                Not necessarily. YouTube and Twitch can have different broadcast
+                delays. Sync Now seeks toward YouTube’s live edge and briefly
+                requests 2× playback to catch up. Optional auto-sync repeats
+                every 10 minutes, but exact alignment with Twitch messages isn’t
+                guaranteed.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>
+              Does it support 4K and fullscreen chat?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                YouTube’s embedded player offers the quality options available
+                for the stream, including 4K/60fps when supported. To bring chat
+                into fullscreen, enable Floating chat under Additional settings
+                → Chat and use Fullscreen with chat. Keep the normal Twitch chat
+                open so there are messages to mirror. Floating chat starts off
+                by default.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>
+              What happens to my data?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <div class="faq-answer">
+              <p>
+                The extension stores preferences, history, and playback state
+                locally in Chrome. It doesn’t send those to the developer and
+                has no developer analytics or telemetry. Search and playback
+                make requests directly to YouTube and Twitch, which apply their
+                own privacy policies.
+                <a href="/privacy/">Read the full privacy policy.</a>
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="final-cta section-shell" aria-labelledby="cta-title">
+        <img src="/assets/mark.svg" alt="" width="52" height="52" />
+        <h2 id="cta-title">
+          Keep the stream.<br /><span>Keep your people.</span>
+        </h2>
+        <p>Your next stream deserves the best of both worlds.</p>
+        <a
+          class="button button-primary"
+          href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"
+          ><svg class="icon" aria-hidden="true"><use href="#i-chrome" /></svg>
+          Add to Chrome
+          <svg class="icon button-arrow" aria-hidden="true">
+            <use href="#i-arrow" /></svg></a
+        ><span class="cta-note">Free to use. Yours to explore.</span>
       </section>
     </main>
-
-    <footer class="site-footer">
-      <span>© 2026 Varun Rana</span>
-      <a href="/privacy/">Privacy Policy</a>
-      <a href="mailto:ypftsupport@vrnrn.com">Support: ypftsupport@vrnrn.com</a>
+    <footer class="site-footer section-shell">
+      <div class="footer-top">
+        <a class="wordmark" href="/"
+          ><img src="/assets/mark.svg" alt="" width="32" height="32" /><span
+            >YouTube Player<span class="wordmark-sub">for Twitch</span></span
+          ></a
+        >
+        <nav aria-label="Footer navigation">
+          <a href="https://github.com/vrnrn/youtube-player-for-twitch">GitHub</a
+          ><a href="/privacy/">Privacy</a
+          ><a href="mailto:ypftsupport@vrnrn.com">Support</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span
+          >© 2026 <a href="https://vrnrn.com/">vrnrn</a>. Made for the
+          community.</span
+        ><span
+          >An independent project. Not affiliated with YouTube or Twitch.</span
+        >
+      </div>
     </footer>
   </body>
 </html>
