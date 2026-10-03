@@ -1,0 +1,62 @@
+{
+  "assets": [
+    {
+      "file": "store-icon-128.png",
+      "width": 128,
+      "height": 128,
+      "sha256": "a239f146ff084a6b75fd208405fbc58eeb1a9d5c3f9ec581e68e18fa5a2f889e",
+      "bytes": 11614
+    },
+    {
+      "file": "01-watch-together-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "4dee2b4b54ab3391528d1e4cc4beb3a7efd69003d88f1f55cc258704fbcb450f",
+      "bytes": 813138
+    },
+    {
+      "file": "02-find-your-stream-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "870bfea396ae81a60cda3d016ba1e7943b5afb62f5f176a258dc06d340feeb7f",
+      "bytes": 450882
+    },
+    {
+      "file": "03-floating-chat-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "9ec6680234b59c3b0d3ce11ffd7e647e90167ad93bcd025f51430032078192fb",
+      "bytes": 856877
+    },
+    {
+      "file": "04-recent-streams-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "e20d1ad55c2c88969eda1cab8565c4e2a1c7caf72801064a592fc956ee8aed00",
+      "bytes": 436393
+    },
+    {
+      "file": "05-customize-your-view-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "abfe1316a6005372f73f3e5cce873aa306c54ecbe39ef05e8787ea508e0c54c1",
+      "bytes": 432828
+    },
+    {
+      "file": "promo-small-440x280.png",
+      "width": 440,
+      "height": 280,
+      "sha256": "969e7080b4e29b4500b3b7edbb0250441168298a6c6ee1aa10a38587108807fe",
+      "bytes": 147326
+    },
+    {
+      "file": "promo-marquee-1400x560.png",
+      "width": 1400,
+      "height": 560,
+      "sha256": "fbf880021d8d462a2ae716dcb342ef572f505fa6596f4a5226670268717c12c5",
+      "bytes": 768056
+    }
+  ],
+  "icon": "Unmodified transparent repo icon from main; Git blob 3142245002a3f530ccf9f5885716ffc291e65574",
+  "screenshots": "Extension interface rendered with illustrative stream and chat"
+}

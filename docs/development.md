@@ -27,7 +27,7 @@ npm test
 npm run build
 ```
 
-The build writes and validates `release.zip` in the repository root. It checks that the bundled VAFT adapter matches its pinned, reviewed source. Building does not publish or submit the extension.
+The build writes and validates `release.zip` in the repository root. Generated release archives are ignored by Git. It checks that the bundled VAFT adapter matches its pinned, reviewed source. Building does not publish or submit the extension. Store listing artwork and its rendering sources are kept in [`docs/chrome-web-store/`](chrome-web-store/README.md) and excluded from the extension archive.
 
 After reviewing an adapter change, regenerate it offline with:
 

@@ -14,6 +14,16 @@ Thumbs.db
 # Build artifacts
 dist/
 build/
+release/
+release.zip
+
+# Local Cloudflare state
+.wrangler/
+
+# Generated store asset previews and bundles
+docs/chrome-web-store/preview*.jpg
+docs/chrome-web-store/youtube-player-for-twitch-webstore-assets*.zip
+docs/chrome-web-store/youtube-player-for-twitch-webstore-assets/
 
 # Logs
 *.log

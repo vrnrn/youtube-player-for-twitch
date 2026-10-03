@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><title>Illustrative stream</title
+  ><style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #151219;
+      color: white;
+      font:
+        13px Arial,
+        sans-serif;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 65px;
+      background: linear-gradient(transparent, #000a);
+      padding: 20px 20px 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #f75b64;
+      border-radius: 50%;
+    }
+    .line {
+      position: absolute;
+      bottom: 5px;
+      left: 14px;
+      right: 14px;
+      height: 3px;
+      background: #ff665f;
+    }
+    .right {
+      margin-left: auto;
+    }
+    .sample {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      padding: 6px 9px;
+      background: #211a2ac7;
+      border-radius: 4px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+  </style>
+  <body>
+    <img
+      src="/site/assets/adventure-stream.jpg"
+      alt="Original fantasy landscape"
+    />
+    <div class="sample">SAMPLE STREAM</div>
+    <div class="controls">
+      <span>Ⅱ</span><span>♬</span><span class="dot"></span><span>LIVE</span
+      ><span class="right">⚙ &nbsp; ⛶</span>
+    </div>
+    <div class="line"></div>
+  </body>
+</html>
