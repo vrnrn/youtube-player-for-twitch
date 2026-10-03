@@ -105,7 +105,8 @@
         close: 'm6 6 12 12M18 6 6 18',
         chevron: 'm6 9 6 6 6-6',
         search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
-        sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7'
+        sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7',
+        theatre: 'M3 5h18v14H3zM16 5v14'
     };
     const menuIcon = name => '<svg class="ytot-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + MENU_ICONS[name] + '"></path></svg>';
 
@@ -149,6 +150,10 @@
                     <button class="ytot-go" id="ytot-go">Go</button>
                 </div>
                 
+                <div class="ytot-layout-controls">
+                    <button type="button" class="ytot-theatre" id="ytot-theatre" aria-pressed="false" disabled>${menuIcon('theatre')}<span id="ytot-theatre-label">Theatre Mode</span></button>
+                </div>
+
                 <!-- Options -->
                 <details class="ytot-additional-settings" id="ytot-additional-settings">
                     <summary><span>Additional settings</span>${menuIcon('chevron')}</summary>
@@ -344,6 +349,78 @@
     function closeDropdown() {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
         document.getElementById('ytot-toggle')?.setAttribute('aria-expanded', 'false');
+    }
+
+    let theatreObserver = null;
+    let theatreHost = null;
+    let theatreNative = null;
+    let theatreNavParent = null;
+
+    function nativeTheatreButton() {
+        // Current Twitch uses only an aria-label with the Alt+T shortcut. Scope
+        // the lookup to its player so the extension never selects its own button.
+        return window.__ypftPlayback.container()?.querySelector(
+            '[data-a-target="player-theatre-mode-button"], [data-a-target="player-theater-mode-button"], ' +
+            'button[aria-label*="(alt+t)" i], button[aria-label*="theatre mode" i], button[aria-label*="theater mode" i]'
+        );
+    }
+
+    function renderTheatreControl() {
+        const button = document.getElementById('ytot-theatre');
+        if (!button) return;
+        const native = nativeTheatreButton();
+        const active = !!document.querySelector('.persistent-player--theatre, .channel-page__video-player--theatre-mode') ||
+            native?.getAttribute('aria-pressed') === 'true';
+        const player = window.__ypftPlayback.container();
+        const host = player?.closest('.persistent-player') || player;
+        if (host !== theatreHost || native !== theatreNative) {
+            theatreObserver?.disconnect();
+            theatreHost = host;
+            theatreNative = native;
+            theatreObserver ||= new MutationObserver(renderTheatreControl);
+            if (host) theatreObserver.observe(host, { attributes: true, attributeFilter: ['class'] });
+            if (native) theatreObserver.observe(native, { attributes: true, attributeFilter: ['aria-label', 'aria-pressed', 'disabled'] });
+        }
+        if (active) document.documentElement.setAttribute('data-ypft-theatre', '');
+        else document.documentElement.removeAttribute('data-ypft-theatre');
+        // Twitch's theatre layer covers the top navigation. Keep the same menu
+        // mounted in a body portal so the exit control stays reachable.
+        const nav = document.getElementById('ytot-nav-wrapper');
+        if (nav) {
+            if (active && nav.parentElement !== document.body) {
+                theatreNavParent = nav.parentElement;
+                document.body.appendChild(nav);
+            } else if (!active && nav.parentElement === document.body) {
+                const parent = theatreNavParent?.isConnected ? theatreNavParent :
+                    document.querySelector('.top-nav__menu > div:first-child') ||
+                    document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
+                if (parent) {
+                    parent.appendChild(nav);
+                    theatreNavParent = null;
+                }
+            }
+            nav.classList.toggle('ytot-nav-theatre', active);
+        }
+        button.disabled = !native || native.disabled || !!document.fullscreenElement;
+        button.setAttribute('aria-pressed', String(active));
+        const label = active ? 'Exit Theatre Mode' : 'Theatre Mode';
+        button.setAttribute('aria-label', label);
+        button.title = button.disabled ? 'Theatre mode is unavailable on this page.' : label;
+        document.getElementById('ytot-theatre-label').textContent = label;
+    }
+
+    function toggleTheatreMode() {
+        const native = nativeTheatreButton();
+        if (!native || native.disabled || document.fullscreenElement) {
+            renderTheatreControl();
+            updateStatus('Theatre mode is unavailable on this page.', 'error');
+            return;
+        }
+        // Let Twitch manage its own layout and preference. The stable YouTube
+        // portal follows the resized player without replacing or reloading it.
+        native.click();
+        renderTheatreControl();
+        setTimeout(renderTheatreControl, 0);
     }
 
     /**
@@ -867,6 +944,8 @@
 
     function setupEventListeners() {
         setupChatControls();
+        document.getElementById('ytot-theatre').onclick = toggleTheatreMode;
+        renderTheatreControl();
         const extensionsToggle = document.getElementById('ytot-hide-extensions');
         extensionsToggle.checked = hideExtensions;
         extensionsToggle.onchange = event => {
@@ -885,6 +964,7 @@
 
         autoFindBtn.onclick = handleAutoFind;
         toggle.onclick = () => {
+            renderTheatreControl();
             const visible = dropdown.classList.toggle('visible');
             toggle.setAttribute('aria-expanded', String(visible));
         };
@@ -1098,6 +1178,7 @@
     setInterval(() => {
         handleNavigation();
         window.__ypftChat?.sync();
+        renderTheatreControl();
         if (state.initialized && !document.getElementById('ytot-nav-wrapper')) {
             state.initialized = false;
             spawnAttempts = 0;

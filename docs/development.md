@@ -35,7 +35,7 @@ After reviewing an adapter change, regenerate it offline with:
 node scripts/prepare-vaft.mjs
 ```
 
-Automated tests cover extension logic and the publishing scripts. They do not establish live Twitch/YouTube behavior or Chrome Web Store acceptance. Use the [floating-chat checklist](floating-chat-qa.md) and [VAFT checklist](vaft-qa.md) for the relevant browser checks.
+Automated tests cover extension logic and the publishing scripts. They do not establish live Twitch/YouTube behavior or Chrome Web Store acceptance. Use the [theatre-mode verification notes](theatre-mode-qa.md), [floating-chat checklist](floating-chat-qa.md) and [VAFT checklist](vaft-qa.md) for the relevant browser checks.
 
 ## Source map
 

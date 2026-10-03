@@ -3,15 +3,21 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 const original = fs.readFileSync(`${__dirname}/../twitch-content.js`, 'utf8');
-const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls };\n})();');
+const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls, renderTheatreControl, toggleTheatreMode };\n})();');
 function fixture({ enabled = false, failure = null, running = null, saved = {} } = {}) {
-    const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [];
-    const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], classList: { add() {}, remove() {}, toggle() {} },
-        appendChild(child) { this.children.push(child); elements.set(child.id, child); },
+    const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [], observers = [];
+    const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], attributes: new Map(), classes: new Set(), isConnected: true,
+        get classList() { return { add: name => this.classes.add(name), remove: name => this.classes.delete(name),
+            toggle: (name, active) => active ? this.classes.add(name) : this.classes.delete(name) }; },
+        appendChild(child) {
+            if (child.parentElement) child.parentElement.children = child.parentElement.children.filter(node => node !== child);
+            this.children.push(child); child.parentElement = this; elements.set(child.id, child);
+        },
         remove() { this.removed = true; elements.delete(this.id); },
-        setAttribute() {}, querySelector() { return null; }, querySelectorAll() { return []; }
+        setAttribute(key, value) { this.attributes.set(key, value); }, getAttribute(key) { return this.attributes.get(key) ?? null; },
+        querySelector() { return null; }, querySelectorAll() { return []; }, closest() { return null; }
     });
-    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset']) elements.set(id, element('div'));
+    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label']) elements.set(id, element('div'));
     if (running) attrs.set('data-ypft-vaft', running);
     const document = {
         body: element('body'), head: null,
@@ -19,7 +25,8 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
         createElement: element, getElementById: id => elements.get(id), querySelector() { return null; }, addEventListener() {}
     };
     const local = new Map([['video-quality', '{"default":"160p30","other":"kept"}']]);
-    const playback = { container: () => ({}), own(wrapper, restored) { calls.push({ own: wrapper, restored }); },
+    const player = element('div');
+    const playback = { container: () => player, own(wrapper, restored) { calls.push({ own: wrapper, restored }); },
         release(options) { calls.push({ release: options }); }, snapshot: () => ({ paused: true, muted: true, volume: 0.2 }) };
     const context = vm.createContext({
         window: { location: { pathname: '/channel' }, __ypftPlayback: playback, localStorage: { getItem: k => local.get(k), setItem: (k, v) => local.set(k, v) } },
@@ -34,12 +41,16 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
             async set(data) { calls.push({ persist: data }); Object.assign(stored, data); },
             get(keys, callback) { callback(stored); }
         }, onChanged: { addListener(listener) { storageListeners.push(listener); } } } },
-        document, MutationObserver: class { observe() {} },
+        document, MutationObserver: class {
+            constructor(fn) { this.fn = fn; this.targets = []; observers.push(this); }
+            observe(target) { this.targets.push(target); }
+            disconnect() { this.targets = []; }
+        },
         setTimeout(fn) { timers.push(fn); return timers.length; }, setInterval() { return 1; }, clearInterval() {},
         console: { log() {}, error() {} }
     });
     vm.runInContext(source, context);
-    return { api: context.window.testContent, document, elements, calls, timers, stored, local, attrs, storageListeners, window: context.window };
+    return { api: context.window.testContent, document, player, element, elements, calls, timers, stored, local, attrs, storageListeners, observers, window: context.window };
 }
 test('menu explains opt-in reload and uses interruption-blocking terminology', () => {
     const f = fixture();
@@ -155,4 +166,122 @@ test('chat appearance follows enablement and collapses when turned off through t
     assert.equal(appearance.hidden, true);
     assert.equal(appearance.open, false);
     assert.equal(settings.opacity, 35);
+});
+
+test('theatre menu toggles Twitch without replacing YouTube or changing playback ownership', () => {
+    const f = fixture();
+    let active = false, clicks = 0;
+    const native = f.element('button');
+    native.click = () => { active = !active; clicks++; };
+    f.player.querySelector = selector => {
+        assert.match(selector, /button\[aria-label\*="\(alt\+t\)" i\]/);
+        return native;
+    };
+    f.document.querySelector = () => active ? f.player : null;
+    f.api.injectYouTube('abcdefghijk', { title: 'Fixture', channel: 'Fixture' });
+    const iframe = f.elements.get('ytot-youtube-player');
+    const stored = JSON.stringify(f.stored);
+    f.api.renderTheatreControl();
+    const button = f.elements.get('ytot-theatre');
+    assert.equal(button.disabled, false);
+    assert.equal(button.getAttribute('aria-pressed'), 'false');
+    f.api.toggleTheatreMode();
+    assert.equal(button.getAttribute('aria-pressed'), 'true');
+    assert.equal(f.elements.get('ytot-theatre-label').textContent, 'Exit Theatre Mode');
+    f.api.toggleTheatreMode();
+    assert.equal(button.getAttribute('aria-pressed'), 'false');
+    assert.equal(clicks, 2);
+    assert.equal(f.elements.get('ytot-youtube-player'), iframe);
+    assert.equal(f.api.state.youtubeVideoId, 'abcdefghijk');
+    assert.equal(f.calls.filter(call => call?.own).length, 1);
+    assert.equal(f.calls.some(call => call?.release || call === 'reload-page'), false);
+    assert.equal(JSON.stringify(f.stored), stored);
+});
+
+test('theatre menu reflects external changes and reacquires a replaced native control', () => {
+    const f = fixture();
+    let native = f.element('button'), clicks = 0;
+    f.player.querySelector = () => native;
+    f.api.renderTheatreControl();
+    assert.equal(f.elements.get('ytot-theatre').getAttribute('aria-pressed'), 'false');
+    native = f.element('button');
+    native.setAttribute('aria-pressed', 'true');
+    native.click = () => { clicks++; native.setAttribute('aria-pressed', 'false'); };
+    f.api.renderTheatreControl();
+    const observer = f.observers.find(item => item.targets.includes(native));
+    assert.equal(observer.targets.includes(f.player), true);
+    assert.equal(f.elements.get('ytot-theatre').getAttribute('aria-pressed'), 'true');
+    f.api.toggleTheatreMode();
+    assert.equal(clicks, 1);
+    assert.equal(f.elements.get('ytot-theatre').getAttribute('aria-pressed'), 'false');
+    native.setAttribute('aria-pressed', 'true');
+    observer.fn();
+    assert.equal(f.elements.get('ytot-theatre').getAttribute('aria-pressed'), 'true');
+    native = null;
+    observer.fn();
+    assert.equal(observer.targets.length, 1);
+    assert.equal(f.elements.get('ytot-theatre').disabled, true);
+});
+
+test('theatre mode is unavailable without a native control, while disabled or in fullscreen', () => {
+    const f = fixture();
+    const button = f.elements.get('ytot-theatre');
+    f.api.renderTheatreControl();
+    assert.equal(button.disabled, true);
+    f.api.toggleTheatreMode();
+    assert.match(f.elements.get('ytot-status').textContent, /unavailable/);
+    const native = f.element('button');
+    native.click = () => assert.fail('unavailable native control must not be clicked');
+    f.player.querySelector = () => native;
+    native.disabled = true;
+    f.api.renderTheatreControl();
+    assert.equal(button.disabled, true);
+    f.api.toggleTheatreMode();
+    native.disabled = false;
+    f.document.fullscreenElement = {};
+    f.api.renderTheatreControl();
+    assert.equal(button.disabled, true);
+    f.api.toggleTheatreMode();
+    f.document.fullscreenElement = null;
+    f.api.renderTheatreControl();
+    assert.equal(button.disabled, false);
+    assert.equal(f.calls.length, 0);
+});
+
+test('theatre mode keeps the same menu reachable above the player and restores its navigation parent', () => {
+    const f = fixture();
+    const parent = f.element('div'), nav = f.api.createNavButton(), native = f.element('button');
+    parent.appendChild(nav);
+    f.player.querySelector = () => native;
+    let active = false;
+    f.document.querySelector = () => active ? f.player : null;
+    f.api.renderTheatreControl();
+    assert.equal(nav.parentElement, parent);
+    active = true;
+    f.api.renderTheatreControl();
+    assert.equal(nav.parentElement, f.document.body);
+    assert.equal(nav.classes.has('ytot-nav-theatre'), true);
+    assert.equal(f.attrs.has('data-ypft-theatre'), true);
+    f.api.renderTheatreControl();
+    active = false;
+    f.api.renderTheatreControl();
+    assert.equal(nav.parentElement, parent);
+    assert.equal(nav.classes.has('ytot-nav-theatre'), false);
+    assert.equal(f.attrs.has('data-ypft-theatre'), false);
+    assert.equal(f.elements.get('ytot-nav-wrapper'), nav);
+});
+
+test('leaving theatre mode reacquires top navigation if Twitch replaced the original parent', () => {
+    const f = fixture();
+    const parent = f.element('div'), replacement = f.element('div'), nav = f.api.createNavButton(), native = f.element('button');
+    parent.appendChild(nav);
+    f.player.querySelector = () => native;
+    f.document.querySelector = () => f.player;
+    f.api.renderTheatreControl();
+    assert.equal(nav.parentElement, f.document.body);
+    parent.isConnected = false;
+    f.document.querySelector = selector => selector.includes('top-nav__menu') ? replacement : null;
+    f.api.renderTheatreControl();
+    assert.equal(nav.parentElement, replacement);
+    assert.equal(f.attrs.has('data-ypft-theatre'), false);
 });
