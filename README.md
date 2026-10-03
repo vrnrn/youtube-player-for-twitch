@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad"><img src="https://img.shields.io/badge/Install_for_Chrome-4285F4?style=for-the-badge&amp;logo=googlechrome&amp;logoColor=white" alt="Install from the Chrome Web Store"></a>
-  <a href="https://github.com/vrnrn/youtube-player-for-twitch/actions/workflows/chrome-web-store.yml"><img src="https://github.com/vrnrn/youtube-player-for-twitch/actions/workflows/chrome-web-store.yml/badge.svg?branch=main" alt="Extension build status"></a>
+  <a href="https://github.com/vrnrn/youtube-player-for-twitch/actions/workflows/chrome-web-store.yml"><img src="https://img.shields.io/github/actions/workflow/status/vrnrn/youtube-player-for-twitch/chrome-web-store.yml?branch=main&amp;label=build&amp;logo=github&amp;logoColor=white" alt="Extension build status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-a78bfa?style=flat" alt="MIT license"></a>
 </p>
 
