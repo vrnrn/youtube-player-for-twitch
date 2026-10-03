@@ -22,5 +22,6 @@ zip -X -q -r release.zip \
     icons \
     LICENSE \
     README.md \
-    product-description.md
+    product-description.md \
+    -x 'docs/chrome-web-store/*' 'docs/assets/site-social-preview.html' '*/.DS_Store'
 unzip -tq release.zip
