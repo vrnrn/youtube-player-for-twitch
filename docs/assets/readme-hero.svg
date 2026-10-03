@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" role="img" aria-labelledby="title desc">
+  <title id="title">YouTube Player for Twitch</title>
+  <desc id="desc">YouTube video. Twitch chat. An illustration of a red video player alongside purple chat bubbles.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#171323"/>
+      <stop offset="1" stop-color="#0e0e17"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#7c3aed" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="video" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#322036"/>
+      <stop offset="1" stop-color="#211722"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#ff595e"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="520" rx="24" fill="url(#background)"/>
+  <ellipse cx="1030" cy="240" rx="560" ry="460" fill="url(#glow)"/>
+  <rect x=".5" y=".5" width="1279" height="519" rx="24" fill="none" stroke="#ffffff" stroke-opacity=".08"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif">
+    <g transform="translate(64 58)">
+      <path d="M0 8a8 8 0 0 1 8-8h28a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H18L8 46V38a8 8 0 0 1-8-8Z" fill="#a78bfa"/>
+      <path d="m17 10 17 10-17 10Z" fill="#171323"/>
+      <text x="60" y="19" fill="#e5dff2" font-size="16" font-weight="650" letter-spacing="2">YOUTUBE PLAYER</text>
+      <text x="60" y="40" fill="#a59bb8" font-size="13" letter-spacing="2.7">FOR TWITCH</text>
+    </g>
+
+    <text x="64" y="222" fill="#faf8ff" font-size="64" font-weight="750" letter-spacing="-2.5">YouTube video.</text>
+    <text x="64" y="296" fill="#b99aff" font-size="64" font-weight="750" letter-spacing="-2.5">Twitch chat.</text>
+    <text x="68" y="346" fill="#b6afc5" font-size="21">Your stream. Your community. One tab.</text>
+
+    <g transform="translate(68 402)">
+      <rect width="172" height="36" rx="18" fill="#ffffff" fill-opacity=".05" stroke="#ffffff" stroke-opacity=".09"/>
+      <circle cx="20" cy="18" r="4" fill="#b99aff"/>
+      <text x="34" y="23" fill="#ded7eb" font-size="13">Chrome extension</text>
+      <text x="194" y="23" fill="#9389a4" font-size="13">Open source · MIT</text>
+    </g>
+
+    <!-- Illustration of the players' roles, not an app screenshot. -->
+    <g transform="translate(650 112)">
+      <rect x="10" y="14" width="556" height="316" rx="20" fill="#000000" fill-opacity=".25"/>
+      <rect width="556" height="316" rx="20" fill="#1a1725" stroke="#4c3e62"/>
+      <path d="M20 0h516a20 20 0 0 1 20 20v28H0V20A20 20 0 0 1 20 0Z" fill="#242030"/>
+      <circle cx="22" cy="24" r="4" fill="#79688c"/>
+      <circle cx="38" cy="24" r="4" fill="#79688c"/>
+      <circle cx="54" cy="24" r="4" fill="#79688c"/>
+      <text x="82" y="29" fill="#afa4bf" font-size="12">One channel. The best of both.</text>
+      <rect x="473" y="14" width="63" height="20" rx="10" fill="#b99aff" fill-opacity=".12"/>
+      <circle cx="486" cy="24" r="3" fill="#b99aff"/>
+      <text x="496" y="28" fill="#d4bfff" font-size="10" font-weight="700" letter-spacing="1">LIVE</text>
+
+      <rect x="16" y="64" width="326" height="202" rx="12" fill="url(#video)"/>
+      <path d="m16 222 68-63 52 39 76-86 130 114v28a12 12 0 0 1-12 12H28a12 12 0 0 1-12-12Z" fill="#724264" fill-opacity=".23"/>
+      <path d="m16 246 101-62 62 42 75-47 88 60v15a12 12 0 0 1-12 12H28a12 12 0 0 1-12-12Z" fill="#f57f8c" fill-opacity=".1"/>
+      <rect x="34" y="82" width="84" height="23" rx="7" fill="#ff595e" fill-opacity=".14"/>
+      <text x="47" y="98" fill="#ffb4b8" font-size="11" font-weight="650">YOUTUBE</text>
+      <rect x="143" y="133" width="74" height="51" rx="15" fill="#ff595e"/>
+      <path d="m173 146 21 12-21 13Z" fill="#ffffff"/>
+      <rect x="34" y="240" width="288" height="3" rx="1.5" fill="#ffffff" fill-opacity=".1"/>
+      <rect x="34" y="240" width="252" height="3" rx="1.5" fill="url(#accent)"/>
+      <circle cx="286" cy="241.5" r="4" fill="#ff777c"/>
+
+      <g transform="translate(358 64)">
+        <rect width="182" height="202" rx="12" fill="#221c30"/>
+        <text x="14" y="28" fill="#cab6f2" font-size="11" font-weight="650" letter-spacing="1">TWITCH CHAT</text>
+        <path d="M14 41h154" stroke="#d4bfff" stroke-opacity=".1"/>
+        <rect x="14" y="56" width="24" height="24" rx="8" fill="#ae8be8" fill-opacity=".2"/>
+        <rect x="48" y="59" width="51" height="5" rx="2.5" fill="#b99aff"/>
+        <rect x="48" y="72" width="106" height="4" rx="2" fill="#756781"/>
+        <rect x="14" y="95" width="24" height="24" rx="8" fill="#ff898d" fill-opacity=".18"/>
+        <rect x="48" y="98" width="63" height="5" rx="2.5" fill="#ffa8ac"/>
+        <rect x="48" y="111" width="85" height="4" rx="2" fill="#756781"/>
+        <rect x="14" y="134" width="24" height="24" rx="8" fill="#72d1bb" fill-opacity=".16"/>
+        <rect x="48" y="137" width="42" height="5" rx="2.5" fill="#9ad9c9"/>
+        <rect x="48" y="150" width="103" height="4" rx="2" fill="#756781"/>
+        <rect x="14" y="174" width="154" height="14" rx="7" fill="#ffffff" fill-opacity=".04"/>
+      </g>
+
+      <text x="17" y="294" fill="#c1b5d0" font-size="12">YouTube handles the video.</text>
+      <text x="358" y="294" fill="#c1b5d0" font-size="12">Twitch keeps the chat.</text>
+    </g>
+  </g>
+</svg>
