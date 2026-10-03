@@ -14,8 +14,7 @@ zip -X -q -r release.zip \
     vendor/vaft/vaft.js \
     vendor/vaft/LICENSE \
     vendor/vaft/README.md \
-    docs/vaft-qa.md \
-    docs/floating-chat-qa.md \
+    docs \
     twitch-playback.js \
     twitch-chat.js \
     twitch-content.js \
