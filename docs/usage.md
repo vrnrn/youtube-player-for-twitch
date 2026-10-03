@@ -11,6 +11,12 @@ Open a Twitch channel and click **▶ YouTube** in the top navigation.
 
 The YouTube player overlays the Twitch player. Twitch chat, badges, channel points and the surrounding interface remain available. YouTube controls playback and the quality options available for the selected stream; 4K/60fps is possible when supported by the source and embedded player.
 
+## Theatre mode
+
+Open **▶ YouTube** (or **Live** while YouTube is playing) and click **Theatre Mode** to expand Twitch's layout. The menu moves to the top-left of the player in theatre mode; use **Exit Theatre Mode** there to return. The button sits above **Additional settings**, outside YouTube's embedded controls, and is available whenever Twitch provides its native theatre control.
+
+YouTube stays mounted and follows the Twitch player size when you change the layout, including through Twitch's **Alt+T** shortcut when the Twitch page has keyboard focus. You do not need to restore Twitch or reopen the YouTube stream. The button is disabled on pages without a native theatre control and while in fullscreen.
+
 ## Sync and quality
 
 Click **Sync Now** to seek toward the live edge. The extension briefly requests 2× playback, then returns to normal speed. This helps catch up but cannot guarantee exact alignment with Twitch chat.

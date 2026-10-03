@@ -8,6 +8,19 @@
     margin-left: 10px;
 }
 
+#ytot-nav-wrapper.ytot-nav-theatre {
+    position: fixed;
+    top: 8px;
+    left: 12px;
+    margin: 0;
+    z-index: 3020;
+}
+
+.ytot-nav-theatre > .ytot-nav-btn {
+    background: #18161e;
+    border: 1px solid #53535f;
+}
+
 /* Main Nav Button */
 .ytot-nav-btn {
     display: flex;
@@ -178,6 +191,39 @@
 }
 
 /* Actions Section */
+.ytot-layout-controls {
+    padding: 0 18px 14px;
+}
+
+.ytot-theatre {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #53535f;
+    border-radius: 8px;
+    background: #26262c;
+    color: #efeff1;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.ytot-theatre:hover:not(:disabled) {
+    background: #3a3a3d;
+}
+
+.ytot-theatre[aria-pressed="true"] {
+    border-color: #a66bff;
+    color: #d4b8f6;
+}
+
+.ytot-theatre:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 .ytot-actions {
     display: flex;
     gap: 8px;
@@ -247,6 +293,10 @@
     z-index: 900;
     background: #000;
 }
+
+/* Twitch's native theatre player uses a higher layer than its normal player. */
+html[data-ypft-theatre] #ytot-youtube-wrapper { z-index: 3001; }
+html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index: 3010; }
 
 .ytot-vaft-status {
     color: #adadb8;
