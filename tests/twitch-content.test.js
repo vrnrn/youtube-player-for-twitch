@@ -3,11 +3,13 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 const original = fs.readFileSync(`${__dirname}/../twitch-content.js`, 'utf8');
-const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls, renderTheatreControl, toggleTheatreMode };\n})();');
-function fixture({ enabled = false, failure = null, running = null, saved = {} } = {}) {
+const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls, renderTheatreControl, toggleTheatreMode, extractVideoId, escapeHtml, handleAutoFind, handleNavigation, addToHistory, togglePin, renderHistory, getTwitchChannel, setupEventListeners, init };\n})();');
+function fixture({ enabled = false, failure = null, running = null, saved = {}, sendMessage = null } = {}) {
     const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [], observers = [];
     const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], attributes: new Map(), classes: new Set(), isConnected: true,
-        get classList() { return { add: name => this.classes.add(name), remove: name => this.classes.delete(name),
+        focus() { document.activeElement = this; },
+        contains(node) { for (; node; node = node.parentElement) if (node === this) return true; return false; },
+        get classList() { return { add: name => this.classes.add(name), remove: name => this.classes.delete(name), contains: name => this.classes.has(name),
             toggle: (name, active) => active ? this.classes.add(name) : this.classes.delete(name) }; },
         appendChild(child) {
             if (child.parentElement) child.parentElement.children = child.parentElement.children.filter(node => node !== child);
@@ -17,7 +19,7 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
         setAttribute(key, value) { this.attributes.set(key, value); }, getAttribute(key) { return this.attributes.get(key) ?? null; },
         querySelector() { return null; }, querySelectorAll() { return []; }, closest() { return null; }
     });
-    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label']) elements.set(id, element('div'));
+    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label', 'ytot-search-result', 'ytot-autofind', 'ytot-dropdown', 'ytot-close', 'ytot-url', 'ytot-go', 'ytot-autosync', 'ytot-quality']) elements.set(id, element('div'));
     if (running) attrs.set('data-ypft-vaft', running);
     const document = {
         body: element('body'), head: null,
@@ -33,6 +35,7 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
         location: { href: 'https://www.twitch.tv/channel', reload() { calls.push('reload-page'); } },
         chrome: { runtime: { id: 'ypft', async sendMessage(message) {
             calls.push(message);
+            if (sendMessage) return sendMessage(message);
             if (failure) return { error: failure };
             if (message.type === 'SET_VAFT_SETTINGS') { enabled = message.enabled; return { enabled, registered: enabled, reloadRequired: true }; }
             if (message.type === 'GET_VIDEO_DETAILS') return { error: 'fixture' };
@@ -46,11 +49,11 @@ function fixture({ enabled = false, failure = null, running = null, saved = {} }
             observe(target) { this.targets.push(target); }
             disconnect() { this.targets = []; }
         },
-        setTimeout(fn) { timers.push(fn); return timers.length; }, setInterval() { return 1; }, clearInterval() {},
-        console: { log() {}, error() {} }
+        setTimeout(fn) { timers.push(fn); return timers.length; }, clearTimeout(id) { if (id) timers[id - 1] = null; }, setInterval() { return 1; }, clearInterval() {},
+        URL, console: { log() {}, error() {}, warn() {} }
     });
     vm.runInContext(source, context);
-    return { api: context.window.testContent, document, player, element, elements, calls, timers, stored, local, attrs, storageListeners, observers, window: context.window };
+    return { api: context.window.testContent, document, player, element, elements, calls, timers, stored, local, attrs, storageListeners, observers, window: context.window, location: context.location };
 }
 test('menu explains opt-in reload and uses interruption-blocking terminology', () => {
     const f = fixture();
@@ -284,4 +287,111 @@ test('leaving theatre mode reacquires top navigation if Twitch replaced the orig
     f.api.renderTheatreControl();
     assert.equal(nav.parentElement, replacement);
     assert.equal(f.attrs.has('data-ypft-theatre'), false);
+});
+
+test('video URLs support shared, reordered, live, embed and Shorts links without accepting lookalike hosts', () => {
+    const { extractVideoId } = fixture().api;
+    for (const url of ['https://www.youtube.com/watch?si=share&v=abcdefghijk&t=30',
+        ' youtu.be/abcdefghijk?si=share ', 'https://m.youtube.com/live/abcdefghijk/',
+        'https://youtube.com/embed/abcdefghijk', 'https://youtube.com/shorts/abcdefghijk'])
+        assert.equal(extractVideoId(url), 'abcdefghijk', url);
+    for (const url of ['https://evil.example/youtube.com/watch?v=abcdefghijk',
+        'https://youtube.com.evil.example/watch?v=abcdefghijk', 'https://youtube.com@evil.example/watch?v=abcdefghijk',
+        'javascript:youtube.com/watch?v=abcdefghijk', 'https://youtu.be/abcdefghijkZ',
+        'https://youtube.com/watch?v=short', null, {}])
+        assert.equal(extractVideoId(url), null, String(url));
+});
+
+test('history escapes quoted metadata and ignores malformed stored entries', async () => {
+    const f = fixture({ saved: { ytot_history: [null, { videoId: '" onmouseover="bad' },
+        { videoId: 'abcdefghijk', title: '" autofocus onfocus="bad <&', channel: 'Creator' }] } });
+    await f.api.renderHistory();
+    const html = f.elements.get('ytot-history-section').innerHTML;
+    assert.ok(html.includes('title="&quot; autofocus onfocus=&quot;bad &lt;&amp;"'));
+    assert.doesNotMatch(html, /onmouseover/);
+    assert.match(html, /<button type="button" class="ytot-history-play"/);
+    assert.equal(f.api.escapeHtml(null), '');
+});
+
+test('concurrent history additions and pin changes preserve every entry', async () => {
+    const f = fixture();
+    await Promise.all([
+        f.api.addToHistory('abcdefghijk', { title: 'First' }),
+        f.api.addToHistory('zyxwvutsrqp', { title: 'Second' }),
+        f.api.togglePin('abcdefghijk')
+    ]);
+    assert.equal(f.stored.ytot_history.length, 2);
+    assert.equal(f.stored.ytot_history[0].videoId, 'abcdefghijk');
+    assert.equal(f.stored.ytot_history[0].pinned, true);
+});
+
+test('sync ignores duplicate clicks, resets speed, and cancels pending steps when playback changes', () => {
+    const f = fixture();
+    f.api.injectYouTube('abcdefghijk', { title: 'First' });
+    const messages = [];
+    f.elements.get('ytot-youtube-player').contentWindow = { postMessage: data => messages.push(JSON.parse(data)) };
+    f.api.syncNow();
+    f.api.syncNow();
+    assert.equal(messages.length, 1);
+    f.timers[f.api.state.syncTimeoutId - 1]();
+    assert.deepEqual(messages.at(-1).args, [2]);
+    f.timers[f.api.state.syncTimeoutId - 1]();
+    assert.deepEqual(messages.at(-1).args, [1]);
+    assert.equal(f.api.state.isSyncing, false);
+    f.api.syncNow();
+    const pending = f.api.state.syncTimeoutId;
+    f.api.injectYouTube('zyxwvutsrqp', { title: 'Second' });
+    assert.equal(f.timers[pending - 1], null);
+    assert.equal(f.api.state.isSyncing, false);
+    f.elements.get('ytot-youtube-player').contentWindow = { postMessage() {} };
+    f.api.syncNow();
+    const removal = f.api.state.syncTimeoutId;
+    f.api.removeYouTube();
+    assert.equal(f.timers[removal - 1], null);
+});
+
+test('late search results do not follow the user into a different Twitch channel', async () => {
+    let resolve;
+    const f = fixture({ sendMessage: () => new Promise(done => { resolve = done; }) });
+    const search = f.api.handleAutoFind();
+    assert.equal(f.elements.get('ytot-autofind').disabled, true);
+    f.window.location.pathname = '/other';
+    f.api.handleNavigation();
+    const target = f.element('div');
+    f.elements.set('ytot-search-result', target);
+    resolve({ results: [{ videoId: 'abcdefghijk', title: 'Old channel', channel: 'channel' }] });
+    await search;
+    assert.equal(target.innerHTML, undefined);
+});
+
+test('search failures are distinct from no matches and leave retry available', async () => {
+    const f = fixture({ sendMessage: async () => ({ error: 'YouTube returned HTTP 503' }) });
+    await f.api.handleAutoFind();
+    assert.match(f.elements.get('ytot-search-result').textContent, /503/);
+    assert.equal(f.elements.get('ytot-autofind').disabled, false);
+});
+
+test('query and hash changes preserve active playback; directory pages are not channels', () => {
+    const f = fixture();
+    f.api.injectYouTube('abcdefghijk', { title: 'First' });
+    f.location.href = 'https://www.twitch.tv/channel?ref=test#chat';
+    f.api.handleNavigation();
+    assert.equal(f.api.state.youtubeVideoId, 'abcdefghijk');
+    for (const pathname of ['/directory', '/videos/1234', '/channel/videos', '/settings']) {
+        f.window.location.pathname = pathname;
+        assert.equal(f.api.getTwitchChannel(), null);
+    }
+    f.api.handleNavigation();
+    assert.equal(f.api.state.youtubeVideoId, null);
+});
+
+test('a setting changed while initialization loads is not overwritten by stored preferences', async () => {
+    const f = fixture({ saved: { ytot_autosync: true, ytot_force_highest: true } });
+    f.document.querySelector = selector => selector.includes('top-nav__menu') ? f.document.body : null;
+    const init = f.api.init();
+    f.elements.get('ytot-autosync').onchange({ target: { checked: false } });
+    await init;
+    assert.equal(f.api.state.autoSyncEnabled, false);
+    assert.equal(f.elements.get('ytot-autosync').checked, false);
+    assert.equal(f.api.state.forceHighestQuality, true);
 });

@@ -1359,7 +1359,7 @@ h3 {
   text-decoration: none;
 }
 
-/* The same visual language, with a reading-focused layout for the existing policy. */
+/* Privacy and error pages. */
 .policy-page .site-header {
   position: static;
 }
@@ -1625,7 +1625,7 @@ h3 {
   }
   .hero-description {
     margin-top: 21px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .hero-actions {
     gap: 9px;
@@ -1647,7 +1647,7 @@ h3 {
   .hero-facts {
     gap: 11px;
     margin-top: 16px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .hero-facts span + span::before {
     margin-right: 11px;
@@ -1876,7 +1876,7 @@ h3 {
   }
   .section-heading > p {
     max-width: 370px;
-    font-size: 12px;
+    font-size: 14px;
   }
   h2 {
     font-size: 30px;
@@ -1898,7 +1898,7 @@ h3 {
     font-size: 17px;
   }
   .feature-copy > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .discovery-preview {
     width: calc(100% - 50px);
@@ -1941,17 +1941,17 @@ h3 {
     height: 20px;
   }
   .small-features h3 {
-    font-size: 14px;
+    font-size: 16px;
   }
   .small-features p {
-    font-size: 12px;
+    font-size: 14px;
     max-width: 370px;
   }
   .how-section {
     padding-block: 58px;
   }
   .center-heading > p:last-child {
-    font-size: 12px;
+    font-size: 14px;
     max-width: 260px;
     margin-inline: auto;
   }
@@ -1979,11 +1979,11 @@ h3 {
     background: #3f2f4e;
   }
   .steps h3 {
-    font-size: 15px;
+    font-size: 16px;
   }
   .steps p {
     max-width: 360px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .in-action {
     padding-top: 61px;
@@ -2012,7 +2012,7 @@ h3 {
     line-height: 1.4;
   }
   .trust-copy p:last-child {
-    font-size: 11px;
+    font-size: 13px;
   }
   .trust-section > .button {
     margin-left: 51px;
@@ -2026,11 +2026,11 @@ h3 {
     font-size: 30px;
   }
   .faq-list summary {
-    font-size: 12px;
+    font-size: 14px;
     padding-block: 19px;
   }
   .faq-answer {
-    font-size: 12px;
+    font-size: 14px;
     padding-right: 10px;
   }
   .final-cta {
@@ -2045,7 +2045,7 @@ h3 {
     letter-spacing: -1.5px;
   }
   .final-cta > p {
-    font-size: 11px;
+    font-size: 13px;
   }
   .site-footer {
     margin-top: 48px;
@@ -2059,10 +2059,10 @@ h3 {
     gap: 14px;
   }
   .footer-top nav a {
-    font-size: 10px;
+    font-size: 12px;
   }
   .footer-bottom {
-    font-size: 8px;
+    font-size: 10px;
   }
   .policy {
     margin-top: 39px;

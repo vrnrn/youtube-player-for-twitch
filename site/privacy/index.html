@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b0b10" />
     <meta
       name="description"
-      content="Privacy information for the YouTube Player for Twitch Chrome extension and its maintainer-only publishing workflow."
+      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare."
     />
     <title>Privacy Policy · YouTube Player for Twitch</title>
     <meta property="og:type" content="website" />
@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="Privacy information for the YouTube Player for Twitch Chrome extension and its maintainer-only publishing workflow."
+      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare."
     />
     <meta
       property="og:url"
@@ -33,7 +33,7 @@
             "@id": "https://youtube-player-for-twitch.vrnrn.com/privacy/#webpage",
             "url": "https://youtube-player-for-twitch.vrnrn.com/privacy/",
             "name": "Privacy Policy · YouTube Player for Twitch",
-            "description": "Privacy information for the YouTube Player for Twitch Chrome extension and its maintainer-only publishing workflow.",
+            "description": "How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare.",
             "inLanguage": "en",
             "isPartOf": {
               "@id": "https://youtube-player-for-twitch.vrnrn.com/#website"
@@ -75,7 +75,7 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="/style.css?v=5b36a74de742" />
+    <link rel="stylesheet" href="/style.css?v=85d3f097e8ac" />
   </head>
   <body class="policy-page">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -95,7 +95,7 @@
     <main class="policy" id="main">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="lede">Last updated September 30, 2026</p>
+      <p class="lede">Last updated October 4, 2026</p>
       <p>
         This policy describes the YouTube Player for Twitch Chrome extension,
         this information site, and the separate workflow used by the maintainer
@@ -195,13 +195,11 @@
       <h2>Maintainer-only publishing workflow</h2>
       <p>
         Separately from extension use, the maintainer uses GitHub Actions to
-        prepare extension releases. When publishing is enabled, the workflow can
-        use the maintainer’s Google OAuth client credentials and refresh token
-        stored as GitHub repository secrets. On a push to the main branch while
-        publishing is enabled, the workflow exchanges those credentials with
-        Google for an access token and uses the Chrome Web Store API to check
-        the target item’s status and submit the extension package and version
-        for review.
+        prepare extension releases. A separate, manually started publishing
+        workflow uses the maintainer’s Google OAuth credentials stored in
+        GitHub repository secrets to check the Chrome Web Store item’s status
+        and submit a release for review. A push to the main branch creates a
+        GitHub release; it does not submit to the Chrome Web Store.
       </p>
       <p>
         The workflow is configured to target this extension’s Chrome Web Store

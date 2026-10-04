@@ -1,12 +1,11 @@
 <p align="center">
-  <img src="docs/assets/readme-hero.svg" alt="YouTube Player for Twitch — YouTube video. Twitch chat." width="100%">
+  <img src="icons/icon128.png" alt="" width="80" height="80">
 </p>
 
 <h1 align="center">YouTube Player for Twitch</h1>
 
 <p align="center">
-  Your stream on YouTube. Your community on Twitch.<br>
-  A Chrome extension that brings a YouTube player into Twitch, keeping chat and the channel interface close by.
+  Watch YouTube livestreams inside Twitch, with Twitch chat alongside.
 </p>
 
 <p align="center">
@@ -41,9 +40,11 @@ The extension pauses and mutes the underlying Twitch player. **Restore Twitch** 
 
 | Watch and chat | Find and customize |
 | :--- | :--- |
-| **▶ YouTube playback, Twitch community**<br>Watch through YouTube's embedded player while keeping the Twitch channel interface. Playback quality depends on the source stream and YouTube's available options. | **⌕ Find the live stream**<br>Checks the streamer's linked YouTube channel first, then searches by Twitch channel name with fuzzy matching and live-result filtering. |
-| **↻ Catch up to live**<br>Use **Sync Now** to seek toward the live edge and briefly catch up at 2× speed. Optional **Auto-sync** repeats every 10 minutes. | **♡ Pick up where you left off**<br>Restore playback after a reload, remember links per Twitch channel, revisit your last five streams and pin favorites. |
-| **▤ Bring chat into fullscreen**<br>Optional floating chat mirrors Twitch messages, badges and emotes over the player. Move it, resize it and adjust its appearance. | **⚙ Make the player your own**<br>Keep Twitch at Source quality, hide native Twitch player-extension overlays, and find extra controls in a compact settings menu. |
+| **YouTube playback, Twitch community**<br>Watch through YouTube's embedded player while keeping the Twitch channel interface. Playback quality depends on the source stream and YouTube's available options. | **Find the live stream**<br>Checks the streamer's linked YouTube channel first, then searches by Twitch channel name with fuzzy matching and live-result filtering. |
+| **Catch up to live**<br>Use **Sync Now** to seek toward the live edge and briefly catch up at 2× speed. Optional **Auto-sync** repeats every 10 minutes. | **Recent streams and favorites**<br>Restore playback after a reload, remember links per Twitch channel, revisit your last five streams and pin favorites. |
+| **Floating chat in fullscreen**<br>Optional floating chat mirrors Twitch messages, badges and emotes over the player. Move it, resize it and adjust its appearance. | **Player settings**<br>Keep Twitch at Source quality, hide native Twitch player-extension overlays, and find extra controls in a compact settings menu. |
+
+**Theatre Mode** widens the player using Twitch’s layout controls. It keeps YouTube playing; **Exit Theatre Mode** restores the standard layout.
 
 Floating chat is **read-only** and starts off by default. Keep the normal Twitch chat open; use it to send messages and access moderation controls. [Explore chat and player settings →](docs/usage.md#floating-chat)
 
@@ -71,13 +72,13 @@ Vanilla JavaScript, CSS and Manifest V3. No framework or npm dependencies are ne
 ```bash
 git clone https://github.com/vrnrn/youtube-player-for-twitch.git
 cd youtube-player-for-twitch
-npm test
+npm run check
 npm run build
 ```
 
-The build creates a validated `release.zip`. See the [development guide](docs/development.md) for local installation, the source map, verification notes and the release workflow.
+The build creates `release.zip` with runtime files and license notices only. See the [development guide](docs/development.md) for local installation, the source map, verification notes and the release workflow.
 
-Found a bug or have an idea? [Open an issue](https://github.com/vrnrn/youtube-player-for-twitch/issues). For playback or chat problems, include your Chrome version and steps to reproduce the issue.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for changes and bug reports. Found a bug or have an idea? [Open an issue](https://github.com/vrnrn/youtube-player-for-twitch/issues). For playback or chat problems, include your Chrome version and steps to reproduce the issue.
 
 ---
 

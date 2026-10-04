@@ -3,9 +3,15 @@
   "version": "1.4.0",
   "private": true,
   "scripts": {
+    "check": "npm run check:syntax && npm test && npm run check:site",
+    "check:syntax": "node scripts/check-syntax.mjs",
     "test": "node --test",
     "check:site": "node scripts/check-site.mjs",
     "build": "sh scripts/build-release.sh",
-    "publish": "node scripts/publish-chrome-web-store.mjs"
+    "publish": "node scripts/publish-chrome-web-store.mjs",
+    "version:site": "node scripts/version-site.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import { createHash } from "node:crypto";
 
 const directory = new URL("../site/", import.meta.url);
 const origin = "https://youtube-player-for-twitch.vrnrn.com";
@@ -58,14 +59,6 @@ for (const route of routes) {
     ).itemListElement;
     assert.equal(crumbs.at(-1).item, url, "Privacy breadcrumb destination");
   }
-  for (const [, value] of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
-    if (!value.startsWith("/")) continue;
-    const target = new URL(value, origin).pathname;
-    const relative = target.endsWith("/")
-      ? `${target.slice(1)}index.html`
-      : target.slice(1);
-    await fs.access(new URL(relative, directory));
-  }
 }
 const missing = await fs.readFile(new URL("404.html", directory), "utf8");
 assert.match(missing, /name="robots" content="noindex"/);
@@ -73,6 +66,28 @@ assert.ok(
   !sitemap.includes("404.html"),
   "Error pages are excluded from the sitemap",
 );
+
+for (const route of [...routes, "/404.html"]) {
+  const relative = route.endsWith("/") ? `${route.slice(1)}index.html` : route.slice(1);
+  const html = await fs.readFile(new URL(relative, directory), "utf8");
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(ids.length, new Set(ids).size, `${route}: unique element IDs`);
+  for (const [, value] of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
+    if (!value.startsWith("/") && !value.startsWith("#")) continue;
+    const target = new URL(value, `${origin}${route}`);
+    const file = target.pathname.endsWith("/") ? `${target.pathname.slice(1)}index.html` : target.pathname.slice(1);
+    const content = await fs.readFile(new URL(file, directory));
+    if (target.hash) {
+      const targetIds = [...content.toString().matchAll(/\sid="([^"]+)"/g)].map(match => match[1]);
+      assert.ok(targetIds.includes(decodeURIComponent(target.hash.slice(1))), `${route}: ${value} has a target`);
+    }
+    if (/\.(css|js)$/.test(file)) {
+      const hash = createHash("sha256").update(content).digest("hex").slice(0, 12);
+      assert.equal(target.searchParams.get("v"), hash, `${value}: run npm run version:site after editing assets`);
+    }
+  }
+  for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) assert.match(tag, /\balt="[^"]*"/, `${route}: image alternative text`);
+}
 console.log(
-  "Validated product and privacy metadata, structured data, sitemap, robots, local assets, and the 404 page.",
+  "Validated website metadata, structured data, routes, anchors, assets, cache versions, and the 404 page.",
 );

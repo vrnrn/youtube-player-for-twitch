@@ -7,8 +7,8 @@ const messages = [
   ["mossy", "#8cd7b1", "we made it 🌿"],
   ["lunar", "#f3bd95", "the colors!"],
   ["riverstone", "#93cde6", "one more adventure?"],
-  ["softglow", "#e3a4ce", "YouTube video + this chat 💜"],
-  ["mossy", "#8cd7b1", "best of both worlds"],
+  ["softglow", "#e3a4ce", "nice view from here"],
+  ["mossy", "#8cd7b1", "try the path on the left"],
   ["pixelpilot", "#bda0ff", "let’s keep going ✨"],
   ["lunar", "#f3bd95", "chat came along for the ride"],
   ["riverstone", "#93cde6", "that mountain in the distance 👀"],
@@ -28,14 +28,14 @@ const shell = (extra = "") =>
   `<div class="channel-shell ${extra}"><div class="channel-nav"><div class="top-nav__menu"><div><span class="twitch-word">twitch</span><span>Browse</span></div></div><span class="channel-search">Search</span><span class="avatar">v</span></div><div class="channel-content"><div class="channel-main"><div class="video-player" data-a-target="video-player-layout"><img src="${media}" alt="Illustrative stream"><button class="theatre-native" aria-label="Theatre Mode (alt+t)" data-a-target="player-theatre-mode-button">▣</button></div><div class="channel-info"><span class="channel-avatar">v</span><div><b>vrnrn</b><p>A new adventure · Exploring the valley</p><small>Adventure &nbsp; · &nbsp; English</small></div><span class="follow">♡ Follow</span></div></div><aside class="native-chat"><div class="native-chat-title">STREAM CHAT <span>⌄</span></div><div class="chat-scrollable-area__message-container" data-test-selector="chat-scrollable-area__message-container">${chat()}</div><div class="chat-compose">Send a message</div><div class="chat-send">Chat</div></aside></div></div>`;
 const variants = {
   watch: {
-    title: "Your video on YouTube.<br><em>Your people on Twitch.</em>",
-    sub: "Watch the stream you want. Stay with the chat you love.",
+    title: "Watch YouTube.<br><em>Keep Twitch chat.</em>",
+    sub: "Play a YouTube livestream inside a Twitch channel.",
     stage: shell(),
     type: "wide",
   },
   find: {
     eyebrow: "01 / FIND YOUR STREAM",
-    title: "Less searching.<br><em>More watching.</em>",
+    title: "Find the<br><em>YouTube stream.</em>",
     sub: "Find the linked YouTube stream,<br>or paste a link and go.",
     stage: shell(),
     type: "split",
@@ -43,21 +43,21 @@ const variants = {
   floating: {
     eyebrow: "02 / FLOATING CHAT",
     title: "Bring chat<br><em>into the picture.</em>",
-    sub: "Move it. Resize it. Keep the reactions<br>right there with your stream.",
+    sub: "Move and resize a read-only<br>overlay of Twitch messages.",
     stage: shell(),
     type: "split floating",
   },
   history: {
     eyebrow: "03 / RECENT STREAMS",
-    title: "Your favorites.<br><em>One click away.</em>",
+    title: "Recent streams<br><em>and favorites.</em>",
     sub: "Revisit recent streams and pin<br>the ones you keep coming back to.",
     stage: shell(),
     type: "split history",
   },
   settings: {
     eyebrow: "04 / MAKE IT YOURS",
-    title: "Little controls.<br><em>A better view.</em>",
-    sub: "Catch up to live, choose your chat style,<br>and make the player feel like yours.",
+    title: "Adjust playback<br><em>and chat.</em>",
+    sub: "Set auto-sync, chat appearance,<br>and optional player controls.",
     stage: shell(),
     type: "split settings",
   },
@@ -73,7 +73,7 @@ if (variants[asset]) {
   document.body.className = `asset ${asset}`;
   document.body.insertAdjacentHTML(
     "afterbegin",
-    `<main class="canvas promo">${brand}${credit}${asset === "marquee" ? "<h1>Your stream.<br><em>Your people.</em></h1><p>YouTube video. Twitch chat. One tab.</p>" : ""}<div class="promo-player"><div class="promo-bar"><i></i><i></i><i></i></div><img src="${media}" alt=""><div class="promo-play">▶</div><div class="promo-chat"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H11l-5 4v-4H4Z"/><path d="M8 8h8M8 12h5"/></svg><span></span><span></span><span></span></div></div>${asset === "small" ? '<div class="small-caption">YouTube video. Twitch chat.</div>' : '<div class="promo-footer">by vrnrn</div>'}</main>`,
+    `<main class="canvas promo">${brand}${credit}${asset === "marquee" ? "<h1>YouTube video.<br><em>Twitch chat.</em></h1><p>YouTube video. Twitch chat. One tab.</p>" : ""}<div class="promo-player"><div class="promo-bar"><i></i><i></i><i></i></div><img src="${media}" alt=""><div class="promo-play">▶</div><div class="promo-chat"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H11l-5 4v-4H4Z"/><path d="M8 8h8M8 12h5"/></svg><span></span><span></span><span></span></div></div>${asset === "small" ? '<div class="small-caption">YouTube video. Twitch chat.</div>' : '<div class="promo-footer">by vrnrn</div>'}</main>`,
   );
 } else if (asset === "icon") {
   document.body.className = "asset icon";

@@ -1,43 +1,31 @@
-What's New?
-- Find streams from the streamer's linked YouTube channel
-- Fall back to Twitch channel-name search when no linked stream is live
+YouTube Player for Twitch
 
-Does your favorite stream multi-stream to both Twitch and YouTube?
-This Chrome extension lets you overlay any YouTube livestream on top of a Twitch channel player, keeping the Twitch chat and interface intact. Perfect for when your favorite streamer switches platforms or when you want the superior YouTube video quality with Twitch's superior chat experience.
+Watch a YouTube livestream inside a Twitch channel while keeping Twitch chat and channel controls available.
 
-The code is open-source: https://github.com/vrnrn/youtube-player-for-twitch
+Find a stream
+The extension checks the streamer's linked YouTube channel, then searches by Twitch channel name. Review the suggested title and channel before playing. You can also paste a YouTube video or livestream link.
 
-✨ Features
+Playback and layout
+The extension pauses and mutes the underlying Twitch player. Restore Twitch brings back its original pause, mute, and volume settings. Theatre Mode uses Twitch's wider layout without restarting YouTube. YouTube controls the available playback quality, including 4K/60fps when the source supports it.
 
-📺 Watch YouTube on Twitch
-Replace the Twitch video player with a YouTube livestream
-Keeps Twitch chat, badges, and channel points visible and interactive
-Autopauses and mutes the underlying Twitch player
-Supports 4K/60fps YouTube playback
+Sync
+Sync Now seeks toward YouTube's live edge and briefly requests 2× playback to catch up. Optional auto-sync repeats every 10 minutes. It does not guarantee exact alignment with Twitch messages.
 
-🔍 Auto-Find Stream
-Smart Search: Checks the streamer's linked YouTube channel first, then searches by Twitch channel name
-Fuzzy Matching: Intelligent matching works even if channel names differ slightly.
-Live Filter: Only suggests actual active livestreams
+Recent streams
+Restore an active stream after a reload, remember links per Twitch channel, revisit the last five unpinned streams, and pin favorites.
 
-⚡ Auto-Sync
-Jump to Live: One-click button to seek to the absolute live edge
-Smart Catch-up: Speeds up playback (2x) briefly to close the latency gap
-Auto-Sync: Optional setting to automatically re-sync every 10 minutes
+Floating chat
+Optional, read-only Twitch chat over the player, including fullscreen. Move or resize it, adjust the background and text, or enable click-through. Keep normal Twitch chat open to supply messages and send replies. Floating chat is off by default.
 
-💾 Smart Persistence
-Auto-Restore: Remembers your active YouTube stream if you reload the page
-Navigation Aware: Handles switching between channels intelligently—keeps the stream when reloading, but resets when you click a different Twitch channel
-Per-Channel Memory: Remembers the last YouTube URL you watched for every Twitch channel
-Recent History: Keeps track of the last 5 YouTube streams you've watched, allowing for quick access.
+Additional settings
+Keep Twitch at Source quality or hide native Twitch player-extension overlays and buttons. Hiding overlays does not prevent those extensions from loading code or making requests.
 
-📺 Twitch Improvements
-Force Highest Quality: Optional setting to automatically enforce "Source" (maximum) quality on the underlying Twitch stream to ensure a crisp viewing experience.
+Experimental interruption blocking
+An optional, off-by-default setting uses bundled TwitchAdSolutions VAFT to filter Twitch advertising segments and request alternate playlists. Changing it reloads Twitch. Disable another VAFT installation before enabling it. Effectiveness depends on Twitch and playback quality can temporarily drop. YouTube playback is separate. Live interruption efficacy and Chrome Web Store acceptance of this integration remain unverified.
 
-Experimental Twitch Interruption Blocking (VAFT): Off by default and marked Experimental in the menu. Opt in from the YouTube menu to filter Twitch advertising segments using bundled TwitchAdSolutions VAFT and alternate Twitch playback tokens/playlists. Changing the setting reloads Twitch. Disable another VAFT installation first. YouTube playback is separate, and Twitch recovery is suspended while YouTube is active. This feature requires Twitch host access and script registration permission, contains no remote updater or telemetry, and may temporarily reduce Twitch quality during interruptions. Availability and effectiveness depend on Twitch; Chrome Web Store acceptance of this new integration has not been verified.
+Privacy
+Settings, stream history, and playback state stay in Chrome's local extension storage. The extension has no developer analytics or telemetry. Search and playback make requests directly to YouTube and Twitch, under those services' privacy policies.
 
-
-💬 Floating Chat
-Optional, draggable and resizable Twitch chat over your player, including YouTube fullscreen. Customize transparency, background, text size and compact mode, or let clicks pass through. Uses your existing Twitch chat and keeps only recent messages in memory. Off by default, with no extra permissions.
-
-Additional settings: A collapsible menu groups Playback, Chat and Player extras. An optional saved setting hides native Twitch player-extension overlays and buttons without affecting YouTube or floating chat. It does not prevent those extensions from loading code or making requests.
+Source: https://github.com/vrnrn/youtube-player-for-twitch
+Privacy: https://youtube-player-for-twitch.vrnrn.com/privacy/
+Support: ypftsupport@vrnrn.com

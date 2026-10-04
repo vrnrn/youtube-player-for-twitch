@@ -7,13 +7,13 @@
 Open a Twitch channel and click **▶ YouTube** in the top navigation.
 
 - **Automatic:** Choose **Find YouTube Stream**. The extension checks the streamer's linked YouTube channel first. If it finds no live stream there, it searches YouTube by Twitch channel name and uses fuzzy matching to suggest a live result. Check the title and channel, then click **Use This Stream**. An approximate match can belong to a different channel.
-- **Manual:** Paste a YouTube watch, short, live or embed URL, then click **Go**. Ordinary videos work too; the live-sync controls are intended for livestreams.
+- **Manual:** Paste a YouTube watch, youtu.be, Shorts, live, or embed URL, then click **Go**. Ordinary videos work too; the live-sync controls are intended for livestreams.
 
 The YouTube player overlays the Twitch player. Twitch chat, badges, channel points and the surrounding interface remain available. YouTube controls playback and the quality options available for the selected stream; 4K/60fps is possible when supported by the source and embedded player.
 
 ## Theatre mode
 
-Open **▶ YouTube** (or **Live** while YouTube is playing) and click **Theatre Mode** to expand Twitch's layout. The menu moves to the top-left of the player in theatre mode; use **Exit Theatre Mode** there to return. The button sits above **Additional settings**, outside YouTube's embedded controls, and is available whenever Twitch provides its native theatre control.
+Open **▶ YouTube** and click **Theatre Mode** to expand Twitch's layout. The menu moves to the top-left of the player in theatre mode; use **Exit Theatre Mode** there to return. The button sits above **Additional settings**, outside YouTube's embedded controls, and is available whenever Twitch provides its native theatre control.
 
 YouTube stays mounted and follows the Twitch player size when you change the layout, including through Twitch's **Alt+T** shortcut when the Twitch page has keyboard focus. You do not need to restore Twitch or reopen the YouTube stream. The button is disabled on pages without a native theatre control and while in fullscreen.
 

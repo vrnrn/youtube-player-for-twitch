@@ -1,6 +1,6 @@
 # Chrome Web Store assets
 
-A matching set for the product page, prepared October 3, 2026. All author credits use **vrnrn**.
+A matching set for the product page, updated October 4, 2026. All author credits use **vrnrn**.
 
 Upload the files in `upload/` to the corresponding slots. The ZIP contains the same eight PNGs plus this guide. `preview.jpg` is an overview for review, not a store upload.
 
@@ -23,7 +23,7 @@ These sizes and the five-screenshot limit follow the [Chrome Web Store graphic a
 
 The menus, search result, recent history, preferences, and floating chat are rendered from this repo's v1.4.0 JavaScript and `twitch-styles.css`. The surrounding channel shell, stream, and chat messages are controlled illustrative content. These are composed feature images, not captures of a live Twitch broadcast. Each screenshot labels the sample content. Settings are shown in a cropped view of the real panel.
 
-`source/server.mjs` serves the original extension code with a capture-only adaptation: it exposes initialization helpers and substitutes a local sample-player document for YouTube's remote iframe. A local Chrome API fixture supplies sample search results and history. The production extension source and icon files are unchanged by this work. No accounts, live chats, private browser state, or third-party broadcasts were used.
+`source/server.mjs` serves the original extension code with a capture-only adaptation: it exposes initialization helpers and substitutes a local sample-player document for YouTube's remote iframe. A local Chrome API fixture supplies sample search results and history. The capture adaptation does not change the production iframe URL or icon. No accounts, live chats, private browser state, or third-party broadcasts were used.
 
 The landscape is the original artwork already used on the product page; see `site/assets/README.md` for provenance and the original imagegen prompt. The font is the same self-hosted Manrope used on the page, under the SIL Open Font License. Promo play/chat symbols are simple HTML/SVG illustrations.
 

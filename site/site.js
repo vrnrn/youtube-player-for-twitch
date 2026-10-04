@@ -14,8 +14,8 @@ if (demoWindow && demoCaption && demoToolbar && layoutButtons.length) {
         option.setAttribute("aria-pressed", String(option === button));
       }
       demoCaption.textContent = floating
-        ? "More room for the stream. Your Twitch chat comes along."
-        : "YouTube handles the stream. Twitch keeps the conversation.";
+        ? "Fullscreen video with a movable, read-only chat overlay."
+        : "YouTube video beside the channel’s Twitch chat.";
     });
   }
 }
