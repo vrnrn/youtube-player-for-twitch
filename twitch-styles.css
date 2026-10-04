@@ -1,4 +1,4 @@
-/* YouTube on Twitch - Styles */
+/* YouTube Player for Twitch */
 
 /* Nav Button Wrapper */
 #ytot-nav-wrapper {
@@ -175,21 +175,6 @@
     transition: background 0.15s, border-color 0.15s;
 }
 
-.ytot-select {
-    background: #100e16;
-    border: 1px solid #40384c;
-    border-radius: 8px;
-    color: #efeff1;
-    font-size: 12px;
-    padding: 4px 8px;
-    outline: none;
-    cursor: pointer;
-}
-
-.ytot-select:focus {
-    border-color: #9147ff;
-}
-
 /* Actions Section */
 .ytot-layout-controls {
     padding: 0 18px 14px;
@@ -363,20 +348,6 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
     display: none;
 }
 
-.ytot-searching {
-    color: #adadb8;
-    font-size: 12px;
-    text-align: center;
-    padding: 8px;
-}
-
-.ytot-no-result {
-    color: #ff5252;
-    font-size: 12px;
-    text-align: center;
-    padding: 8px;
-}
-
 .ytot-result-card {
     background: #241f2c;
     border: 1px solid #40364f;
@@ -484,13 +455,20 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
     background: #2f2f35;
 }
 
-.ytot-history-info {
+.ytot-dropdown .ytot-history-play {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     margin-right: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
 }
 
 .ytot-history-title {
+    display: block;
     color: #efeff1;
     font-size: 12px;
     margin-bottom: 2px;
@@ -500,6 +478,7 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
 }
 
 .ytot-history-channel {
+    display: block;
     color: #adadb8;
     font-size: 11px;
 }
@@ -508,6 +487,7 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
     background: transparent;
     border: none;
     font-size: 14px;
+    color: #aaa2b6;
     padding: 4px;
     cursor: pointer;
     opacity: 0;
@@ -522,6 +502,8 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
 .ytot-history-item.pinned .ytot-pin-btn {
     opacity: 1;
 }
+
+.ytot-pin-btn[aria-pressed="true"] { color: #bf94ff; }
 
 .ytot-pin-btn:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -655,13 +637,22 @@ html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index:
 .ytot-vaft-status[data-state="warning"]::before { background: #f4bd65; }
 .ytot-vaft-status[data-state="error"]::before { background: #ff8e8e; }
 
-.ytot-dropdown button:focus-visible, .ytot-dropdown input:focus-visible {
+.ytot-nav-btn:focus-visible,
+.ytot-dropdown button:focus-visible, .ytot-dropdown input:focus-visible, .ytot-dropdown select:focus-visible {
     outline: 2px solid #bf94ff;
     outline-offset: 3px;
 }
 
 .ytot-history-item:focus-within .ytot-pin-btn {
     opacity: 1;
+}
+
+.ytot-dropdown button:disabled { opacity: 0.55; cursor: default; }
+.ytot-search-result { color: #c7bfd3; font-size: 12px; overflow-wrap: anywhere; }
+.ytot-search-result:not(:empty) { margin-top: 10px; }
+
+@media (hover: none) {
+    .ytot-pin-btn { opacity: 1; }
 }
 
 @media (max-width: 640px) {

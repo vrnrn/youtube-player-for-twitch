@@ -49,7 +49,7 @@ function createBackground(fetchImpl) {
             }
         },
         fetch: fetchImpl,
-        URL,
+        URL, AbortController, setTimeout, clearTimeout,
         console: { error() {}, log() {}, warn() {} }
     }, { filename: 'background.js' });
 
@@ -74,7 +74,7 @@ test('linked-channel lookup fetches the normalized /streams page and returns a l
             ok: true,
             text: async () => makePage([
                 makeVideo('scheduled123', { overlay: { style: 'DEFAULT', text: { simpleText: 'Starting soon' } } }),
-                makeVideo('live-video-1', { title: 'Playing now', badge: { label: 'LIVE NOW', style: 'BADGE_STYLE_TYPE_LIVE_NOW' } }),
+                makeVideo('live-video1', { title: 'Playing now', badge: { label: 'LIVE NOW', style: 'BADGE_STYLE_TYPE_LIVE_NOW' } }),
                 makeVideo('archive12345')
             ])
         };
@@ -89,7 +89,7 @@ test('linked-channel lookup fetches the normalized /streams page and returns a l
     assert.equal(requestOptions.credentials, 'omit');
     assert.equal(response.results.length, 1);
     assert.deepEqual({ ...response.results[0] }, {
-        videoId: 'live-video-1',
+        videoId: 'live-video1',
         title: 'Playing now',
         channel: 'Creator',
         isLive: true
@@ -100,7 +100,7 @@ test('linked-channel lookup recognizes YouTube LIVE badges in initial data assig
     const sendMessage = createBackground(async () => ({
         ok: true,
         text: async () => makePage([
-            makeVideo('live-video-2', { overlay: { style: 'LIVE', text: { simpleText: 'LIVE' } } })
+            makeVideo('live-video2', { overlay: { style: 'LIVE', text: { simpleText: 'LIVE' } } })
         ], 'window["ytInitialData"]')
     }));
 
@@ -109,7 +109,7 @@ test('linked-channel lookup recognizes YouTube LIVE badges in initial data assig
         channelUrl: 'https://www.youtube.com/channel/UCexample'
     });
 
-    assert.equal(response.results[0].videoId, 'live-video-2');
+    assert.equal(response.results[0].videoId, 'live-video2');
 });
 
 test('linked-channel lookup ignores pages that show no active livestream', async () => {
@@ -144,4 +144,52 @@ test('linked-channel lookup rejects non-YouTube and non-HTTPS URLs before fetchi
 
     assert.equal(fetchCount, 0);
     assert.ok(responses.every(response => Boolean(response.error)));
+});
+
+test('video details tolerate multiline JSON, escaped quotes and semicolons in titles', async () => {
+    const title = 'A "quoted" stream }; and a new line\npart two';
+    const html = `<script>window['ytInitialPlayerResponse'] = ${JSON.stringify({ videoDetails: { title, author: 'Creator' } }, null, 2)};</script>`;
+    const send = createBackground(async () => ({ ok: true, text: async () => html }));
+    const result = await send({ type: 'GET_VIDEO_DETAILS', videoId: 'abcdefghijk' });
+    assert.equal(result.title, title);
+    assert.equal(result.channel, 'Creator');
+});
+
+test('search validates inputs and deduplicates live results', async () => {
+    let requests = 0;
+    const send = createBackground(async () => {
+        requests++;
+        return { ok: true, text: async () => makePage([
+            makeVideo('abcdefghijk', { badge: { label: 'LIVE' } }),
+            makeVideo('abcdefghijk', { badge: { label: 'LIVE' } }),
+            makeVideo('bad" id', { badge: { label: 'LIVE' } }),
+            makeVideo('archived123')
+        ]) };
+    });
+    for (const videoId of ['', null, 'abcdefghijk&extra=1', 'abcdefghijkz'])
+        assert.ok((await send({ type: 'GET_VIDEO_DETAILS', videoId })).error);
+    for (const query of [null, '', ' ', 'x'.repeat(201)])
+        assert.ok((await send({ type: 'SEARCH_YOUTUBE', query })).error);
+    assert.equal(requests, 0);
+    const result = await send({ type: 'SEARCH_YOUTUBE', query: 'creator' });
+    assert.equal(result.results.length, 1);
+    assert.equal(result.results[0].videoId, 'abcdefghijk');
+});
+
+test('YouTube timeout aborts the body read and releases the timer', async () => {
+    const listeners = [], timers = new Map();
+    vm.runInNewContext(backgroundScript, {
+        chrome: { runtime: { onMessage: { addListener: fn => listeners.push(fn) } } },
+        URL, AbortController, console: { error() {} },
+        setTimeout(fn) { timers.set(1, fn); return 1; }, clearTimeout(id) { timers.delete(id); },
+        fetch: async (url, { signal }) => ({ ok: true, text: () => new Promise((resolve, reject) => {
+            if (signal.aborted) reject(new Error('Aborted'));
+            else signal.addEventListener('abort', () => reject(new Error('Aborted')));
+        }) })
+    });
+    const response = new Promise(resolve => listeners[0]({ type: 'GET_VIDEO_DETAILS', videoId: 'abcdefghijk' }, {}, resolve));
+    await Promise.resolve();
+    timers.get(1)();
+    assert.match((await response).error, /too long/);
+    assert.equal(timers.size, 0);
 });

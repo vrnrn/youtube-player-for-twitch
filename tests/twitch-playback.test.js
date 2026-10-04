@@ -19,7 +19,7 @@ function fixture(initial = {}) {
     };
     replace(initial);
     const document = {
-        body: {}, documentElement: { setAttribute(k, v) { attrs.set(k, v); }, removeAttribute(k) { attrs.delete(k); } },
+        body: {}, documentElement: { getAttribute(k) { return attrs.get(k) ?? null; }, setAttribute(k, v) { attrs.set(k, v); }, removeAttribute(k) { attrs.delete(k); } },
         querySelector: () => player,
         addEventListener(name, fn) { events.set(name, fn); }, removeEventListener(name) { events.delete(name); }
     };
@@ -196,4 +196,16 @@ test('resize observation follows replacement players and pending layout work is 
     f.flushFrame();
     assert.equal(f.element.style.width, '900px');
     f.owner.release();
+});
+
+test('busy chat and extension menu mutations do not schedule player layout', () => {
+    const f = fixture();
+    f.owner.own(f.element);
+    const observer = f.observers[0];
+    observer.fn([{ target: { closest: () => ({}) } }]);
+    assert.equal(f.frames.size, 0);
+    observer.fn([{ target: { closest: () => null } }]);
+    assert.equal(f.frames.size, 1);
+    f.owner.release();
+    assert.equal(f.frames.size, 0);
 });

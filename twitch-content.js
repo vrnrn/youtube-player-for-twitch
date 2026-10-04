@@ -1,15 +1,4 @@
-/**
- * YouTube on Twitch - Content Script
- * 
- * Features:
- * - Overlays YouTube player on Twitch stream
- * - Preserves Twitch chat
- * - Auto-finds YouTube stream based on Twitch channel name
- * - Syncs playback speed to catch up with live edge
- * - Persists state across page reloads and navigation
- * 
- * @author YouTube on Twitch Team
- */
+// YouTube player, stream discovery, and controls on Twitch.
 
 (function () {
     'use strict';
@@ -24,132 +13,104 @@
     if (window.__ytOnTwitchLoaded) return;
     window.__ytOnTwitchLoaded = true;
 
-    // =====================
-    // Configuration
-    // =====================
     const CONFIG = {
         SYNC_INTERVAL: 10 * 60 * 1000, // 10 minutes
         SYNC_SPEED: 2.0,               // Speed to catch up
         NORMAL_SPEED: 1.0,             // Normal playback speed
         CHECK_INTERVAL: 1500,          // Poll interval for nav bar
         FAST_CHECK_INTERVAL: 250,      // Fast poll interval for initial load
-        MAX_ATTEMPTS: 60,              // Max checks for nav bar before giving up (increased for fast start)
+        MAX_ATTEMPTS: 60,              // Fast startup checks; the backup loop can retry later
         QUALITY_CHECK_INTERVAL: 5 * 60 * 1000 // 5 minutes
     };
 
-    const VIDEO_ID_PATTERNS = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
-        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
-    ];
+    const validVideoId = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(value);
 
-    // =====================
-    // State Management
-    // =====================
     const state = {
         initialized: false,
         youtubeVideoId: null,
         autoSyncEnabled: false,
         syncIntervalId: null,
         isSyncing: false,
+        syncTimeoutId: null,
         forceHighestQuality: false,
         qualityIntervalId: null
     };
 
-    /**
-     * Persist data to Chrome storage
-     * @param {string} key 
-     * @param {any} value 
-     */
-    function saveState(key, value) {
+    async function saveState(key, value) {
         if (!chrome.runtime?.id) return;
         try {
-            chrome.storage?.local?.set({ [key]: value });
+            await chrome.storage.local.set({ [key]: value });
         } catch (e) {
-            // Silent fail
+            // The page can outlive its extension context after an update.
         }
     }
 
-    /**
-     * Retrieve data from Chrome storage
-     * @param {string} key 
-     * @returns {Promise<any>}
-     */
     function loadState(key) {
         return new Promise((resolve) => {
-            if (!chrome.runtime?.id) {
+            if (!chrome.runtime?.id || !chrome.storage?.local) {
                 resolve(null);
                 return;
             }
             try {
-                chrome.storage?.local?.get([key], (result) => resolve(result?.[key]));
+                chrome.storage.local.get([key], result => resolve(chrome.runtime.lastError ? null : result?.[key]));
             } catch (e) {
                 resolve(null);
             }
         });
     }
 
-    /**
-     * Get current Twitch channel name from URL
-     * @returns {string|null}
-     */
     function getTwitchChannel() {
-        // Matches /channelName at start of path
-        const match = window.location.pathname.match(/^\/([a-zA-Z0-9_]+)/);
-        return match ? match[1].toLowerCase() : null;
+        const match = window.location.pathname.match(/^\/([a-zA-Z0-9_]+)\/?$/);
+        const reserved = /^(directory|downloads|drops|friends|jobs|moderator|p|popout|prime|search|settings|store|subscriptions|team|turbo|u|videos|wallet)$/i;
+        return match && !reserved.test(match[1]) ? match[1].toLowerCase() : null;
     }
 
-    // =====================
-    // UI Components
-    // =====================
     const MENU_ICONS = {
         close: 'm6 6 12 12M18 6 6 18',
         chevron: 'm6 9 6 6 6-6',
         search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
         sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7',
-        theatre: 'M3 5h18v14H3zM16 5v14'
+        theatre: 'M3 5h18v14H3zM16 5v14',
+        pin: 'M9 3h6l-1 7 3 3v2H7v-2l3-3-1-7M12 15v6'
     };
     const menuIcon = name => '<svg class="ytot-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + MENU_ICONS[name] + '"></path></svg>';
 
-    /**
-     * Creates the main navigation button and dropdown menu
-     * @returns {HTMLElement} Wrapper element containing button and dropdown
-     */
     function createNavButton() {
         const wrapper = document.createElement('div');
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube" aria-haspopup="true" aria-expanded="false" aria-controls="ytot-dropdown">
+            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube" aria-expanded="false" aria-controls="ytot-dropdown">
                 <span class="ytot-icon">▶</span>
                 <span class="ytot-label">YouTube</span>
             </button>
-            
+
             <div class="ytot-dropdown" id="ytot-dropdown">
                 <div class="ytot-dropdown-header">
                     <div>
-                        <span class="ytot-menu-title">YouTube on Twitch</span>
+                        <span class="ytot-menu-title">YouTube Player for Twitch</span>
                         <span class="ytot-menu-subtitle">Your stream, with Twitch chat</span>
                     </div>
                     <button class="ytot-close" id="ytot-close" aria-label="Close">${menuIcon('close')}</button>
                 </div>
-                
+
                 <!-- Auto-Find Section -->
                 <div class="ytot-autofind" id="ytot-autofind-section">
                     <button class="ytot-autofind-btn" id="ytot-autofind">${menuIcon('search')}<span>Find YouTube Stream</span></button>
-                    <div class="ytot-search-result" id="ytot-search-result"></div>
+                    <div class="ytot-search-result" id="ytot-search-result" role="status" aria-live="polite"></div>
                 </div>
 
                 <!-- History Section -->
                 <div id="ytot-history-section" class="ytot-history-section"></div>
-                
+
                 <div class="ytot-divider">or paste URL</div>
-                
+
                 <!-- Manual Input -->
                 <div class="ytot-dropdown-body">
-                    <input type="text" id="ytot-url" placeholder="Paste YouTube URL" spellcheck="false" />
+                    <input type="url" id="ytot-url" aria-label="YouTube video or livestream URL" placeholder="Paste YouTube URL" spellcheck="false" autocomplete="off" />
                     <button class="ytot-go" id="ytot-go">Go</button>
                 </div>
-                
+
                 <div class="ytot-layout-controls">
                     <button type="button" class="ytot-theatre" id="ytot-theatre" aria-pressed="false" disabled>${menuIcon('theatre')}<span id="ytot-theatre-label">Theatre Mode</span></button>
                 </div>
@@ -203,14 +164,14 @@
                         </section>
                     </div>
                 </details>
-                
+
                 <!-- Actions -->
                 <div class="ytot-actions" id="ytot-actions" hidden>
                     <button class="ytot-sync-now" id="ytot-sync-now" title="Sync">${menuIcon('sync')}<span>Sync Now</span></button>
                     <button class="ytot-restore" id="ytot-restore">Restore Twitch</button>
                 </div>
-                
-                <div class="ytot-status" id="ytot-status"></div>
+
+                <div class="ytot-status" id="ytot-status" role="status" aria-live="polite"></div>
             </div>
         `;
         return wrapper;
@@ -312,12 +273,7 @@
         uiCache.actions = document.getElementById('ytot-actions');
     }
 
-    /**
-     * Updates the toggle button appearance based on active state
-     * @param {boolean} isActive 
-     */
     function updateToggleButton(isActive) {
-        // Fallback if cache is empty (safety net)
         if (!uiCache.toggle) refreshDOMCache();
 
         const { toggle, icon, label, restore, syncNow, actions } = uiCache;
@@ -325,8 +281,8 @@
 
         if (isActive) {
             toggle?.classList.add('active');
-            if (icon) icon.textContent = '🔴';
-            if (label) label.textContent = 'Live';
+            if (icon) icon.textContent = '▶';
+            if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'block';
             if (syncNow) syncNow.style.display = 'block';
         } else {
@@ -346,9 +302,10 @@
         }
     }
 
-    function closeDropdown() {
+    function closeDropdown(restoreFocus = false) {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
         document.getElementById('ytot-toggle')?.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) document.getElementById('ytot-toggle')?.focus();
     }
 
     let theatreObserver = null;
@@ -423,69 +380,50 @@
         setTimeout(renderTheatreControl, 0);
     }
 
-    /**
-     * Saves history with sorting and trimming logic
-     * @param {Array} historyList
-     */
-    function saveAndRenderHistory(historyList) {
-        // Separate Pinned and Unpinned
-        const pinned = historyList.filter(h => h.pinned).sort((a, b) => b.timestamp - a.timestamp);
-        const unpinned = historyList.filter(h => !h.pinned).sort((a, b) => b.timestamp - a.timestamp);
-
-        // Keep max 5 unpinned
-        const trimmedUnpinned = unpinned.slice(0, 5);
-
-        // Recombine
-        const finalHistory = [...pinned, ...trimmedUnpinned];
-
-        saveState('ytot_history', finalHistory);
-        renderHistory();
+    // Serialize local history edits so rapid playback/pin actions do not lose entries.
+    let historyQueue = Promise.resolve();
+    function readHistory(value) {
+        return Array.isArray(value) ? value.filter(item => item && validVideoId(item.videoId)) : [];
     }
-
-    async function addToHistory(videoId, metadata) {
-        if (!videoId) return;
-
-        let history = (await loadState('ytot_history')) || [];
-
-        // Check if existing item was pinned
-        const existingItem = history.find(h => h.videoId === videoId);
-        const isPinned = existingItem ? existingItem.pinned : false;
-
-        const newItem = {
+    function editHistory(update) {
+        historyQueue = historyQueue.then(async () => {
+            const history = update(readHistory(await loadState('ytot_history')));
+            const byNewest = (a, b) => (b.timestamp || 0) - (a.timestamp || 0);
+            const pinned = history.filter(item => item.pinned).sort(byNewest);
+            const recent = history.filter(item => !item.pinned).sort(byNewest).slice(0, 5);
+            await saveState('ytot_history', [...pinned, ...recent]);
+            await renderHistory();
+        }).catch(error => Logger.warn('Could not update stream history:', error));
+        return historyQueue;
+    }
+    function addToHistory(videoId, metadata) {
+        if (!validVideoId(videoId)) return;
+        return editHistory(history => [{
             videoId,
             title: metadata?.title || videoId,
             channel: metadata?.channel || 'Unknown Channel',
             timestamp: Date.now(),
-            pinned: isPinned
-        };
-
-        // Remove duplicates (by videoId)
-        history = history.filter(h => h.videoId !== videoId);
-
-        // Add to top
-        history.unshift(newItem);
-
-        saveAndRenderHistory(history);
+            pinned: history.find(item => item.videoId === videoId)?.pinned === true
+        }, ...history.filter(item => item.videoId !== videoId)]);
     }
-
-    async function togglePin(videoId) {
-        let history = (await loadState('ytot_history')) || [];
-        const item = history.find(h => h.videoId === videoId);
-        if (item) {
-            item.pinned = !item.pinned;
-            saveAndRenderHistory(history);
-        }
+    function togglePin(videoId) {
+        return editHistory(history => history.map(item => item.videoId === videoId
+            ? { ...item, pinned: !item.pinned } : item));
     }
 
     async function renderHistory() {
         const container = document.getElementById('ytot-history-section');
         if (!container) return;
 
-        const history = (await loadState('ytot_history')) || [];
+        const history = readHistory(await loadState('ytot_history'));
+        const focused = document.activeElement;
+        const focusId = container.contains(focused) ? focused.getAttribute('data-video-id') : null;
+        const focusClass = focused?.classList.contains('ytot-pin-btn') ? 'ytot-pin-btn' : 'ytot-history-play';
 
         if (history.length === 0) {
             container.innerHTML = '';
             container.style.display = 'none';
+            if (focusId || focused?.id === 'ytot-clear-history') document.getElementById('ytot-autofind')?.focus();
             return;
         }
 
@@ -498,30 +436,27 @@
             <div class="ytot-history-list">
                 ${history.map(item => `
                     <div class="ytot-history-item ${item.pinned ? 'pinned' : ''}" data-video-id="${item.videoId}">
-                        <div class="ytot-history-info">
-                            <div class="ytot-history-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-                            <div class="ytot-history-channel">${escapeHtml(item.channel)}</div>
-                        </div>
-                        <button class="ytot-pin-btn" title="${item.pinned ? 'Unpin' : 'Pin'}" data-video-id="${item.videoId}">
-                            ${item.pinned ? '📌' : '📍'}
+                        <button type="button" class="ytot-history-play" data-video-id="${item.videoId}" aria-label="Play ${escapeHtml(item.title)}">
+                            <span class="ytot-history-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
+                            <span class="ytot-history-channel">${escapeHtml(item.channel)}</span>
+                        </button>
+                        <button type="button" class="ytot-pin-btn" aria-label="${item.pinned ? 'Unpin' : 'Pin'} ${escapeHtml(item.title)}" aria-pressed="${!!item.pinned}" title="${item.pinned ? 'Unpin' : 'Pin'}" data-video-id="${item.videoId}">
+                            ${menuIcon('pin')}
                         </button>
                     </div>
                 `).join('')}
             </div>
         `;
 
-        // Clear button listener
         const clearBtn = container.querySelector('#ytot-clear-history');
         if (clearBtn) {
             clearBtn.onclick = (e) => {
                 e.stopPropagation();
-                saveState('ytot_history', []);
-                renderHistory();
+                editHistory(() => []);
             };
         }
 
-        // Add click listeners for items
-        container.querySelectorAll('.ytot-history-item').forEach(el => {
+        container.querySelectorAll('.ytot-history-play').forEach(el => {
             el.onclick = () => {
                 const videoId = el.getAttribute('data-video-id');
                 const item = history.find(h => h.videoId === videoId);
@@ -529,7 +464,8 @@
             };
         });
 
-        // Add click listeners for pins
+        if (validVideoId(focusId)) container.querySelector(`.${focusClass}[data-video-id="${focusId}"]`)?.focus();
+
         container.querySelectorAll('.ytot-pin-btn').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -539,28 +475,25 @@
         });
     }
 
-    // =====================
-    // Parsing & Search logic
-    // =====================
-
-    /**
-     * Extracts YouTube Video ID from various URL formats
-     * @param {string} url 
-     * @returns {string|null} Video ID
-     */
     function extractVideoId(url) {
-        if (!url) return null;
-        for (const pattern of VIDEO_ID_PATTERNS) {
-            const match = url.match(pattern);
-            if (match) return match[1];
+        if (typeof url !== 'string' || !url.trim()) return null;
+        try {
+            const input = url.trim();
+            const parsed = new URL(/^[a-z][a-z0-9+.-]*:/i.test(input) ? input : `https://${input}`);
+            if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.port) return null;
+            let id;
+            if (['youtu.be', 'www.youtu.be'].includes(parsed.hostname)) {
+                id = parsed.pathname.match(/^\/([^/]+)\/?$/)?.[1];
+            } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'].includes(parsed.hostname)) {
+                id = parsed.pathname === '/watch' ? parsed.searchParams.get('v')
+                    : parsed.pathname.match(/^\/(?:live|embed|shorts)\/([^/]+)\/?$/)?.[1];
+            }
+            return validVideoId(id) ? id : null;
+        } catch {
+            return null;
         }
-        return null;
     }
 
-    /**
-     * Calculates Levenshtein distance for fuzzy string matching
-     * Optimized using Uint16Array and charCodeAt for performance
-     */
     function levenshteinDistance(a, b) {
         if (a.length === 0) return b.length;
         if (b.length === 0) return a.length;
@@ -609,150 +542,134 @@
         }
     }
 
-    /**
-     * Searches YouTube for a livestream matching the Twitch channel name
-     * Uses background script to bypass CORS
-     */
     async function searchYouTubeLive(channelName) {
         if (!channelName) return null;
 
-        const resultDiv = document.getElementById('ytot-search-result');
-        resultDiv.innerHTML = '<div class="ytot-searching">🔍 Searching...</div>';
-
-        try {
-            const linkedChannelUrl = getLinkedYouTubeChannel();
-            if (linkedChannelUrl) {
-                const linkedResponse = await chrome.runtime.sendMessage({
-                    type: 'SEARCH_YOUTUBE_CHANNEL',
-                    channelUrl: linkedChannelUrl
-                });
-
-                if (linkedResponse?.results?.length) {
-                    return { ...linkedResponse.results[0], linkedChannel: true };
-                }
-
-                if (linkedResponse?.error) {
-                    Logger.warn('Linked YouTube channel search failed:', linkedResponse.error);
-                }
-            }
-
-            const response = await chrome.runtime.sendMessage({
-                type: 'SEARCH_YOUTUBE',
-                query: channelName
+        const linkedChannelUrl = getLinkedYouTubeChannel();
+        if (linkedChannelUrl) {
+            const linkedResponse = await chrome.runtime.sendMessage({
+                type: 'SEARCH_YOUTUBE_CHANNEL',
+                channelUrl: linkedChannelUrl
             });
 
-            if (!response || response.error) {
-                Logger.error('Search error:', response?.error);
-                throw new Error(response?.error || 'Search failed');
+            if (linkedResponse?.results?.length) {
+                return { ...linkedResponse.results[0], linkedChannel: true };
             }
 
-            const contents = response.results;
-            if (!contents || contents.length === 0) throw new Error('No results found');
-
-            // Find best match
-            const normalizedChannel = channelName.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-            // 1. Exact/Close Match
-            for (const video of contents) {
-                const normalizedResult = video.channel.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const isSimilar = normalizedResult.includes(normalizedChannel) ||
-                    normalizedChannel.includes(normalizedResult) ||
-                    levenshteinDistance(normalizedChannel, normalizedResult) <= 3;
-
-                if (isSimilar) return { ...video, channel: video.channel };
+            if (linkedResponse?.error) {
+                Logger.warn('Linked YouTube channel search failed:', linkedResponse.error);
             }
-
-            // 2. Fallback: First live result
-            return { ...contents[0], approximate: true };
-
-        } catch (e) {
-            Logger.error('Search error:', e);
-            return null;
         }
+
+        const response = await chrome.runtime.sendMessage({
+            type: 'SEARCH_YOUTUBE',
+            query: channelName
+        });
+
+        if (!response || response.error) {
+            throw new Error(response?.error || 'Search failed');
+        }
+
+        const contents = response.results;
+        if (!contents || contents.length === 0) return null;
+
+        const normalizedChannel = channelName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // Prefer a matching channel; flag the first live result otherwise.
+        for (const video of contents) {
+            const normalizedResult = video.channel.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const isSimilar = normalizedResult && normalizedChannel && (normalizedResult.includes(normalizedChannel) ||
+                normalizedChannel.includes(normalizedResult) ||
+                levenshteinDistance(normalizedChannel, normalizedResult) <= 3);
+
+            if (isSimilar) return video;
+        }
+
+        return { ...contents[0], approximate: true };
+
     }
 
+    let searchGeneration = 0;
     async function handleAutoFind() {
         const channel = getTwitchChannel();
         if (!channel) {
-            updateStatus('Could not detect Twitch channel', 'error');
+            updateStatus('Open a Twitch channel to find its YouTube stream.', 'error');
             return;
         }
-
-        const result = await searchYouTubeLive(channel);
+        const generation = ++searchGeneration;
         const resultDiv = document.getElementById('ytot-search-result');
-
-        if (result) {
-            const approxNote = result.approximate ? '<div class="ytot-result-note">⚠️ Best match (channel name differs)</div>' : '';
-            const linkedNote = result.linkedChannel ? '<div class="ytot-result-note">🔗 Found on the streamer’s linked YouTube channel</div>' : '';
+        const button = document.getElementById('ytot-autofind');
+        if (!resultDiv) return;
+        if (button) button.disabled = true;
+        resultDiv.textContent = 'Searching YouTube…';
+        const current = () => generation === searchGeneration && channel === getTwitchChannel() &&
+            resultDiv === document.getElementById('ytot-search-result');
+        try {
+            const result = await searchYouTubeLive(channel);
+            if (!current()) return;
+            if (!result || !validVideoId(result.videoId)) {
+                resultDiv.textContent = 'No live stream found. Try pasting a YouTube link.';
+                return;
+            }
+            const approxNote = result.approximate ? '<div class="ytot-result-note">Best match · check the channel before playing</div>' : '';
+            const linkedNote = result.linkedChannel ? '<div class="ytot-result-note">From the streamer’s linked YouTube channel</div>' : '';
             resultDiv.innerHTML = `
                 <div class="ytot-result-card">
-                    ${approxNote}
-                    ${linkedNote}
+                    ${approxNote}${linkedNote}
                     <div class="ytot-result-title">${escapeHtml(result.title)}</div>
-                    <div class="ytot-result-channel">📺 ${escapeHtml(result.channel)}</div>
-                    <button class="ytot-result-use" data-video-id="${result.videoId}">▶ Use This Stream</button>
+                    <div class="ytot-result-channel">${escapeHtml(result.channel)}</div>
+                    <button type="button" class="ytot-result-use">Use This Stream</button>
                 </div>
             `;
-            resultDiv.querySelector('.ytot-result-use').onclick = () => injectYouTube(result.videoId, result);
-        } else {
-            resultDiv.innerHTML = '<div class="ytot-no-result">No live stream found for this channel</div>';
+            resultDiv.querySelector('.ytot-result-use').onclick = () => {
+                if (current()) injectYouTube(result.videoId, result);
+            };
+        } catch (error) {
+            if (current()) resultDiv.textContent = `Search unavailable: ${error.message} You can paste a YouTube link.`;
+        } finally {
+            if (button && generation === searchGeneration) button.disabled = false;
         }
     }
 
     function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(text ?? '').replace(/[&<>"']/g, character => entities[character]);
     }
 
-    // =====================
-    // Player Control
-    // =====================
-
-    /**
-     * Injects YouTube iframe over the Twitch player
-     * @param {string} videoId 
-     * @param {object} metadata Optional metadata { title, channel }
-     */
     function injectYouTube(videoId, metadata = null, restoredPlayback = null) {
-        if (!videoId) return;
+        if (!validVideoId(videoId)) return;
+        const container = window.__ypftPlayback.container();
+        if (!container || !getTwitchChannel()) {
+            updateStatus('Open a Twitch channel with a player first.', 'error');
+            return;
+        }
+        searchGeneration++;
+        const searchButton = document.getElementById('ytot-autofind');
+        if (searchButton) searchButton.disabled = false;
+        const searchResult = document.getElementById('ytot-search-result');
+        if (searchResult) searchResult.textContent = '';
+        cancelSync();
 
-        // Update History
         if (metadata) {
             addToHistory(videoId, metadata);
         } else {
             // Fetch metadata asynchronously
             if (chrome.runtime?.id) {
-                chrome.runtime.sendMessage({
-                    type: 'GET_VIDEO_DETAILS',
-                    videoId
-                }, (response) => {
-                    if (response && !response.error) {
-                        addToHistory(videoId, response);
-                    } else {
-                        addToHistory(videoId, { title: videoId, channel: 'Manual Entry' });
-                    }
-                });
+                chrome.runtime.sendMessage({ type: 'GET_VIDEO_DETAILS', videoId })
+                    .then(response => addToHistory(videoId, response && !response.error
+                        ? response : { title: videoId, channel: 'Manual Entry' }))
+                    .catch(() => addToHistory(videoId, { title: videoId, channel: 'Manual Entry' }));
             }
         }
 
-        // Try multiple selectors to support Twitch layout changes
-        const container = window.__ypftPlayback.container();
-
-        if (!container) {
-            updateStatus('Error: Player not found', 'error');
-            return;
-        }
-
-        // Cleanup existing
         document.getElementById('ytot-youtube-wrapper')?.remove();
 
-        // Create overlay
         const wrapper = document.createElement('div');
         wrapper.id = 'ytot-youtube-wrapper';
 
         const iframe = document.createElement('iframe');
         iframe.id = 'ytot-youtube-player';
+        iframe.title = 'YouTube video player';
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&enablejsapi=1`;
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
         iframe.setAttribute('allowfullscreen', 'true');
@@ -764,16 +681,14 @@
         document.body.appendChild(wrapper);
         window.__ypftChat?.sync();
 
-        // Update state
         state.youtubeVideoId = videoId;
         const channel = getTwitchChannel();
         saveState(`ytot_${channel}`, videoId);
         saveState(`ytot_active_${channel}`, videoId); // Mark as active for persistence
         saveState(`ytot_playback_${channel}`, window.__ypftPlayback.snapshot());
 
-        // UI Updates
         updateToggleButton(true);
-        closeDropdown();
+        closeDropdown(document.getElementById('ytot-dropdown')?.contains(document.activeElement));
         updateStatus('YouTube playing', 'success');
 
         if (state.autoSyncEnabled) {
@@ -783,11 +698,8 @@
         Logger.log('YouTube injected:', videoId);
     }
 
-    /**
-     * Removes the YouTube overlay and restores Twitch player
-     * @param {boolean} keepState If true, preserves active state (used during navigation)
-     */
     function removeYouTube(keepState = false) {
+        cancelSync();
         document.getElementById('ytot-youtube-wrapper')?.remove();
         window.__ypftPlayback.release({ navigation: keepState });
         window.__ypftChat?.sync();
@@ -804,51 +716,46 @@
         }
     }
 
-    // =====================
-    // Sync Logic
-    // =====================
+    function cancelSync() {
+        clearTimeout(state.syncTimeoutId);
+        state.syncTimeoutId = null;
+        state.isSyncing = false;
+        const button = document.getElementById('ytot-sync-now');
+        if (button) button.disabled = false;
+    }
 
-    /**
-     * Forces the YouTube player to jump to live edge
-     * Strategy: Seek to far future -> 2x speed for 5s -> Normal speed
-     */
     function syncNow() {
         const iframe = document.getElementById('ytot-youtube-player');
-        if (!iframe) return;
-
+        if (!iframe || state.isSyncing) return;
+        cancelSync();
         state.isSyncing = true;
-        updateStatus('⚡ Jumping to live...', 'syncing');
-
+        const button = document.getElementById('ytot-sync-now');
+        if (button) button.disabled = true;
+        updateStatus('Jumping to live…', 'syncing');
+        const sendCmd = (func, args) => iframe.contentWindow.postMessage(
+            JSON.stringify({ event: 'command', func, args }), 'https://www.youtube.com');
+        const step = (delay, action) => {
+            state.syncTimeoutId = setTimeout(() => {
+                if (iframe !== document.getElementById('ytot-youtube-player')) { cancelSync(); return; }
+                try { action(); }
+                catch { cancelSync(); updateStatus('Sync failed. Try again.', 'error'); }
+            }, delay);
+        };
         try {
-            // Post commands to YouTube Embed API
-            const sendCmd = (func, args) => {
-                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), 'https://www.youtube.com');
-            };
-
-            // 1. Jump to live
             sendCmd('seekTo', [999999, true]);
-
-            // 2. Speed up briefly
-            setTimeout(() => {
-                updateStatus('⚡ Catching up at 2x...', 'syncing');
+            step(500, () => {
                 sendCmd('setPlaybackRate', [CONFIG.SYNC_SPEED]);
-
-                // 3. Return to normal
-                setTimeout(() => {
+                updateStatus('Catching up at 2×…', 'syncing');
+                step(5000, () => {
                     sendCmd('setPlaybackRate', [CONFIG.NORMAL_SPEED]);
-                    state.isSyncing = false;
-                    updateStatus('✓ Synced to live', 'success');
-
-                    // Clear status message
-                    setTimeout(() => {
-                        if (!state.isSyncing) updateStatus('');
-                    }, 3000);
-                }, 5000);
-            }, 500);
-
-        } catch (e) {
-            state.isSyncing = false;
-            updateStatus('Sync failed', 'error');
+                    cancelSync();
+                    updateStatus('Caught up to live', 'success');
+                    step(3000, () => updateStatus(''));
+                });
+            });
+        } catch {
+            cancelSync();
+            updateStatus('Sync failed. Try again.', 'error');
         }
     }
 
@@ -867,13 +774,6 @@
         }
     }
 
-    // =====================
-    // Quality Enforcement
-    // =====================
-
-    /**
-     * Enforces the user's preferred Twitch stream quality
-     */
     function enforceQuality() {
         if (!state.forceHighestQuality) return;
 
@@ -883,23 +783,8 @@
             const qualityKey = 'video-quality';
             const currentSettings = JSON.parse(window.localStorage.getItem(qualityKey) || '{}');
 
-            // Map simple values to likely Twitch keys if needed, but for now we try direct mapping
-            // Note: Twitch often appends '30' or '60' to resolution (e.g., '160p30').
-            // We'll rely on the user selecting an option that roughly matches, or we'd need
-            // to fetch available qualities from the player, which is complex.
-            // For this feature, we'll try to set what we know.
-
-            // Heuristic updates: if user wants 160p, we might set '160p30' if exact '160p' doesn't work?
-            // Actually, localStorage is aggressive. Let's try setting exactly what we want.
-            // If it fails, we might need a more complex "get available qualities" loop.
-
-            // Simple mapping for safety
-            // 'chunked' is the internal string Twitch uses for "Source" quality (maximum available).
-            // This ensures we always request the highest possible resolution and framerate 
-            // from the video server (e.g. 1080p60, 4K, etc).
+            // Twitch uses 'chunked' for the source stream. Preserve its other preferences.
             const target = 'chunked';
-
-
 
             if (currentSettings.default !== target) {
                 const newSettings = { ...currentSettings, default: target };
@@ -913,7 +798,6 @@
 
     function startQualityEnforcement() {
         if (state.qualityIntervalId) return;
-        // Run immediately
         enforceQuality();
         state.qualityIntervalId = setInterval(enforceQuality, CONFIG.QUALITY_CHECK_INTERVAL);
         Logger.log('Quality enforcement started');
@@ -926,10 +810,6 @@
         }
     }
 
-    // =====================
-    // Lifecycle & Events
-    // =====================
-
     function setupGlobalListeners() {
         // Close on click outside
         document.addEventListener('click', (e) => {
@@ -938,7 +818,7 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeDropdown();
+            if (e.key === 'Escape' && document.getElementById('ytot-dropdown')?.classList.contains('visible')) closeDropdown(true);
         });
     }
 
@@ -968,7 +848,7 @@
             const visible = dropdown.classList.toggle('visible');
             toggle.setAttribute('aria-expanded', String(visible));
         };
-        close.onclick = closeDropdown;
+        close.onclick = () => closeDropdown(true);
 
         const handleGo = () => {
             const videoId = extractVideoId(urlInput.value);
@@ -985,6 +865,7 @@
         syncNowBtn.onclick = syncNow;
 
         autoSyncCheckbox.onchange = (e) => {
+            settingsRevision.autoSync++;
             state.autoSyncEnabled = e.target.checked;
             saveState('ytot_autosync', state.autoSyncEnabled);
             state.autoSyncEnabled && state.youtubeVideoId ? startAutoSync() : stopAutoSync();
@@ -992,10 +873,10 @@
 
         const qualityCheckbox = document.getElementById('ytot-quality');
         qualityCheckbox.onchange = (e) => {
+            settingsRevision.quality++;
             state.forceHighestQuality = e.target.checked;
             saveState('ytot_force_highest', state.forceHighestQuality);
             if (state.forceHighestQuality) {
-                enforceQuality();
                 startQualityEnforcement();
             } else {
                 stopQualityEnforcement();
@@ -1047,6 +928,7 @@
 
     let spawnAttempts = 0;
     let initGeneration = 0;
+    const settingsRevision = { autoSync: 0, quality: 0 };
 
     async function init() {
         if (state.initialized) return;
@@ -1060,29 +942,27 @@
         const generation = ++initGeneration;
         const channel = getTwitchChannel();
 
-        // Clean up any stale elements
         document.getElementById('ytot-nav-wrapper')?.remove();
 
         leftNav.appendChild(createNavButton());
         setupEventListeners();
         refreshDOMCache();
 
-        // Restore Settings
+        // A late storage read must not overwrite a setting just changed in the menu.
+        const revision = { ...settingsRevision };
         const [savedAutoSync, savedForceHighest] = await Promise.all([
             loadState('ytot_autosync'), loadState('ytot_force_highest')
         ]);
         if (generation !== initGeneration || channel !== getTwitchChannel()) return;
-        if (savedAutoSync) {
-            state.autoSyncEnabled = true;
-            document.getElementById('ytot-autosync').checked = true;
-        }
-
-        if (savedForceHighest) {
-            state.forceHighestQuality = true;
-            const qualityCheckbox = document.getElementById('ytot-quality');
-            if (qualityCheckbox) qualityCheckbox.checked = true;
-            startQualityEnforcement();
-        }
+        if (revision.autoSync === settingsRevision.autoSync) state.autoSyncEnabled = savedAutoSync === true;
+        if (revision.quality === settingsRevision.quality) state.forceHighestQuality = savedForceHighest === true;
+        document.getElementById('ytot-autosync').checked = state.autoSyncEnabled;
+        document.getElementById('ytot-quality').checked = state.forceHighestQuality;
+        if (state.forceHighestQuality) startQualityEnforcement();
+        else stopQualityEnforcement();
+        updateToggleButton(!!state.youtubeVideoId);
+        if (state.autoSyncEnabled && state.youtubeVideoId) startAutoSync();
+        else stopAutoSync();
 
         renderHistory();
 
@@ -1092,7 +972,7 @@
                 loadState(`ytot_active_${channel}`), loadState(`ytot_${channel}`), loadState(`ytot_playback_${channel}`)
             ]);
             if (generation !== initGeneration || channel !== getTwitchChannel()) return;
-            if (activeStream) {
+            if (validVideoId(activeStream)) {
                 Logger.log('Restoring active stream:', activeStream);
                 const restoreWhenReady = (attempt = 0) => {
                     if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId) return;
@@ -1102,7 +982,7 @@
                 };
                 restoreWhenReady();
             } else {
-                if (savedVideoId) {
+                if (validVideoId(savedVideoId)) {
                     const urlInput = document.getElementById('ytot-url');
                     if (urlInput) {
                         urlInput.value = `https://youtube.com/watch?v=${savedVideoId}`;
@@ -1116,27 +996,31 @@
         Logger.log('Initialized for:', channel);
     }
 
-    // =====================
-    // Main Loop
-    // =====================
-    let lastUrl = location.href;
+    let lastChannel = getTwitchChannel();
+    let checkTimeout = null;
+    function scheduleCheck(delay) {
+        if (checkTimeout !== null) clearTimeout(checkTimeout);
+        checkTimeout = setTimeout(() => { checkTimeout = null; check(); }, delay);
+    }
 
     function check() {
         // If nav bar exists but we aren't initialized, try init
-        if (!state.initialized && document.querySelector('.top-nav__menu')) {
-            init();
-        } else if (!state.initialized && spawnAttempts <= CONFIG.MAX_ATTEMPTS) {
+        if (state.initialized) return;
+        init();
+        if (!state.initialized && spawnAttempts < CONFIG.MAX_ATTEMPTS) {
             spawnAttempts++;
             // Fast Start: Check more frequently for the first few seconds
             const delay = spawnAttempts <= 20 ? CONFIG.FAST_CHECK_INTERVAL : CONFIG.CHECK_INTERVAL;
-            setTimeout(check, delay);
+            scheduleCheck(delay);
         }
     }
 
     // SPA Navigation Detection
     function handleNavigation() {
-        if (location.href !== lastUrl) {
-            lastUrl = location.href;
+        const channel = getTwitchChannel();
+        if (channel !== lastChannel) {
+            lastChannel = channel;
+            searchGeneration++;
             Logger.log('Navigation detected');
 
             // Navigate away: clear UI but keep state
@@ -1147,7 +1031,7 @@
             spawnAttempts = 0;
 
             // Re-bind to new page
-            setTimeout(check, 500);
+            scheduleCheck(500);
         }
     }
 
@@ -1179,7 +1063,7 @@
         handleNavigation();
         window.__ypftChat?.sync();
         renderTheatreControl();
-        if (state.initialized && !document.getElementById('ytot-nav-wrapper')) {
+        if (!document.getElementById('ytot-nav-wrapper') && checkTimeout === null) {
             state.initialized = false;
             spawnAttempts = 0;
             check();
@@ -1187,6 +1071,6 @@
     }, 2000);
 
     setupGlobalListeners();
-    setTimeout(check, 1000);
+    scheduleCheck(1000);
 
 })();

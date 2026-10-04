@@ -23,11 +23,11 @@ After changing extension code, reload the extension from `chrome://extensions` a
 Use Node.js 22, matching GitHub Actions. The project uses Node's built-in test runner and has no npm dependencies to install. The build also requires `sh`, `zip` and `unzip`.
 
 ```bash
-npm test
+npm run check
 npm run build
 ```
 
-The build writes and validates `release.zip` in the repository root. Generated release archives are ignored by Git. It checks that the bundled VAFT adapter matches its pinned, reviewed source. Building does not publish or submit the extension. Store listing artwork and its rendering sources are kept in [`docs/chrome-web-store/`](chrome-web-store/README.md) and excluded from the extension archive.
+The build writes and validates `release.zip` in the repository root, checking every packaged file against the source. Only runtime code, manifest icons, and license notices are included. Generated release archives are ignored by Git. It checks that the bundled VAFT adapter matches its pinned, reviewed source. Building does not publish or submit the extension. Store listing artwork and its rendering sources are kept in [`docs/chrome-web-store/`](chrome-web-store/README.md) and excluded from the extension archive.
 
 After reviewing an adapter change, regenerate it offline with:
 
@@ -36,6 +36,14 @@ node scripts/prepare-vaft.mjs
 ```
 
 Automated tests cover extension logic and the publishing scripts. They do not establish live Twitch/YouTube behavior or Chrome Web Store acceptance. Use the [theatre-mode verification notes](theatre-mode-qa.md), [floating-chat checklist](floating-chat-qa.md) and [VAFT checklist](vaft-qa.md) for the relevant browser checks.
+
+## Preview the website
+
+```bash
+python3 -m http.server 4185 --bind 127.0.0.1 --directory site
+```
+
+Open `http://127.0.0.1:4185/`. Check the homepage, demo controls, privacy page, and mobile layout. After changing CSS or JavaScript, run `npm run version:site` to refresh the asset fingerprints in all pages. `npm run check:site` catches stale fingerprints, missing assets, and broken local links.
 
 ## Source map
 
@@ -55,7 +63,7 @@ The YouTube iframe keeps playback in YouTube's embedded player. The content scri
 
 ## GitHub releases
 
-Pull requests targeting `main` run `npm test` and build `release.zip`. Each successful push to `main`, including a merged pull request, also creates a GitHub Release containing `release.zip` and the matching `manifest.json`.
+Pull requests targeting `main` run `npm run check` (syntax, regression tests, website) and build `release.zip`. Each successful push to `main`, including a merged pull request, also creates a GitHub Release containing `release.zip` and the matching `manifest.json`.
 
 The released extension version adds the GitHub Actions run number as a fourth component, for example `1.4.0.42`. The fourth component is the build number; the checked-in base version stays unchanged.
 

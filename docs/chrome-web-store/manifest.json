@@ -11,36 +11,36 @@
       "file": "01-watch-together-1280x800.png",
       "width": 1280,
       "height": 800,
-      "sha256": "4dee2b4b54ab3391528d1e4cc4beb3a7efd69003d88f1f55cc258704fbcb450f",
-      "bytes": 813138
+      "sha256": "b45a0167994da4587eb7066bad30e419f50af9e371fb6b2d4a234106fdfbc83e",
+      "bytes": 430513
     },
     {
       "file": "02-find-your-stream-1280x800.png",
       "width": 1280,
       "height": 800,
-      "sha256": "870bfea396ae81a60cda3d016ba1e7943b5afb62f5f176a258dc06d340feeb7f",
-      "bytes": 450882
+      "sha256": "628524f921a8c65803e68dc184cadd5d32650672d3c00861bf5742e54d01848a",
+      "bytes": 276481
     },
     {
       "file": "03-floating-chat-1280x800.png",
       "width": 1280,
       "height": 800,
-      "sha256": "9ec6680234b59c3b0d3ce11ffd7e647e90167ad93bcd025f51430032078192fb",
-      "bytes": 856877
+      "sha256": "cc4e6f72ade7aec669222b77684e1e71b35a4ac73dca8ec0fb3efe05f46db8e2",
+      "bytes": 321455
     },
     {
       "file": "04-recent-streams-1280x800.png",
       "width": 1280,
       "height": 800,
-      "sha256": "e20d1ad55c2c88969eda1cab8565c4e2a1c7caf72801064a592fc956ee8aed00",
-      "bytes": 436393
+      "sha256": "ba3866d88b7aa44742a6bf56111faaf7a02a820524c980e6afa2e3e68a52c6ff",
+      "bytes": 243513
     },
     {
       "file": "05-customize-your-view-1280x800.png",
       "width": 1280,
       "height": 800,
-      "sha256": "abfe1316a6005372f73f3e5cce873aa306c54ecbe39ef05e8787ea508e0c54c1",
-      "bytes": 432828
+      "sha256": "078785cd2b03daab3ea37fdfff20f24418fe4abda13eca6143e3a45e9e6b9456",
+      "bytes": 228498
     },
     {
       "file": "promo-small-440x280.png",
@@ -53,8 +53,8 @@
       "file": "promo-marquee-1400x560.png",
       "width": 1400,
       "height": 560,
-      "sha256": "fbf880021d8d462a2ae716dcb342ef572f505fa6596f4a5226670268717c12c5",
-      "bytes": 768056
+      "sha256": "8ee27431a4797d024e15868e8263f67cf296d7c1ebdbd25075e4c57e1aa0b69b",
+      "bytes": 768222
     }
   ],
   "icon": "Unmodified transparent repo icon from main; Git blob 3142245002a3f530ccf9f5885716ffc291e65574",

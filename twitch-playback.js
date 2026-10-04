@@ -11,7 +11,7 @@
     let observedPlayer = null;
     let timer = null;
     let frame = null;
-    const heldVideos = new Set();
+    let heldVideos = new WeakSet();
     const container = () => document.querySelector(selector);
     const video = () => container()?.querySelector('video');
     function hold(target) {
@@ -24,7 +24,8 @@
     function sync() {
         if (!overlay) return;
         // An attribute is a nonprivileged ownership signal, never a Chrome API bridge.
-        document.documentElement.setAttribute('data-ypft-playback', 'youtube');
+        if (document.documentElement.getAttribute('data-ypft-playback') !== 'youtube')
+            document.documentElement.setAttribute('data-ypft-playback', 'youtube');
         const player = container();
         if (player !== observedPlayer) {
             resizeObserver?.disconnect();
@@ -65,7 +66,12 @@
         document.documentElement.setAttribute('data-ypft-playback', 'youtube');
         resizeObserver = new ResizeObserver(schedule);
         sync();
-        observer = new MutationObserver(schedule);
+        observer = new MutationObserver(records => {
+            // Chat and menu updates do not move the player. Ignore their busy subtrees.
+            if (records.some(record => !record.target.closest?.(
+                '#ytot-nav-wrapper, #ytot-chat-root, .chat-scrollable-area__message-container, [data-test-selector="chat-scrollable-area__message-container"]'
+            ))) schedule();
+        });
         observer.observe(document.body, { childList: true, subtree: true });
         // Poll also covers resizing, animations and player swaps without DOM mutations.
         timer = setInterval(sync, 250);
@@ -100,7 +106,7 @@
             else current.play()?.catch(() => {});
         }
         saved = null;
-        heldVideos.clear();
+        heldVideos = new WeakSet();
     }
     window.__ypftPlayback = Object.freeze({ own, release, container, snapshot: () => saved ? { ...saved } : null });
 })();

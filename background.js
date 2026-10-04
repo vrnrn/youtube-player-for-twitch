@@ -5,21 +5,21 @@
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'SEARCH_YOUTUBE') {
+    if (request?.type === 'SEARCH_YOUTUBE') {
         handleSearch(request.query)
             .then(sendResponse)
             .catch(err => sendResponse({ error: err.message }));
         return true; // Keep channel open for async response
     }
 
-    if (request.type === 'SEARCH_YOUTUBE_CHANNEL') {
+    if (request?.type === 'SEARCH_YOUTUBE_CHANNEL') {
         handleChannelSearch(request.channelUrl)
             .then(sendResponse)
             .catch(err => sendResponse({ error: err.message }));
         return true;
     }
 
-    if (request.type === 'GET_VIDEO_DETAILS') {
+    if (request?.type === 'GET_VIDEO_DETAILS') {
         handleVideoDetails(request.videoId)
             .then(sendResponse)
             .catch(err => sendResponse({ error: err.message }));
@@ -31,7 +31,8 @@ function getStreamsPageUrl(channelUrl) {
     try {
         const url = new URL(channelUrl);
         const hostname = url.hostname.toLowerCase();
-        if (url.protocol !== 'https:' || !['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(hostname)) {
+        if (url.protocol !== 'https:' || url.username || url.password || url.port ||
+            !['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(hostname)) {
             return null;
         }
 
@@ -49,8 +50,8 @@ function getStreamsPageUrl(channelUrl) {
     }
 }
 
-function parseInitialData(html) {
-    const assignments = /(?:var\s+ytInitialData|window\["ytInitialData"\])\s*=\s*/g;
+function parseInitialData(html, name = 'ytInitialData') {
+    const assignments = new RegExp(`(?:\\b${name}|window\\[["']${name}["']\\])\\s*=\\s*`, 'g');
     let match;
 
     while ((match = assignments.exec(html))) {
@@ -125,14 +126,25 @@ function getText(value) {
 }
 
 async function fetchYouTubePage(url) {
-    const response = await fetch(url, { credentials: 'omit' });
-    if (!response.ok) throw new Error(`YouTube returned HTTP ${response.status}`);
-    return response.text();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+        const response = await fetch(url, { credentials: 'omit', signal: controller.signal });
+        if (!response.ok) throw new Error(`YouTube returned HTTP ${response.status}`);
+        return await response.text();
+    } catch (error) {
+        if (controller.signal.aborted) throw new Error('YouTube took too long to respond. Try again.');
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
+const validVideoId = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(value);
+
 function findLiveChannelStream(data) {
-    const video = collectVideoRenderers(data).find(isLiveVideo);
-    if (!video?.videoId) return null;
+    const video = collectVideoRenderers(data).find(video => validVideoId(video.videoId) && isLiveVideo(video));
+    if (!video) return null;
 
     const channel = getText(video.ownerText) || getText(video.shortBylineText) || 'YouTube Channel';
     return {
@@ -160,26 +172,14 @@ async function handleChannelSearch(channelUrl) {
 }
 
 async function handleVideoDetails(videoId) {
+    if (!validVideoId(videoId)) return { error: 'Invalid YouTube video ID' };
     try {
         const url = `https://www.youtube.com/watch?v=${videoId}`;
         const html = await fetchYouTubePage(url);
 
-        // Try to find ytInitialPlayerResponse
-        let match = html.match(/var ytInitialPlayerResponse\s*=\s*({.*?});/);
-        if (!match) {
-            match = html.match(/ytInitialPlayerResponse\s*=\s*({.*?});/);
-        }
-
-        if (match) {
-            const data = JSON.parse(match[1]);
-            const details = data?.videoDetails;
-            if (details) {
-                return {
-                    title: details.title,
-                    channel: details.author,
-                    videoId: videoId
-                };
-            }
+        const details = parseInitialData(html, 'ytInitialPlayerResponse')?.videoDetails;
+        if (details) {
+            return { title: details.title, channel: details.author, videoId };
         }
 
         // Fallback to title tag if JSON parsing fails
@@ -200,6 +200,7 @@ async function handleVideoDetails(videoId) {
 }
 
 async function handleSearch(query) {
+    if (typeof query !== 'string' || !query.trim() || query.length > 200) return { error: 'Invalid search query' };
     try {
         const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgJAAQ%3D%3D`;
         const html = await fetchYouTubePage(searchUrl);
@@ -207,8 +208,13 @@ async function handleSearch(query) {
         const data = parseInitialData(html);
         if (!data) return { error: 'Could not parse YouTube results' };
 
+        const seen = new Set();
         const results = collectVideoRenderers(data)
-            .filter(video => video.videoId && isLiveVideo(video))
+            .filter(video => {
+                if (!validVideoId(video.videoId) || !isLiveVideo(video) || seen.has(video.videoId)) return false;
+                seen.add(video.videoId);
+                return true;
+            })
             .map(video => ({
                 videoId: video.videoId,
                 title: getText(video.title),

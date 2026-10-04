@@ -3,7 +3,7 @@
   "name": "YouTube Player for Twitch",
   "version": "1.4.0",
   "minimum_chrome_version": "102",
-  "description": "Watch YouTube livestreams with Twitch chat - the best of both worlds",
+  "description": "Watch YouTube livestreams inside Twitch with stream discovery, live sync, and optional floating chat.",
   "permissions": [
     "storage",
     "scripting"
