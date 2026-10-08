@@ -173,7 +173,7 @@ patch('    hookWindowWorker();\n    hookFetch();', `    try {
         window.__ypftVaft.rollback();
         return;
     }`);
-patch("adBlockDiv.P.textContent = 'Blocking' + (data.isMidroll ? ' midroll' : '') + ' ads' + (data.isStrippingAdSegments ? ' (stripping)' : '');", "adBlockDiv.P.textContent = 'Blocking Twitch interruptions (VAFT · Experimental)';");
+patch("adBlockDiv.P.textContent = 'Blocking' + (data.isMidroll ? ' midroll' : '') + ' ads' + (data.isStrippingAdSegments ? ' (stripping)' : '');", "adBlockDiv.P.textContent = 'Blocking ads';");
 // MAIN-world caching must observe quality writes from YPFT's ISOLATED world.
 patch('                    return cachedValues.get(key);', `                    const current = realGetItem.call(this, key);
                     cachedValues.set(key, current);
