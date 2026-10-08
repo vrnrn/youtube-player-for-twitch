@@ -3,7 +3,6 @@
 (() => {
     'use strict';
     if (window.__ypftPlayback) return;
-    const selector = '[data-a-target="video-player-layout"], .video-player__container, .video-player';
     let overlay = null;
     let saved = null;
     let observer = null;
@@ -12,7 +11,11 @@
     let timer = null;
     let frame = null;
     let heldVideos = new WeakSet();
-    const container = () => document.querySelector(selector);
+    // The outer .video-player can retain a width-based 16:9 height even when
+    // Twitch clips its inner viewport on wide windows. Query in priority order;
+    // a selector list would pick the outer ancestor first in document order.
+    const container = () => document.querySelector('.video-player__container') ||
+        document.querySelector('[data-a-target="video-player-layout"]') || document.querySelector('.video-player');
     const video = () => container()?.querySelector('video');
     function hold(target) {
         if (!target) return;

@@ -113,6 +113,44 @@ test('missing/replaced container hides and realigns the portal without removing 
     assert.equal(f.element.style.visibility, 'visible');
     assert.equal(f.element.iframe, iframe);
 });
+test('wide windows use the bounded inner viewport instead of its oversized outer player', () => {
+    for (const width of [1980, 3260]) {
+        const f = fixture();
+        Object.assign(f.rect, { left: 240, top: 50, width, height: 920 });
+        const outer = { querySelector: () => f.video,
+            getBoundingClientRect: () => ({ ...f.rect, height: width * 9 / 16 }) };
+        // The outer ancestor wins a comma-separated query, regardless of selector order.
+        f.document.querySelector = selector => selector === '.video-player__container' ? f.player : outer;
+        f.element.iframe = {};
+        const iframe = f.element.iframe;
+        f.owner.own(f.element);
+        assert.equal(f.element.style.width, `${width}px`);
+        assert.equal(f.element.style.height, '920px');
+        assert.equal(parseFloat(f.element.style.top) + parseFloat(f.element.style.height), 970);
+        assert.equal(f.owner.container(), f.player);
+        assert.equal(f.resizeObservers[0].target, f.player);
+        Object.assign(f.rect, { left: 0, top: 0, width: width + 240, height: 1080 });
+        f.resizeObservers[0].fn();
+        f.flushFrame();
+        assert.equal(f.element.style.top, '0px');
+        assert.equal(f.element.style.height, '1080px');
+        assert.equal(f.element.iframe, iframe);
+        assert.equal(f.video.paused, true);
+        assert.equal(f.video.muted, true);
+        f.owner.release();
+    }
+});
+test('player lookup falls back to targeted layouts and outer players when the inner viewport is absent', () => {
+    for (const available of ['[data-a-target="video-player-layout"]', '.video-player']) {
+        const f = fixture();
+        f.document.querySelector = selector => selector === available ? f.player : null;
+        f.owner.own(f.element);
+        assert.equal(f.owner.container(), f.player);
+        assert.equal(f.element.style.height, '500px');
+        assert.equal(f.video.paused, true);
+        f.owner.release();
+    }
+});
 test('SPA navigation does not resume or unmute the new channel using old intent', () => {
     const f = fixture({ volume: 0.2 });
     f.owner.own(f.element);
