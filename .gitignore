@@ -32,3 +32,8 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# Local design choices and browser review captures
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/config.local.json

@@ -10,7 +10,11 @@
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
-    "https://www.twitch.tv/*"
+    "https://www.twitch.tv/*",
+    "https://gql.twitch.tv/*",
+    "https://api.betterttv.net/*",
+    "https://api.frankerfacez.com/*",
+    "https://7tv.io/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,6 +26,8 @@
       ],
       "js": [
         "twitch-playback.js",
+        "twitch-directory.js",
+        "twitch-emotes.js",
         "twitch-chat.js",
         "twitch-content.js"
       ],

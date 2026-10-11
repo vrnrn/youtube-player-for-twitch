@@ -1,10 +1,17 @@
-name: Build Chrome Extension & Create GitHub Release
+name: Build Chrome Extension
 
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: Create a GitHub release from this main build
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -33,7 +40,7 @@ jobs:
         run: npm run check
 
       - name: Assign build version
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         id: version
         run: |
           node scripts/set-build-version.mjs
@@ -43,11 +50,11 @@ jobs:
       - name: Build and validate release ZIP
         run: npm run build
 
-      - name: Store release assets for publishing
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - name: Store build assets
+        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         uses: actions/upload-artifact@v7
         with:
-          name: chrome-extension-release
+          name: chrome-extension-build
           path: |
             manifest.json
             release.zip
@@ -57,7 +64,7 @@ jobs:
   create-github-release:
     name: Create GitHub release
     needs: verify-and-build
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.create_release && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -71,7 +78,7 @@ jobs:
       - name: Download release assets
         uses: actions/download-artifact@v7
         with:
-          name: chrome-extension-release
+          name: chrome-extension-build
           path: release-assets
 
       - name: Create GitHub Release

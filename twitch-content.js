@@ -71,18 +71,31 @@
         search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
         sync: 'M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7',
         theatre: 'M3 5h18v14H3zM16 5v14',
+        playback: 'm9 5 11 7-11 7z',
+        chat: 'M4 4h16v12H9l-5 4zM8 8h8M8 12h5',
+        settings: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1z',
         pin: 'M9 3h6l-1 7 3 3v2H7v-2l3-3-1-7M12 15v6'
     };
     const menuIcon = name => '<svg class="ytot-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + MENU_ICONS[name] + '"></path></svg>';
+
+    function navParent() {
+        return document.querySelector('.top-nav__menu > div:last-child') ||
+            document.querySelector('[data-a-target="user-menu-toggle"]')?.closest('.top-nav__menu > div');
+    }
+    function placeNavButton(nav, parent) {
+        let account = parent.querySelector('[data-a-target="user-menu-toggle"]');
+        while (account && account.parentElement !== parent) account = account.parentElement;
+        if (account) parent.insertBefore(nav, account);
+        else parent.appendChild(nav);
+    }
 
     function createNavButton() {
         const wrapper = document.createElement('div');
         wrapper.id = 'ytot-nav-wrapper';
 
         wrapper.innerHTML = `
-            <button class="ytot-nav-btn" id="ytot-toggle" aria-label="Toggle YouTube Player" title="Toggle YouTube" aria-expanded="false" aria-controls="ytot-dropdown">
-                <span class="ytot-icon">▶</span>
-                <span class="ytot-label">YouTube</span>
+            <button type="button" class="ytot-nav-btn" id="ytot-toggle" aria-label="YouTube Player for Twitch" title="YouTube Player for Twitch" aria-expanded="false" aria-controls="ytot-dropdown">
+                <span class="ytot-label">YPFT</span>
             </button>
 
             <div class="ytot-dropdown" id="ytot-dropdown">
@@ -107,63 +120,9 @@
 
                 <!-- Manual Input -->
                 <div class="ytot-dropdown-body">
-                    <input type="url" id="ytot-url" aria-label="YouTube video or livestream URL" placeholder="Paste YouTube URL" spellcheck="false" autocomplete="off" />
+                    <input type="url" id="ytot-url" aria-label="YouTube video or livestream URL" aria-describedby="ytot-status" placeholder="Paste YouTube URL" spellcheck="false" autocomplete="off" />
                     <button class="ytot-go" id="ytot-go">Go</button>
                 </div>
-
-                <div class="ytot-layout-controls">
-                    <button type="button" class="ytot-theatre" id="ytot-theatre" aria-pressed="false" disabled>${menuIcon('theatre')}<span id="ytot-theatre-label">Theatre Mode</span></button>
-                </div>
-
-                <!-- Options -->
-                <details class="ytot-additional-settings" id="ytot-additional-settings">
-                    <summary><span>Additional settings</span>${menuIcon('chevron')}</summary>
-                    <div class="ytot-settings-body">
-                        <section class="ytot-settings-group" aria-label="Playback settings">
-                            <div class="ytot-section-label">Playback</div>
-                            <label class="ytot-option">
-                                <input type="checkbox" role="switch" id="ytot-autosync" />
-                                <span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up every 10 minutes</span></span>
-                            </label>
-                            <label class="ytot-option">
-                                <input type="checkbox" role="switch" id="ytot-quality" />
-                                <span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep Twitch set to Source</span></span>
-                            </label>
-                        </section>
-                        <section class="ytot-settings-group" aria-label="Floating chat settings">
-                            <div class="ytot-section-label">Chat</div>
-                            <label class="ytot-option">
-                                <input type="checkbox" role="switch" id="ytot-chat-toggle" />
-                                <span class="ytot-option-copy"><span class="ytot-option-title">Floating chat</span></span>
-                            </label>
-                            <details class="ytot-chat-settings" id="ytot-chat-settings" hidden>
-                                <summary><span>Chat appearance</span>${menuIcon('chevron')}</summary>
-                                <label class="ytot-chat-setting">Show <select id="ytot-chat-mode"><option value="fullscreen">Fullscreen only</option><option value="always">Always on player</option></select></label>
-                                <label class="ytot-chat-setting">Background <input type="color" id="ytot-chat-color" aria-label="Chat background color" /></label>
-                                <label class="ytot-chat-setting">Opacity <input type="range" id="ytot-chat-opacity" min="0" max="100" step="5" aria-label="Chat background opacity" /></label>
-                                <label class="ytot-chat-setting">Text size <input type="range" id="ytot-chat-font" min="11" max="24" aria-label="Chat text size" /></label>
-                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-compact" /><span>Compact</span></label>
-                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-through" /><span>Click-through</span></label>
-                                <button type="button" class="ytot-vaft-reload" id="ytot-chat-reset">Reset position &amp; size</button>
-                            </details>
-                        </section>
-                        <section class="ytot-settings-group" aria-label="Player extras">
-                            <div class="ytot-section-label">Player extras</div>
-                            <label class="ytot-option">
-                                <input type="checkbox" role="switch" id="ytot-hide-extensions" />
-                                <span class="ytot-option-copy"><span class="ytot-option-title">Hide Twitch extensions</span></span>
-                            </label>
-                            <div class="ytot-vaft-card">
-                                <label class="ytot-option">
-                                    <input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" />
-                                    <span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking <span class="ytot-badge">Experimental</span></span></span>
-                                </label>
-                                <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
-                                <button id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
-                            </div>
-                        </section>
-                    </div>
-                </details>
 
                 <!-- Actions -->
                 <div class="ytot-actions" id="ytot-actions" hidden>
@@ -172,9 +131,161 @@
                 </div>
 
                 <div class="ytot-status" id="ytot-status" role="status" aria-live="polite"></div>
+                <div class="ytot-menu-footer">
+                    <button type="button" class="ytot-open-settings" id="ytot-open-settings" aria-haspopup="dialog">${menuIcon('settings')}<span>Settings</span>${menuIcon('chevron')}</button>
+                </div>
             </div>
         `;
         return wrapper;
+    }
+
+    const SETTINGS_TABS = ['playback', 'chat', 'extras'];
+    let settingsDialog = null;
+    let settingsTab = 'playback';
+
+    function createSettingsDialog() {
+        const dialog = document.createElement('dialog');
+        dialog.id = 'ytot-settings-dialog';
+        dialog.className = 'ytot-settings-dialog';
+        dialog.setAttribute('aria-labelledby', 'ytot-settings-title');
+        dialog.innerHTML = `
+            <div class="ytot-settings-shell">
+                <aside class="ytot-settings-sidebar">
+                    <div class="ytot-settings-brand"><span class="ytot-settings-mark">YPFT</span><span>YouTube Player for Twitch</span></div>
+                    <nav class="ytot-settings-tabs" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
+                        <button type="button" role="tab" id="ytot-tab-playback" data-ytot-settings-tab="playback" aria-controls="ytot-panel-playback">${menuIcon('playback')}<span>Playback</span></button>
+                        <button type="button" role="tab" id="ytot-tab-chat" data-ytot-settings-tab="chat" aria-controls="ytot-panel-chat">${menuIcon('chat')}<span>Chat</span></button>
+                        <button type="button" role="tab" id="ytot-tab-extras" data-ytot-settings-tab="extras" aria-controls="ytot-panel-extras">${menuIcon('settings')}<span>Player extras</span></button>
+                    </nav>
+                    <p class="ytot-settings-note">Settings save automatically.</p>
+                </aside>
+                <div class="ytot-settings-main">
+                    <header class="ytot-settings-header"><h1 id="ytot-settings-title">Settings</h1><button type="button" class="ytot-close" id="ytot-settings-close" aria-label="Close settings">${menuIcon('close')}</button></header>
+                    <div class="ytot-settings-content">
+                        <section class="ytot-settings-panel" id="ytot-panel-playback" role="tabpanel" aria-labelledby="ytot-tab-playback" tabindex="0">
+                            <h2>Playback</h2><p class="ytot-settings-intro">Keep your stream in sync and choose how you watch.</p>
+                            <div class="ytot-settings-group">
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-autosync" /><span class="ytot-option-copy"><span class="ytot-option-title">Auto-sync</span><span class="ytot-option-description">Catch up to the live edge every 10 minutes.</span></span></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-quality" /><span class="ytot-option-copy"><span class="ytot-option-title">Highest Twitch quality</span><span class="ytot-option-description">Keep the Twitch player set to Source quality.</span></span></label>
+                            </div>
+                            <h3>Layout</h3>
+                            <div class="ytot-settings-group ytot-settings-action"><div class="ytot-option-copy"><span class="ytot-option-title">Theatre mode</span><span class="ytot-option-description">Expand the player using Twitch's native layout.</span></div><button type="button" class="ytot-theatre" id="ytot-theatre" aria-pressed="false" disabled>${menuIcon('theatre')}<span id="ytot-theatre-label">Theatre Mode</span></button></div>
+                        </section>
+                        <section class="ytot-settings-panel" id="ytot-panel-chat" role="tabpanel" aria-labelledby="ytot-tab-chat" tabindex="0" hidden>
+                            <h2>Chat</h2><p class="ytot-settings-intro">More emotes and a chat overlay that follows your player.</p>
+                            <div class="ytot-settings-group">
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-emotes-toggle" /><span class="ytot-option-copy"><span class="ytot-option-title">Extra emotes</span><span class="ytot-option-description">Global &amp; channel emotes from BTTV, FFZ &amp; 7TV.</span></span></label>
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-toggle" /><span class="ytot-option-copy"><span class="ytot-option-title">Floating chat</span><span class="ytot-option-description">Show Twitch chat over your video, including fullscreen.</span></span></label>
+                            </div>
+                            <div class="ytot-chat-settings" id="ytot-chat-settings" hidden>
+                                <h3>Chat appearance</h3>
+                                <div class="ytot-chat-customization">
+                                    <div class="ytot-chat-fields">
+                                        <label class="ytot-chat-setting">Show <select id="ytot-chat-mode"><option value="fullscreen">Fullscreen only</option><option value="always">Always on player</option></select></label>
+                                        <label class="ytot-chat-setting">Background <input type="color" id="ytot-chat-color" aria-label="Chat background color" /></label>
+                                        <label class="ytot-chat-setting">Opacity <span class="ytot-range-control"><input type="range" id="ytot-chat-opacity" min="0" max="100" step="5" aria-label="Chat background opacity" /><output id="ytot-chat-opacity-value" for="ytot-chat-opacity">70%</output></span></label>
+                                        <label class="ytot-chat-setting">Text size <span class="ytot-range-control"><input type="range" id="ytot-chat-font" min="11" max="24" aria-label="Chat text size" /><output id="ytot-chat-font-value" for="ytot-chat-font">14px</output></span></label>
+                                        <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-compact" /><span class="ytot-option-copy"><span class="ytot-option-title">Compact spacing</span></span></label>
+                                        <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-chat-through" /><span class="ytot-option-copy"><span class="ytot-option-title">Click-through</span><span class="ytot-option-description">Let clicks pass through the chat messages to your video.</span></span></label>
+                                        <button type="button" class="ytot-vaft-reload" id="ytot-chat-reset">Reset position &amp; size</button>
+                                    </div>
+                                    <figure class="ytot-chat-preview-stage" aria-label="Chat appearance preview">
+                                        <div class="ytot-chat-preview" id="ytot-chat-preview">
+                                            <div class="ytot-chat-preview-header">${menuIcon('chat')}<span>Twitch chat</span></div>
+                                            <div class="ytot-chat-preview-line"><span class="ytot-chat-preview-author">Viewer:</span> Sample message</div>
+                                            <div class="ytot-chat-preview-line"><span class="ytot-chat-preview-author">Community:</span> Chat stays with the stream.</div>
+                                            <div class="ytot-chat-preview-line">Messages, badges and emotes.</div>
+                                        </div>
+                                        <figcaption>Appearance preview · sample messages</figcaption>
+                                    </figure>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="ytot-settings-panel" id="ytot-panel-extras" role="tabpanel" aria-labelledby="ytot-tab-extras" tabindex="0" hidden>
+                            <h2>Player extras</h2><p class="ytot-settings-intro">Adjust Twitch's overlays and optional playback features.</p>
+                            <div class="ytot-settings-group"><label class="ytot-option"><input type="checkbox" role="switch" id="ytot-hide-extensions" /><span class="ytot-option-copy"><span class="ytot-option-title">Hide Twitch extensions</span><span class="ytot-option-description">Hide native player overlays and extension buttons.</span></span></label></div>
+                            <h3>Interruption blocking <span class="ytot-badge">Experimental</span></h3>
+                            <div class="ytot-settings-group ytot-vaft-card">
+                                <label class="ytot-option"><input type="checkbox" role="switch" id="ytot-vaft" disabled aria-describedby="ytot-vaft-status" /><span class="ytot-option-copy"><span class="ytot-option-title">Interruption blocking</span><span class="ytot-option-description">Changing this setting reloads Twitch.</span></span></label>
+                                <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
+                                <button type="button" id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>`;
+        return dialog;
+    }
+
+    function selectSettingsTab(tab) {
+        if (!SETTINGS_TABS.includes(tab) || !settingsDialog) return;
+        updateSettingsOrientation();
+        settingsTab = tab;
+        for (const name of SETTINGS_TABS) {
+            const selected = name === tab;
+            const button = document.getElementById(`ytot-tab-${name}`);
+            button.setAttribute('aria-selected', String(selected));
+            button.tabIndex = selected ? 0 : -1;
+            document.getElementById(`ytot-panel-${name}`).hidden = !selected;
+        }
+        settingsDialog.querySelector('.ytot-settings-content').scrollTop = 0;
+    }
+
+    function updateSettingsOrientation() {
+        settingsDialog?.querySelector('[role="tablist"]')?.setAttribute('aria-orientation', window.innerWidth <= 560 ? 'horizontal' : 'vertical');
+    }
+
+    function closeSettings(restoreFocus = true) {
+        if (!settingsDialog) return;
+        const dialog = settingsDialog;
+        settingsDialog = null;
+        dialog.close();
+        dialog.remove();
+        if (restoreFocus) document.getElementById('ytot-toggle')?.focus();
+    }
+
+    function openSettings() {
+        if (settingsDialog) return;
+        closeDropdown();
+        settingsDialog = createSettingsDialog();
+        document.body.appendChild(settingsDialog);
+        settingsDialog.oncancel = event => { event.preventDefault(); closeSettings(); };
+        settingsDialog.onclose = event => { if (event.target === settingsDialog) closeSettings(); };
+        settingsDialog.onclick = event => {
+            const tab = event.target.closest('[data-ytot-settings-tab]');
+            if (tab) { selectSettingsTab(tab.dataset.ytotSettingsTab); return; }
+            if (event.target !== settingsDialog) return;
+            const bounds = settingsDialog.getBoundingClientRect();
+            if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeSettings();
+        };
+        settingsDialog.onkeydown = event => {
+            if (event.key === 'Escape') {
+                event.preventDefault(); event.stopPropagation(); closeSettings(); return;
+            }
+            if (event.key === 'Tab') {
+                event.stopPropagation();
+                const controls = Array.from(settingsDialog.querySelectorAll('button, input, select, [tabindex]'))
+                    .filter(control => !control.disabled && control.tabIndex >= 0 && control.getClientRects().length);
+                const first = controls[0], last = controls.at(-1);
+                if (first && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+                    event.preventDefault(); (event.shiftKey ? last : first).focus();
+                }
+                return;
+            }
+            const tab = event.target.closest('[data-ytot-settings-tab]');
+            if (!tab || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            const index = SETTINGS_TABS.indexOf(tab.dataset.ytotSettingsTab);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? SETTINGS_TABS.length - 1 :
+                (index + (['ArrowDown', 'ArrowRight'].includes(event.key) ? 1 : -1) + SETTINGS_TABS.length) % SETTINGS_TABS.length;
+            selectSettingsTab(SETTINGS_TABS[next]);
+            document.getElementById(`ytot-tab-${settingsTab}`).focus();
+        };
+        document.getElementById('ytot-settings-close').onclick = () => closeSettings();
+        setupSettingsListeners();
+        selectSettingsTab(settingsTab);
+        settingsDialog.showModal();
+        document.getElementById(`ytot-tab-${settingsTab}`).focus();
     }
 
     // A root attribute makes this preference survive native player/SPA replacement
@@ -266,7 +377,6 @@
     function refreshDOMCache() {
         const toggle = document.getElementById('ytot-toggle');
         uiCache.toggle = toggle;
-        uiCache.icon = toggle?.querySelector('.ytot-icon');
         uiCache.label = toggle?.querySelector('.ytot-label');
         uiCache.restore = document.getElementById('ytot-restore');
         uiCache.syncNow = document.getElementById('ytot-sync-now');
@@ -276,19 +386,16 @@
     function updateToggleButton(isActive) {
         if (!uiCache.toggle) refreshDOMCache();
 
-        const { toggle, icon, label, restore, syncNow, actions } = uiCache;
+        const { toggle, label, restore, syncNow, actions } = uiCache;
         if (actions) actions.hidden = !isActive;
+        if (label) label.textContent = 'YPFT';
 
         if (isActive) {
             toggle?.classList.add('active');
-            if (icon) icon.textContent = '▶';
-            if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'block';
             if (syncNow) syncNow.style.display = 'block';
         } else {
             toggle?.classList.remove('active');
-            if (icon) icon.textContent = '▶';
-            if (label) label.textContent = 'YouTube';
             if (restore) restore.style.display = 'none';
             if (syncNow) syncNow.style.display = 'none';
         }
@@ -305,6 +412,7 @@
     function closeDropdown(restoreFocus = false) {
         document.getElementById('ytot-dropdown')?.classList.remove('visible');
         document.getElementById('ytot-toggle')?.setAttribute('aria-expanded', 'false');
+        clearHistoryUI();
         if (restoreFocus) document.getElementById('ytot-toggle')?.focus();
     }
 
@@ -312,6 +420,21 @@
     let theatreHost = null;
     let theatreNative = null;
     let theatreNavParent = null;
+
+    function releaseTheatreControl() {
+        theatreObserver?.disconnect();
+        theatreObserver = theatreHost = theatreNative = theatreNavParent = null;
+        document.documentElement.removeAttribute('data-ypft-theatre');
+    }
+
+    function releaseUI() {
+        closeSettings(false);
+        releaseTheatreControl();
+        for (const key of Object.keys(uiCache)) delete uiCache[key];
+        clearHistoryUI();
+        if (restoreTimeout !== null) clearTimeout(restoreTimeout);
+        restoreTimeout = null;
+    }
 
     function nativeTheatreButton() {
         // Current Twitch uses only an aria-label with the Alt+T shortcut. Scope
@@ -324,7 +447,7 @@
 
     function renderTheatreControl() {
         const button = document.getElementById('ytot-theatre');
-        if (!button) return;
+        if (!button && !document.getElementById('ytot-nav-wrapper')) { releaseTheatreControl(); return; }
         const native = nativeTheatreButton();
         const active = !!document.querySelector('.persistent-player--theatre, .channel-page__video-player--theatre-mode') ||
             native?.getAttribute('aria-pressed') === 'true';
@@ -348,16 +471,15 @@
                 theatreNavParent = nav.parentElement;
                 document.body.appendChild(nav);
             } else if (!active && nav.parentElement === document.body) {
-                const parent = theatreNavParent?.isConnected ? theatreNavParent :
-                    document.querySelector('.top-nav__menu > div:first-child') ||
-                    document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
+                const parent = theatreNavParent?.isConnected ? theatreNavParent : navParent();
                 if (parent) {
-                    parent.appendChild(nav);
+                    placeNavButton(nav, parent);
                     theatreNavParent = null;
                 }
             }
             nav.classList.toggle('ytot-nav-theatre', active);
         }
+        if (!button) return;
         button.disabled = !native || native.disabled || !!document.fullscreenElement;
         button.setAttribute('aria-pressed', String(active));
         const label = active ? 'Exit Theatre Mode' : 'Theatre Mode';
@@ -382,6 +504,7 @@
 
     // Serialize local history edits so rapid playback/pin actions do not lose entries.
     let historyQueue = Promise.resolve();
+    let historyGeneration = 0;
     function readHistory(value) {
         return Array.isArray(value) ? value.filter(item => item && validVideoId(item.videoId)) : [];
     }
@@ -411,11 +534,24 @@
             ? { ...item, pinned: !item.pinned } : item));
     }
 
+    function historyVisible() {
+        return document.getElementById('ytot-dropdown')?.classList.contains('visible') === true;
+    }
+
+    function clearHistoryUI() {
+        historyGeneration++;
+        const container = document.getElementById('ytot-history-section');
+        if (container) { container.innerHTML = ''; container.style.display = 'none'; }
+    }
+
     async function renderHistory() {
         const container = document.getElementById('ytot-history-section');
         if (!container) return;
+        if (!historyVisible()) { clearHistoryUI(); return; }
 
+        const generation = ++historyGeneration;
         const history = readHistory(await loadState('ytot_history'));
+        if (generation !== historyGeneration || !historyVisible() || container !== document.getElementById('ytot-history-section')) return;
         const focused = document.activeElement;
         const focusId = container.contains(focused) ? focused.getAttribute('data-video-id') : null;
         const focusClass = focused?.classList.contains('ytot-pin-btn') ? 'ytot-pin-btn' : 'ytot-history-play';
@@ -823,6 +959,63 @@
     }
 
     function setupEventListeners() {
+        renderTheatreControl();
+        const toggle = document.getElementById('ytot-toggle');
+        const dropdown = document.getElementById('ytot-dropdown');
+        const close = document.getElementById('ytot-close');
+        const urlInput = document.getElementById('ytot-url');
+        const goBtn = document.getElementById('ytot-go');
+        const restore = document.getElementById('ytot-restore');
+        const syncNowBtn = document.getElementById('ytot-sync-now');
+        const autoFindBtn = document.getElementById('ytot-autofind');
+
+        autoFindBtn.onclick = handleAutoFind;
+        toggle.onclick = () => {
+            renderTheatreControl();
+            const visible = dropdown.classList.toggle('visible');
+            toggle.setAttribute('aria-expanded', String(visible));
+            if (visible) renderHistory();
+            else clearHistoryUI();
+        };
+        close.onclick = () => closeDropdown(true);
+
+        const handleGo = () => {
+            const videoId = extractVideoId(urlInput.value);
+            urlInput.setAttribute('aria-invalid', String(!videoId));
+            if (videoId) injectYouTube(videoId);
+            else {
+                updateStatus('Enter a valid YouTube video or livestream URL.', 'error');
+                urlInput.focus();
+            }
+        };
+
+        goBtn.onclick = handleGo;
+        urlInput.oninput = () => {
+            if (urlInput.getAttribute('aria-invalid') !== 'true') return;
+            urlInput.setAttribute('aria-invalid', 'false');
+            updateStatus('');
+        };
+        urlInput.onkeydown = (e) => {
+            if (e.key === 'Enter') handleGo();
+        };
+
+        restore.onclick = () => removeYouTube(false); // Explicit removal
+        syncNowBtn.onclick = syncNow;
+        document.getElementById('ytot-open-settings').onclick = openSettings;
+    }
+
+    function renderPlaybackControls() {
+        const sync = document.getElementById('ytot-autosync');
+        const quality = document.getElementById('ytot-quality');
+        if (sync) sync.checked = state.autoSyncEnabled;
+        if (quality) quality.checked = state.forceHighestQuality;
+    }
+
+    function setupSettingsListeners() {
+        const emotesToggle = document.getElementById('ytot-emotes-toggle');
+        emotesToggle.disabled = !window.__ypftEmotes;
+        emotesToggle.onchange = event => window.__ypftEmotes?.configure(event.target.checked, true);
+        renderEmoteControl();
         setupChatControls();
         document.getElementById('ytot-theatre').onclick = toggleTheatreMode;
         renderTheatreControl();
@@ -832,38 +1025,8 @@
             applyExtensionVisibility(event.target.checked);
             saveState(HIDE_EXTENSIONS_KEY, hideExtensions);
         };
-        const toggle = document.getElementById('ytot-toggle');
-        const dropdown = document.getElementById('ytot-dropdown');
-        const close = document.getElementById('ytot-close');
-        const urlInput = document.getElementById('ytot-url');
-        const goBtn = document.getElementById('ytot-go');
-        const restore = document.getElementById('ytot-restore');
-        const syncNowBtn = document.getElementById('ytot-sync-now');
+
         const autoSyncCheckbox = document.getElementById('ytot-autosync');
-        const autoFindBtn = document.getElementById('ytot-autofind');
-
-        autoFindBtn.onclick = handleAutoFind;
-        toggle.onclick = () => {
-            renderTheatreControl();
-            const visible = dropdown.classList.toggle('visible');
-            toggle.setAttribute('aria-expanded', String(visible));
-        };
-        close.onclick = () => closeDropdown(true);
-
-        const handleGo = () => {
-            const videoId = extractVideoId(urlInput.value);
-            if (videoId) injectYouTube(videoId);
-            else updateStatus('Invalid YouTube URL', 'error');
-        };
-
-        goBtn.onclick = handleGo;
-        urlInput.onkeydown = (e) => {
-            if (e.key === 'Enter') handleGo();
-        };
-
-        restore.onclick = () => removeYouTube(false); // Explicit removal
-        syncNowBtn.onclick = syncNow;
-
         autoSyncCheckbox.onchange = (e) => {
             settingsRevision.autoSync++;
             state.autoSyncEnabled = e.target.checked;
@@ -884,6 +1047,8 @@
         };
         document.getElementById('ytot-vaft').onchange = e => changeVaftSetting(e.target.checked);
         document.getElementById('ytot-vaft-reload').onclick = () => location.reload();
+        renderPlaybackControls();
+        renderVaftSetting();
         loadVaftSetting();
     }
 
@@ -895,13 +1060,25 @@
         toggle.checked = settings.enabled;
         const appearance = document.getElementById('ytot-chat-settings');
         appearance.hidden = !settings.enabled;
-        if (!settings.enabled) appearance.open = false;
         document.getElementById('ytot-chat-mode').value = settings.fullscreenOnly ? 'fullscreen' : 'always';
         document.getElementById('ytot-chat-opacity').value = settings.opacity;
         document.getElementById('ytot-chat-font').value = settings.fontSize;
         document.getElementById('ytot-chat-color').value = settings.color;
         document.getElementById('ytot-chat-compact').checked = settings.compact;
         document.getElementById('ytot-chat-through').checked = settings.clickThrough;
+        renderChatAppearance(settings);
+    }
+    function renderChatAppearance(settings) {
+        const opacity = document.getElementById('ytot-chat-opacity-value');
+        const font = document.getElementById('ytot-chat-font-value');
+        if (opacity) opacity.textContent = `${settings.opacity}%`;
+        if (font) font.textContent = `${settings.fontSize}px`;
+        const preview = document.getElementById('ytot-chat-preview');
+        if (!preview) return;
+        const rgb = [1, 3, 5].map(index => parseInt(settings.color.slice(index, index + 2), 16));
+        preview.style.backgroundColor = `rgba(${rgb.join(',')},${settings.opacity / 100})`;
+        preview.style.fontSize = `${settings.fontSize}px`;
+        preview.classList.toggle('ytot-chat-preview-compact', settings.compact);
     }
     function setupChatControls() {
         const chat = window.__ypftChat;
@@ -916,35 +1093,45 @@
             ['ytot-chat-font', 'fontSize', 'number'], ['ytot-chat-color', 'color', 'value'],
             ['ytot-chat-compact', 'compact', 'boolean'], ['ytot-chat-through', 'clickThrough', 'boolean']
         ]) {
-            document.getElementById(id).onchange = event => update({ [key]:
+            const control = document.getElementById(id);
+            const value = event =>
                 kind === 'mode' ? event.target.value === 'fullscreen' :
                 kind === 'number' ? Number(event.target.value) :
-                kind === 'boolean' ? event.target.checked : event.target.value });
+                kind === 'boolean' ? event.target.checked : event.target.value;
+            control.onchange = event => update({ [key]: value(event) });
+            if (['opacity', 'fontSize', 'color'].includes(key)) {
+                control.oninput = event => renderChatAppearance({ ...chat.settings(), [key]: value(event) });
+            }
         }
         document.getElementById('ytot-chat-reset').onclick = () => update({ x: 1, y: 0.15, width: 320, height: 0.55 });
         renderChatControls();
     }
     document.addEventListener('ypft-chat-setting', renderChatControls);
+    function renderEmoteControl() {
+        const toggle = document.getElementById('ytot-emotes-toggle');
+        if (toggle) toggle.checked = window.__ypftEmotes?.enabled() === true;
+    }
+    document.addEventListener('ypft-emote-setting', renderEmoteControl);
 
     let spawnAttempts = 0;
     let initGeneration = 0;
+    let restoreTimeout = null;
     const settingsRevision = { autoSync: 0, quality: 0 };
 
     async function init() {
         if (state.initialized) return;
 
         // Try to insert into Twitch Top Nav
-        const leftNav = document.querySelector('.top-nav__menu > div:first-child') ||
-            document.querySelector('button[aria-label="More Options"]')?.closest('div[class]')?.parentElement;
+        const rightNav = navParent();
 
-        if (!leftNav) return;
+        if (!rightNav) return;
         state.initialized = true;
         const generation = ++initGeneration;
         const channel = getTwitchChannel();
 
         document.getElementById('ytot-nav-wrapper')?.remove();
 
-        leftNav.appendChild(createNavButton());
+        placeNavButton(createNavButton(), rightNav);
         setupEventListeners();
         refreshDOMCache();
 
@@ -956,8 +1143,7 @@
         if (generation !== initGeneration || channel !== getTwitchChannel()) return;
         if (revision.autoSync === settingsRevision.autoSync) state.autoSyncEnabled = savedAutoSync === true;
         if (revision.quality === settingsRevision.quality) state.forceHighestQuality = savedForceHighest === true;
-        document.getElementById('ytot-autosync').checked = state.autoSyncEnabled;
-        document.getElementById('ytot-quality').checked = state.forceHighestQuality;
+        renderPlaybackControls();
         if (state.forceHighestQuality) startQualityEnforcement();
         else stopQualityEnforcement();
         updateToggleButton(!!state.youtubeVideoId);
@@ -977,7 +1163,10 @@
                 const restoreWhenReady = (attempt = 0) => {
                     if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId) return;
                     if (window.__ypftPlayback.container()) injectYouTube(activeStream, null, restoredPlayback);
-                    else if (attempt < 40) setTimeout(() => restoreWhenReady(attempt + 1), 250);
+                    else if (attempt < 40) restoreTimeout = setTimeout(() => {
+                        restoreTimeout = null;
+                        restoreWhenReady(attempt + 1);
+                    }, 250);
                     else updateStatus('Twitch player was not ready. Reopen your saved YouTube stream.', 'error');
                 };
                 restoreWhenReady();
@@ -1017,6 +1206,8 @@
 
     // SPA Navigation Detection
     function handleNavigation() {
+        window.__ypftDirectory?.sync();
+        window.__ypftEmotes?.sync();
         const channel = getTwitchChannel();
         if (channel !== lastChannel) {
             lastChannel = channel;
@@ -1025,6 +1216,7 @@
 
             // Navigate away: clear UI but keep state
             removeYouTube(true);
+            releaseUI();
             initGeneration++;
             state.initialized = false;
             state.youtubeVideoId = null;
@@ -1059,16 +1251,21 @@
         }
     });
 
-    setInterval(() => {
+    function refreshPage() {
         handleNavigation();
         window.__ypftChat?.sync();
+        updateSettingsOrientation();
+        if (document.visibilityState === 'hidden') { closeSettings(false); closeDropdown(); releaseTheatreControl(); return; }
         renderTheatreControl();
         if (!document.getElementById('ytot-nav-wrapper') && checkTimeout === null) {
+            releaseUI();
             state.initialized = false;
             spawnAttempts = 0;
             check();
         }
-    }, 2000);
+    }
+    setInterval(refreshPage, 2000);
+    document.addEventListener('visibilitychange', refreshPage);
 
     setupGlobalListeners();
     scheduleCheck(1000);

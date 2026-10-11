@@ -6,7 +6,10 @@
     const FEED = '[data-test-selector="chat-scrollable-area__message-container"], .chat-scrollable-area__message-container';
     const LINE = '[data-a-target="chat-line-message"], .chat-line__message';
     const PLAYER = '[data-a-target="video-player-layout"], .video-player__container, .video-player';
+    const CHAT_COLUMN = '.right-column';
+    const CHAT_TOGGLE = '[data-a-target="right-column__toggle-collapse-btn"]';
     const MAX_LINES = 60;
+    const MAX_DIRTY_LINES = 150;
     const defaults = Object.freeze({ enabled: false, fullscreenOnly: true, opacity: 70,
         fontSize: 14, color: '#18151f', compact: false, clickThrough: false,
         x: 1, y: 0.15, width: 320, height: 0.55 });
@@ -27,6 +30,7 @@
     let host = null, rows = new Map(), dirty = new Set(), frame = null, flushTimer = null;
     let gesture = null, bounds = null, suspended = false, listening = false;
     let managedIframe = null, originalAllow = null, originalFullscreen = null;
+    let nativeStartup = null, startedChannel = null;
     const channel = () => {
         const path = location.pathname.split('/').filter(Boolean);
         const reserved = /^(directory|downloads|drops|friends|jobs|moderator|p|popout|prime|search|settings|store|subscriptions|team|turbo|u|videos|wallet)$/i;
@@ -43,8 +47,9 @@
         compact: 'M4 5h16M4 9h16M4 13h16M4 17h16',
         close: 'm6 6 12 12M18 6 6 18',
         fullscreen: 'M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5',
-        resize: 'm7 17 10-10m-5 5 5-5m0 5h.01',
-        drag: 'M8 5h.01M16 5h.01M8 12h.01M16 12h.01M8 19h.01M16 19h.01'
+        resize: 'M7 19 19 7M12 19 19 12M17 19 19 17',
+        drag: 'M8 5h.01M16 5h.01M8 12h.01M16 12h.01M8 19h.01M16 19h.01',
+        latest: 'M12 4v16m-6-6 6 6 6-6'
     };
     function button(label, text, className, icon = null) {
         const node = element('button', className);
@@ -81,7 +86,7 @@
         panel.setAttribute('aria-label', 'Floating Twitch chat');
         const header = element('div', 'ytot-chat-header');
         const grip = button('Move chat — drag or use arrow keys', 'Twitch chat', 'ytot-chat-grip', 'drag');
-        compactButton = button('Toggle compact chat', '', 'ytot-chat-tool', 'compact');
+        compactButton = button('Compact spacing', '', 'ytot-chat-tool', 'compact');
         const close = button('Turn off floating chat', '', 'ytot-chat-tool', 'close');
         compactButton.onclick = () => configure({ ...settings, compact: !settings.compact }, true);
         close.onclick = () => configure({ ...settings, enabled: false }, true);
@@ -102,7 +107,7 @@
         messages.tabIndex = 0;
         messages.onscroll = () => { latest.hidden = isAtBottom(); };
         empty = element('div', 'ytot-chat-empty', 'Waiting for chat…');
-        latest = button('Jump to latest chat', '↓ Latest', 'ytot-chat-latest');
+        latest = button('Jump to latest chat', 'Latest', 'ytot-chat-latest', 'latest');
         latest.hidden = true;
         latest.onclick = () => { messages.scrollTop = messages.scrollHeight; latest.hidden = true; };
         const resize = button('Resize chat — drag or use arrow keys', '', 'ytot-chat-resize', 'resize');
@@ -128,7 +133,7 @@
         root.append(panel, fullscreenButton);
     }
     function startGesture(event, control, type) {
-        if (event.button !== 0 || !bounds) return;
+        if (gesture || event.isPrimary === false || event.button !== 0 || !bounds) return;
         event.preventDefault();
         control.setPointerCapture(event.pointerId);
         gesture = { type, id: event.pointerId, control, clientX: event.clientX, clientY: event.clientY,
@@ -155,8 +160,8 @@
         }
         scheduleLayout();
     }
-    function endGesture() {
-        if (!gesture) return;
+    function endGesture(event) {
+        if (!gesture || (event?.pointerId !== undefined && event.pointerId !== gesture.id)) return;
         const { control, id } = gesture;
         gesture = null;
         control.onpointermove = control.onpointerup = control.onpointercancel = control.onlostpointercapture = null;
@@ -190,6 +195,7 @@
         panel.style.backgroundColor = 'rgba(' + rgb.join(',') + ',' + settings.opacity / 100 + ')';
         panel.classList.toggle('ytot-chat-compact', settings.compact);
         compactButton.setAttribute('aria-pressed', String(settings.compact));
+        compactButton.title = settings.compact ? 'Restore normal message spacing' : 'Reduce message spacing';
         panel.classList.toggle('ytot-chat-through', settings.clickThrough);
         panel.hidden = suspended || (settings.fullscreenOnly && !inFullscreen) || rect.width < 100 || rect.height < 100;
         root.hidden = suspended || rect.width === 0 || rect.height === 0 || (!!fullscreen && fullscreen === managedIframe);
@@ -198,6 +204,71 @@
         fullscreenButton.title = inFullscreen ? 'Exit fullscreen' : 'Fullscreen with chat';
         const visible = !panel.hidden && !root.hidden;
         attachFeed(visible ? document.querySelector(FEED) : null);
+        primeNativeChat(visible);
+    }
+    // Twitch defers connecting a chat that starts collapsed. Warm its existing
+    // feed once, without another client, then restore the user's sidebar state.
+    function releaseNativeStartup(startup) {
+        if (!startup || nativeStartup !== startup) return;
+        clearTimeout(startup.timer);
+        startup.column.removeAttribute('data-ypft-chat-priming');
+        if (startup.player) {
+            startup.player.removeAttribute('data-ypft-chat-priming-player');
+            if (startup.previousWidth) startup.player.style.setProperty('--ypft-chat-player-width', startup.previousWidth, startup.previousPriority);
+            else startup.player.style.removeProperty('--ypft-chat-player-width');
+        }
+        document.removeEventListener('click', onNativeChatClick, true);
+        nativeStartup = null;
+    }
+    function onNativeChatClick(event) {
+        if (event.isTrusted && event.target.closest?.(CHAT_TOGGLE)) releaseNativeStartup(nativeStartup);
+    }
+    function restoreNativeChat(cancelled = false) {
+        const startup = nativeStartup;
+        if (!startup || startup.closing) return;
+        startup.closing = true;
+        clearTimeout(startup.timer);
+        if (cancelled) startedChannel = null;
+        const collapse = () => {
+            if (nativeStartup !== startup) return;
+            const column = startup.column.isConnected ? startup.column : document.querySelector(CHAT_COLUMN);
+            try {
+                if (column && !column.classList.contains('right-column--collapsed')) column.querySelector(CHAT_TOGGLE)?.click();
+            } finally {
+                // Allow Twitch's pending React commit to complete before unmasking.
+                startup.timer = setTimeout(() => releaseNativeStartup(startup), 100);
+            }
+        };
+        // Cancellation can happen before React commits the initial expand click.
+        if (cancelled) startup.timer = setTimeout(collapse, 0);
+        else collapse();
+    }
+    function primeNativeChat(visible) {
+        if (!visible) { restoreNativeChat(true); return; }
+        if (nativeStartup || startedChannel === lastChannel || feed?.querySelector(LINE)) return;
+        const column = document.querySelector(CHAT_COLUMN), toggle = column?.querySelector(CHAT_TOGGLE);
+        if (!column?.classList.contains('right-column--collapsed') || !toggle || toggle.disabled) return;
+        startedChannel = lastChannel;
+        const player = document.querySelector('.persistent-player');
+        const startup = nativeStartup = { column, player, timer: null, ready: false, closing: false,
+            previousWidth: player?.style.getPropertyValue('--ypft-chat-player-width'),
+            previousPriority: player?.style.getPropertyPriority('--ypft-chat-player-width') };
+        column.setAttribute('data-ypft-chat-priming', '');
+        if (player) {
+            player.style.setProperty('--ypft-chat-player-width', player.getBoundingClientRect().width + 'px');
+            player.setAttribute('data-ypft-chat-priming-player', '');
+        }
+        document.addEventListener('click', onNativeChatClick, true);
+        try { toggle.click(); }
+        catch { releaseNativeStartup(startup); return; }
+        startup.timer = setTimeout(() => {
+            if (nativeStartup !== startup || startup.closing) return;
+            startup.ready = true;
+            if (feed?.childNodes.length) restoreNativeChat();
+            else startup.timer = setTimeout(() => {
+                if (nativeStartup === startup) restoreNativeChat();
+            }, 4400);
+        }, 600);
     }
     // Preserve the original iframe permissions exactly when the feature is off.
     // Fullscreen with chat uses the stable parent, so the cross-origin iframe is never moved.
@@ -231,6 +302,7 @@
         node.alt = source.alt || '';
         node.title = source.alt || '';
         node.decoding = 'async';
+        node.loading = 'lazy';
         node.referrerPolicy = 'no-referrer';
         return node;
     }
@@ -239,7 +311,10 @@
         if (source.nodeType === 3) {
             const text = source.textContent.slice(0, Math.max(0, 4000 - budget.chars));
             budget.chars += text.length;
-            if (text) destination.appendChild(document.createTextNode(text));
+            if (text) {
+                if (window.__ypftEmotes) window.__ypftEmotes.appendText(destination, text, budget);
+                else destination.appendChild(document.createTextNode(text));
+            }
             return;
         }
         if (source.nodeType !== 1 || ['SCRIPT', 'STYLE', 'SVG', 'IFRAME', 'INPUT', 'TEXTAREA', 'BUTTON'].includes(source.tagName)) return;
@@ -256,12 +331,14 @@
         const body = source.querySelector('[data-a-target="chat-line-message-body"]');
         if (!name || !body) return null;
         const row = element('div', 'ytot-chat-line');
-        for (const badge of Array.from(source.querySelectorAll('img.chat-badge')).slice(0, 6)) {
+        const badges = source.querySelectorAll('img.chat-badge');
+        for (let i = 0; i < Math.min(badges.length, 6); i++) {
+            const badge = badges[i];
             const node = element('img', 'ytot-chat-badge');
             try {
                 const url = new URL(badge.currentSrc || badge.getAttribute('src'));
                 if (url.protocol !== 'https:') continue;
-                node.src = url.href; node.alt = badge.alt || ''; node.decoding = 'async';
+                node.src = url.href; node.alt = badge.alt || ''; node.decoding = 'async'; node.loading = 'lazy';
                 node.referrerPolicy = 'no-referrer'; row.appendChild(node);
             } catch {}
         }
@@ -275,7 +352,10 @@
         for (const record of records) {
             const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
             const line = target?.closest(LINE);
-            if (line) dirty.add(line);
+            if (line && feed?.contains(line)) {
+                dirty.delete(line); dirty.add(line);
+                if (dirty.size > MAX_DIRTY_LINES) dirty.delete(dirty.values().next().value);
+            }
         }
         // At most eight DOM batches/second even in busy channels.
         if (flushTimer === null) flushTimer = setTimeout(() => { flushTimer = null; flush(); }, 125);
@@ -285,7 +365,8 @@
         const atBottom = isAtBottom(), previousTop = messages.scrollTop;
         const anchor = atBottom ? null : Array.from(messages.children).find(row => row.offsetTop + row.offsetHeight > previousTop);
         const anchorOffset = anchor ? anchor.offsetTop - previousTop : 0;
-        const sources = Array.from(feed.querySelectorAll(LINE)).slice(-MAX_LINES);
+        const lines = feed.querySelectorAll(LINE), sources = [];
+        for (let i = Math.max(0, lines.length - MAX_LINES); i < lines.length; i++) sources.push(lines[i]);
         const keep = new Set(sources);
         for (const [source, row] of rows) if (!keep.has(source)) { row.remove(); rows.delete(source); }
         const fragment = document.createDocumentFragment(), ordered = [];
@@ -312,6 +393,7 @@
         if (atBottom) messages.scrollTop = messages.scrollHeight;
         else messages.scrollTop = anchor?.parentElement === messages ? Math.max(0, anchor.offsetTop - anchorOffset) : previousTop;
         latest.hidden = atBottom;
+        if (nativeStartup?.ready && !nativeStartup.closing && feed.childNodes.length) restoreNativeChat();
     }
     function attachFeed(next) {
         if (feed === next) return;
@@ -322,7 +404,7 @@
         messages?.replaceChildren();
         feed = next;
         if (!feed) {
-            if (empty) { empty.hidden = false; empty.textContent = 'Open Twitch chat to show messages.'; }
+            if (empty) { empty.hidden = false; empty.textContent = 'Waiting for Twitch chat…'; }
             return;
         }
         feedObserver = new MutationObserver(queueFlush);
@@ -331,31 +413,37 @@
         flush();
     }
     function teardown() {
+        restoreNativeChat(true); startedChannel = null;
         attachFeed(null);
         endGesture();
         resizeObserver?.disconnect(); resizeObserver = null; observedHost = null;
         if (frame !== null) cancelAnimationFrame(frame);
         frame = null;
         root?.remove(); root = null; host = null; rows.clear(); dirty.clear();
+        panel = messages = empty = latest = fullscreenButton = compactButton = null;
+        bounds = null;
         restoreIframe();
         if (listening) {
             document.removeEventListener('fullscreenchange', sync);
             document.removeEventListener('visibilitychange', sync);
             document.removeEventListener('scroll', scheduleLayout, true);
             window.removeEventListener('resize', scheduleLayout);
+            window.removeEventListener('blur', endGesture);
             listening = false;
         }
     }
     function sync() {
         const current = channel();
         if (!settings.enabled || !current) { teardown(); lastChannel = current; return; }
-        if (lastChannel !== current) attachFeed(null);
+        if (lastChannel !== current) { restoreNativeChat(true); startedChannel = null; attachFeed(null); }
         lastChannel = current;
         suspended = document.visibilityState === 'hidden';
+        if (suspended) endGesture();
         if (!root) build();
         manageIframe();
         host = document.getElementById('ytot-youtube-wrapper') || document.querySelector(PLAYER);
         if (!host) {
+            restoreNativeChat(true);
             root.remove(); attachFeed(null);
             resizeObserver?.disconnect(); resizeObserver = null; observedHost = null;
             return;
@@ -365,6 +453,7 @@
             document.addEventListener('visibilitychange', sync);
             document.addEventListener('scroll', scheduleLayout, true);
             window.addEventListener('resize', scheduleLayout);
+            window.addEventListener('blur', endGesture);
             listening = true;
         }
         if (observedHost !== host) {

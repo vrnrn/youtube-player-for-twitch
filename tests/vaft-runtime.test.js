@@ -141,6 +141,9 @@ test('worker payload is valid with quoted headers, signals success/error, and re
     assert.equal(f.attrs.get('data-ypft-vaft'), 'worker-ready');
     assert.ok(f.revoked.includes(worker.url));
     worker.emit('error');
+    const failedCount = worker.messages.length;
+    await f.context.fetch('https://gql.twitch.tv/gql', { headers: { Authorization: 'after-error' } });
+    assert.equal(worker.messages.length, failedCount);
     worker.emit('message', { key: 'YPFTVaftWorkerReady' });
     assert.equal(f.attrs.get('data-ypft-vaft'), 'error');
     worker.terminate();
@@ -203,6 +206,38 @@ test('HEVC master and stitched media fixtures trigger reload requests while pres
     await f.ctx.processM3U8(hevc, clean, f.ctx.fetch);
     assert.equal(info.IsShowingAd, false);
     assert.equal(info.IsUsingModifiedM3U8, false);
+    assert.equal(info.RequestedAds.size, 0);
+});
+
+test('VAFT playlist caches stay bounded across channel visits and retain recently accessed channels', async () => {
+    const f = await workerRuntime(url => {
+        const name = new URL(url).pathname.split('/').at(-1);
+        return new Response(`#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=1920x1080,FRAME-RATE=60,CODECS="avc1"\nhttps://media.ttvnw.net/${name}`);
+    });
+    const visit = channel => f.ctx.fetch(`https://usher.ttvnw.net/api/channel/hls/channel${channel}.m3u8?sig=fixture`);
+    for (let channel = 0; channel < 8; channel++) await visit(channel);
+    await visit(0); await visit(8);
+    assert.ok(f.ctx.StreamInfos.channel0); assert.equal(f.ctx.StreamInfos.channel1, undefined);
+    for (let channel = 9; channel < 30; channel++) await visit(channel);
+    assert.equal(Object.keys(f.ctx.StreamInfos).length, 8);
+    assert.equal(Object.keys(f.ctx.StreamInfosByUrl).length, 8);
+    const retained = new Set(Object.values(f.ctx.StreamInfos));
+    assert.ok(Object.values(f.ctx.StreamInfosByUrl).every(info => retained.has(info)));
+    assert.ok(f.ctx.StreamInfos.channel29);
+});
+
+test('restarted streams release dead encoding URL entries when their master playlist is replaced', async () => {
+    let restarted = false;
+    const f = await workerRuntime(url => {
+        if (url === 'https://media.ttvnw.net/old.m3u8' && restarted) return new Response('', { status: 404 });
+        return new Response(`#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000000,RESOLUTION=1920x1080,FRAME-RATE=60,CODECS="avc1"\nhttps://media.ttvnw.net/${restarted ? 'new' : 'old'}.m3u8`);
+    });
+    const url = 'https://usher.ttvnw.net/api/channel/hls/channel.m3u8?sig=fixture';
+    await f.ctx.fetch(url); const previous = f.ctx.StreamInfos.channel;
+    restarted = true; await f.ctx.fetch(url);
+    assert.equal(f.ctx.StreamInfosByUrl['https://media.ttvnw.net/old.m3u8'], undefined);
+    assert.notEqual(f.ctx.StreamInfos.channel, previous);
+    assert.equal(f.ctx.StreamInfosByUrl['https://media.ttvnw.net/new.m3u8'], f.ctx.StreamInfos.channel);
 });
 
 test('MAIN storage hooks see isolated-world quality updates rather than stale cached values', () => {

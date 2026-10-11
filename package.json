@@ -6,6 +6,7 @@
     "check": "npm run check:syntax && npm test && npm run check:site",
     "check:syntax": "node scripts/check-syntax.mjs",
     "test": "node --test",
+    "profile:memory": "node --expose-gc scripts/profile-memory.mjs",
     "check:site": "node scripts/check-site.mjs",
     "build": "sh scripts/build-release.sh",
     "publish": "node scripts/publish-chrome-web-store.mjs",

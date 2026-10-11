@@ -56,8 +56,11 @@ The adapter:
 - Reports hooks-ready, worker-ready, conflict and error through an informational
   DOM attribute. The attribute/ownership signal is page-visible and untrusted;
   neither exposes privileged Chrome APIs. Worker errors stay visible until reload.
-- Releases generated Blob URLs and removes terminated workers from its registry.
+- Releases generated Blob URLs and removes terminated or failed workers from its registry.
   Playlist-processing failures reject their promises; missing SERVER-TIME is safe.
+- Keeps eight recently accessed channel playlist records per worker, removes dead
+  encoding URL references when a stream restarts, and limits remembered ad requests
+  to 128 URLs, clearing them after each advertising interruption.
 - Uses “interruption blocking” for the visible banner, retains internal upstream
   identifiers and attribution, and removes developer-only simulation globals.
 

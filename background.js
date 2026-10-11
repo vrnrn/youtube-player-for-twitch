@@ -5,6 +5,16 @@
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request?.type === 'GET_GLOBAL_EMOTES') {
+        getGlobalEmotes().then(sendResponse).catch(() => sendResponse({ emotes: [] }));
+        return true;
+    }
+
+    if (request?.type === 'GET_CHANNEL_EMOTES') {
+        getChannelEmotes(request.channel).then(sendResponse).catch(() => sendResponse({ emotes: [] }));
+        return true;
+    }
+
     if (request?.type === 'SEARCH_YOUTUBE') {
         handleSearch(request.query)
             .then(sendResponse)
@@ -26,6 +36,194 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 });
+
+const EMOTE_CACHE_KEY = 'ypft_global_emotes_v1';
+const EMOTE_CACHE_TTL = 6 * 60 * 60 * 1000;
+const EMOTE_RETRY_DELAY = 5 * 60 * 1000;
+const CHANNEL_EMOTE_CACHE_PREFIX = 'ypft_channel_emotes_v2_';
+const CHANNEL_EMOTE_CACHE_INDEX = 'ypft_channel_emotes_index_v2';
+const CHANNEL_EMOTE_CACHE_TTL = 30 * 60 * 1000;
+const EMOTE_PROVIDERS = {
+    BetterTTV: 'https://api.betterttv.net/3/cached/emotes/global',
+    FrankerFaceZ: 'https://api.frankerfacez.com/v1/set/global',
+    '7TV': 'https://7tv.io/v3/emote-sets/global'
+};
+let globalEmotesRequest = null;
+const channelEmoteRequests = new Map();
+let channelEmoteWrites = Promise.resolve();
+
+function emoteImageUrl(value, hostname) {
+    try {
+        const url = new URL(value?.startsWith('//') ? `https:${value}` : value);
+        return url.protocol === 'https:' && url.hostname === hostname && !url.username && !url.password && !url.port
+            ? url.href : null;
+    } catch { return null; }
+}
+
+function parseEmoteCatalog(provider, data) {
+    let entries;
+    if (provider === 'BetterTTV' && Array.isArray(data)) {
+        entries = data.filter(emote => !emote.modifier && /^[a-f0-9]{24}$/i.test(emote.id)).map(emote => ({
+            code: emote.code, url: `https://cdn.betterttv.net/emote/${emote.id}/2x`
+        }));
+    } else if (provider === 'FrankerFaceZ' && Array.isArray(data?.default_sets) && data?.sets) {
+        // Other sets in this response belong to specific users, not everyone.
+        entries = data.default_sets.flatMap(id => data.sets[id]?.emoticons || [])
+            .filter(emote => !emote.modifier && !emote.hidden).map(emote => ({
+                code: emote.name,
+                url: emoteImageUrl(emote.animated?.['2'] || emote.urls?.['2'] || emote.urls?.['1'], 'cdn.frankerfacez.com')
+            }));
+    } else if (provider === '7TV' && Array.isArray(data?.emotes)) {
+        entries = data.emotes.map(emote => {
+            const host = emote.data?.host;
+            const file = host?.files?.find(file => file.name === '2x.webp') ||
+                host?.files?.find(file => /^(?:1|2)x\.(?:webp|png|gif)$/.test(file.name));
+            const base = emoteImageUrl(host?.url, 'cdn.7tv.app');
+            return { code: emote.name, url: base && file ? `${base.replace(/\/$/, '')}/${file.name}` : null };
+        });
+    } else {
+        throw new Error('Invalid emote catalog');
+    }
+    return entries.filter(emote => typeof emote.code === 'string' && emote.code.length <= 100 &&
+        emote.code.length > 0 && !/\s/.test(emote.code) && emote.url)
+        .slice(0, 2000).map(emote => ({ ...emote, provider }));
+}
+
+async function fetchEmoteData(endpoint, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+        const response = await fetch(endpoint, { ...options, credentials: 'omit', referrerPolicy: 'no-referrer', signal: controller.signal });
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error('Emote provider unavailable');
+        return await response.json();
+    } finally { clearTimeout(timer); }
+}
+
+function getGlobalEmotes() {
+    // Share in-flight work across tabs, and persist the public catalog across worker restarts.
+    if (globalEmotesRequest) return globalEmotesRequest;
+    globalEmotesRequest = (async () => {
+        let cache = {};
+        try {
+            const stored = await chrome.storage.local.get(EMOTE_CACHE_KEY);
+            if (stored?.[EMOTE_CACHE_KEY] && typeof stored[EMOTE_CACHE_KEY] === 'object') cache = stored[EMOTE_CACHE_KEY];
+        } catch {}
+        let changed = false;
+        await Promise.all(Object.entries(EMOTE_PROVIDERS).map(async ([provider, endpoint]) => {
+            const previous = cache[provider];
+            const now = Date.now();
+            if (Array.isArray(previous?.emotes) && previous.refreshAt > now && previous.refreshAt <= now + EMOTE_CACHE_TTL) return;
+            changed = true;
+            try {
+                cache[provider] = { emotes: parseEmoteCatalog(provider, await fetchEmoteData(endpoint)), refreshAt: Date.now() + EMOTE_CACHE_TTL };
+            } catch {
+                cache[provider] = { emotes: Array.isArray(previous?.emotes) ? previous.emotes : [], refreshAt: Date.now() + EMOTE_RETRY_DELAY };
+            }
+        }));
+        if (changed) { try { await chrome.storage.local.set({ [EMOTE_CACHE_KEY]: cache }); } catch {} }
+        return { emotes: Object.keys(EMOTE_PROVIDERS).flatMap(provider => cache[provider].emotes),
+            refreshAt: Math.min(...Object.keys(EMOTE_PROVIDERS).map(provider => cache[provider].refreshAt)) };
+    })().finally(() => { globalEmotesRequest = null; });
+    return globalEmotesRequest;
+}
+
+async function readEmoteCache(key) {
+    try { return (await chrome.storage.local.get(key))?.[key]; }
+    catch { return null; }
+}
+
+function saveChannelEmoteCache(channel, providers, twitchId, writeCatalog) {
+    // Keep only in-flight catalogs in worker memory; read one channel from storage on demand.
+    channelEmoteWrites = channelEmoteWrites.catch(() => {}).then(async () => {
+        const index = Object.assign(Object.create(null), await readEmoteCache(CHANNEL_EMOTE_CACHE_INDEX));
+        delete index[channel]; index[channel] = Date.now();
+        const expired = Object.keys(index).reverse().sort((a, b) => index[b] - index[a]).slice(10);
+        for (const name of expired) delete index[name];
+        const values = { [CHANNEL_EMOTE_CACHE_INDEX]: index };
+        if (writeCatalog) {
+            const packed = Object.fromEntries(Object.entries(providers).map(([provider, value]) => [provider, {
+                refreshAt: value.refreshAt, emotes: value.emotes.map(emote => [emote.code, emote.url])
+            }]));
+            values[CHANNEL_EMOTE_CACHE_PREFIX + channel] = { providers: packed, twitchId };
+        }
+        await chrome.storage.local.set(values);
+        await chrome.storage.local.remove([...expired.map(name => CHANNEL_EMOTE_CACHE_PREFIX + name), 'ypft_channel_emotes_v1']);
+    });
+    return channelEmoteWrites;
+}
+
+async function resolveTwitchId(channel) {
+    // Only needed when FFZ has no room record. Query public identity, without login credentials.
+    const data = await fetchEmoteData('https://gql.twitch.tv/gql', {
+        method: 'POST',
+        headers: { 'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'query YPFTChannel($login: String!) { user(login: $login) { id } }', variables: { login: channel } })
+    });
+    const id = data?.data?.user?.id;
+    if (!/^\d+$/.test(String(id || ''))) throw new Error('Twitch channel unavailable');
+    return String(id);
+}
+
+function getChannelEmotes(value) {
+    if (typeof value !== 'string' || !/^[a-z0-9_]{1,25}$/i.test(value)) {
+        return Promise.resolve({ emotes: [], error: 'Invalid Twitch channel.' });
+    }
+    const channel = value.toLowerCase();
+    if (channelEmoteRequests.has(channel)) return channelEmoteRequests.get(channel);
+    const request = (async () => {
+        const previous = await readEmoteCache(CHANNEL_EMOTE_CACHE_PREFIX + channel) || {};
+        const providers = Object.fromEntries(Object.keys(EMOTE_PROVIDERS).flatMap(provider => {
+            const value = previous.providers?.[provider];
+            return Array.isArray(value?.emotes) ? [[provider, { refreshAt: value.refreshAt,
+                emotes: value.emotes.slice(0, 2000).filter(emote => Array.isArray(emote) && emote.length === 2)
+                    .map(([code, url]) => ({ code, url, provider })) }]] : [];
+        }));
+        const fresh = provider => Array.isArray(providers[provider]?.emotes) &&
+            providers[provider].refreshAt > Date.now() && providers[provider].refreshAt <= Date.now() + CHANNEL_EMOTE_CACHE_TTL;
+        let twitchId = /^\d+$/.test(previous.twitchId || '') ? previous.twitchId : null;
+        const changed = !twitchId || Object.keys(EMOTE_PROVIDERS).some(provider => !fresh(provider));
+        let room, roomError;
+        if (!fresh('FrankerFaceZ') || !twitchId) {
+            try {
+                room = await fetchEmoteData(`https://api.frankerfacez.com/v1/room/${channel}`);
+                if (/^\d+$/.test(String(room?.room?.twitch_id || ''))) twitchId = String(room.room.twitch_id);
+            } catch (error) { roomError = error; }
+        }
+        const identity = twitchId ? Promise.resolve(twitchId) : resolveTwitchId(channel);
+        await Promise.all(Object.keys(EMOTE_PROVIDERS).map(async provider => {
+            if (fresh(provider)) return;
+            const old = providers[provider];
+            try {
+                let data;
+                if (provider === 'FrankerFaceZ') {
+                    if (roomError) throw roomError;
+                    // Only the channel's assigned set; never unrelated or personal sets.
+                    data = { default_sets: room?.room?.set ? [room.room.set] : [], sets: room?.sets || {} };
+                } else {
+                    const id = await identity;
+                    if (provider === 'BetterTTV') {
+                        const user = await fetchEmoteData(`https://api.betterttv.net/3/cached/users/twitch/${id}`);
+                        data = [...(user?.channelEmotes || []), ...(user?.sharedEmotes || [])];
+                    } else {
+                        const user = await fetchEmoteData(`https://7tv.io/v3/users/twitch/${id}`);
+                        data = user?.emote_set || { emotes: [] };
+                    }
+                }
+                providers[provider] = { emotes: parseEmoteCatalog(provider, data), refreshAt: Date.now() + CHANNEL_EMOTE_CACHE_TTL };
+            } catch {
+                providers[provider] = { emotes: Array.isArray(old?.emotes) ? old.emotes : [], refreshAt: Date.now() + EMOTE_RETRY_DELAY };
+            }
+        }));
+        // Consume identity failure even if all ID-based catalogs were already fresh.
+        twitchId = await identity.catch(() => null);
+        try { await saveChannelEmoteCache(channel, providers, twitchId, changed); } catch {}
+        return { emotes: Object.keys(EMOTE_PROVIDERS).flatMap(provider => providers[provider].emotes),
+            refreshAt: Math.min(...Object.keys(EMOTE_PROVIDERS).map(provider => providers[provider].refreshAt)) };
+    })().finally(() => { channelEmoteRequests.delete(channel); });
+    channelEmoteRequests.set(channel, request);
+    return request;
+}
 
 function getStreamsPageUrl(channelUrl) {
     try {

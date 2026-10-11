@@ -16,6 +16,8 @@ zip -X -q release.zip \
     vendor/vaft/LICENSE \
     vendor/vaft/README.md \
     twitch-playback.js \
+    twitch-directory.js \
+    twitch-emotes.js \
     twitch-chat.js \
     twitch-content.js \
     twitch-styles.css \
@@ -25,3 +27,10 @@ zip -X -q release.zip \
     LICENSE
 unzip -tq release.zip
 node scripts/check-release.mjs
+
+# Reserve build/ for the latest unpacked extension; never retain older builds.
+unpacked_dir=build/latest
+rm -rf build
+mkdir -p "$unpacked_dir"
+unzip -q release.zip -d "$unpacked_dir"
+node scripts/check-release.mjs "$unpacked_dir"

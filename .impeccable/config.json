@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "tests/twitch-chat.test.js"
+        ],
+        "createdAt": "2026-10-11T21:38:16.078Z",
+        "reason": "Agent: intentional hostile-image strings and synthetic image nodes verify chat sanitization; no shipping markup in this test file."
+      }
+    ]
+  }
+}

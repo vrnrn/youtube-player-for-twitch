@@ -29,7 +29,7 @@ const server = http.createServer(async (req, res) => {
         )
         .replace(
           /\}\)\(\);\s*$/,
-          "window.assetUI = { init, injectYouTube, handleAutoFind, renderHistory, renderChatControls };\n})();",
+          "window.assetUI = { init, injectYouTube, handleAutoFind, renderHistory, renderChatControls, openSettings, selectSettingsTab };\n})();",
         );
       type = "text/javascript";
     } else {
