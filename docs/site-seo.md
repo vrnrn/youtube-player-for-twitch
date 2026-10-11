@@ -8,4 +8,4 @@ Run `npm run check:site` before publishing website changes. This validates the c
 
 Descriptions and page names identify the Chrome extension's actual features. `WebSite` and `WebPage` JSON-LD identifies this product separately from the personal website and links to its creator. The markup does not assert software reviews, ratings, or rich-result eligibility.
 
-A push to this repository's `main` branch also creates an extension release through GitHub Actions. If only publishing the website, use a Pages deployment of `site/` to `ytpt-site` so website publication does not create an extension release. Do not run the Chrome Web Store publishing workflow for website changes.
+A push to this repository's `main` branch runs the extension checks and build through GitHub Actions. Creating a GitHub release requires an explicit manual workflow dispatch with the release option enabled. Deploy `site/` to the Pages project `ytpt-site` to publish website changes.

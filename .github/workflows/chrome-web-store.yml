@@ -93,7 +93,7 @@ jobs:
             gh release create "$tag" \
               --target "$GITHUB_SHA" \
               --title "$tag" \
-              --notes "Automated build from main commit $GITHUB_SHA. Chrome Web Store submission is started manually from the Publish Chrome Web Store workflow."
+              --notes "Verified extension build from main commit $GITHUB_SHA."
           fi
 
           gh release upload "$tag" \
