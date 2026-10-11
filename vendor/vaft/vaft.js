@@ -151,6 +151,7 @@
                     return terminate();
                 };
                 this.addEventListener('error', () => {
+                    twitchWorkers.delete(this);
                     URL.revokeObjectURL(blobUrl);
                     window.__ypftVaft.fail();
                 }, { once: true });
@@ -159,6 +160,7 @@
                         URL.revokeObjectURL(blobUrl);
                         window.__ypftVaft.report('worker-ready');
                     } else if (e.data?.key === 'YPFTVaftWorkerError') {
+                        twitchWorkers.delete(this);
                         URL.revokeObjectURL(blobUrl);
                         window.__ypftVaft.fail();
                     } else if (e.data?.key == 'UpdateAdBlockBanner') {
@@ -245,11 +247,26 @@
                                 const encodingsM3u8 = await response.text();
                                 const serverTime = getServerTimeFromM3u8(encodingsM3u8);
                                 let streamInfo = StreamInfos[channelName];
+                                if (streamInfo) {
+                                    delete StreamInfos[channelName];
+                                    StreamInfos[channelName] = streamInfo;
+                                }
                                 if (streamInfo != null && streamInfo.EncodingsM3U8 != null && (await realFetch(streamInfo.EncodingsM3U8.match(/^https:.*\.m3u8$/m)[0])).status !== 200) {
                                     // The cached encodings are dead (the stream probably restarted)
                                     streamInfo = null;
                                 }
                                 if (streamInfo == null || streamInfo.EncodingsM3U8 == null) {
+                                    const discarded = new Set();
+                                    if (StreamInfos[channelName]) discarded.add(StreamInfos[channelName]);
+                                    delete StreamInfos[channelName];
+                                    while (Object.keys(StreamInfos).length >= 8) {
+                                        const oldest = Object.keys(StreamInfos)[0];
+                                        discarded.add(StreamInfos[oldest]);
+                                        delete StreamInfos[oldest];
+                                    }
+                                    for (const playlistUrl of Object.keys(StreamInfosByUrl)) {
+                                        if (discarded.has(StreamInfosByUrl[playlistUrl])) delete StreamInfosByUrl[playlistUrl];
+                                    }
                                     StreamInfos[channelName] = streamInfo = {
                                         ChannelName: channelName,
                                         IsShowingAd: false,
@@ -446,6 +463,7 @@
                             // Only request one .ts file per .m3u8 request to avoid making too many requests
                             //console.log('Fetch ad .ts file');
                             streamInfo.RequestedAds.add(lines[i + 1]);
+                            if (streamInfo.RequestedAds.size > 128) streamInfo.RequestedAds.delete(streamInfo.RequestedAds.values().next().value);
                             fetch(lines[i + 1]).then((response)=>{response.blob()});
                             break;
                         }
@@ -550,6 +568,7 @@
             }
         } else if (streamInfo.IsShowingAd) {
             console.log('Finished blocking ads');
+            streamInfo.RequestedAds.clear();
             streamInfo.IsShowingAd = false;
             streamInfo.IsStrippingAdSegments = false;
             streamInfo.NumStrippedAdSegments = 0;

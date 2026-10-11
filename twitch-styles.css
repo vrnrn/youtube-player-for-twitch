@@ -1,822 +1,313 @@
-/* YouTube Player for Twitch */
-
-/* Nav Button Wrapper */
-#ytot-nav-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
-}
-
-#ytot-nav-wrapper.ytot-nav-theatre {
-    position: fixed;
-    top: 8px;
-    left: 12px;
-    margin: 0;
-    z-index: 3020;
-}
-
-.ytot-nav-theatre > .ytot-nav-btn {
-    background: #18161e;
-    border: 1px solid #53535f;
-}
-
-/* Main Nav Button */
-.ytot-nav-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    color: #dedee3;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.ytot-nav-btn:hover {
-    background: rgba(83, 83, 95, 0.48);
-    color: #fff;
-}
-
-.ytot-nav-btn.active {
-    color: #bf94ff;
-}
-
-.ytot-icon {
-    font-size: 12px;
-}
-
-/* Dropdown Panel */
-.ytot-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    width: 360px;
-    max-height: calc(100vh - 76px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+/* YouTube Player for Twitch: shared tokens are scoped to extension surfaces. */
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) {
+    --ytot-bg: #18181b;
+    --ytot-rail: #25252b;
+    --ytot-surface: #202024;
+    --ytot-hover: #303038;
+    --ytot-line: #35353d;
+    --ytot-control-line: #62626f;
+    --ytot-text: #efeff1;
+    --ytot-muted: #bcbcc6;
+    --ytot-accent: #bf94ff;
+    --ytot-accent-hover: #d0afff;
+    --ytot-accent-ink: #18181b;
+    --ytot-accent-subtle: #332647;
+    --ytot-danger: #ff9c9c;
+    --ytot-warning: #f4ca74;
+    --ytot-success: #88d9b0;
+    --ytot-field-bg: #101012;
+    --ytot-hover-strong: #40404a;
+    --ytot-accent-subtle-hover: #3d2d53;
+    --ytot-native-hover: #53535f7a;
+    --ytot-danger-subtle: #ff9c9c0d;
+    --ytot-warning-subtle: #483e27;
+    --ytot-tint: #ffffff0d;
+    --ytot-tint-hover: #ffffff14;
+    --ytot-preview-line: #ffffff24;
+    --ytot-overlay-line: #ffffff26;
+    --ytot-overlay-header: #18181bd9;
+    --ytot-scrim: #0009;
+    --ytot-ink: #000;
+    --ytot-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: dark;
+    font-family: var(--ytot-font);
     scrollbar-width: thin;
-    font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #18161e;
-    border: 1px solid #37313f;
-    border-radius: 14px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-    z-index: 9999;
+    scrollbar-color: var(--ytot-control-line) transparent;
 }
-
-.ytot-dropdown.visible {
-    display: block;
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *,
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *::before,
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *::after { box-sizing: border-box; }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) [hidden] { display: none !important; }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) ::selection { background: var(--ytot-accent); color: var(--ytot-accent-ink); }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) :is(button, input, select) { font-family: inherit; }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog) :is(button, input, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--ytot-accent); outline-offset: 3px;
 }
-
-/* Dropdown Header */
-.ytot-dropdown-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 18px;
-    background: linear-gradient(115deg, #272033, #19161f);
-    color: #efeff1;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.ytot-close {
-    background: none;
-    border: none;
-    color: #adadb8;
-    font-size: 24px;
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    padding: 0;
-    line-height: 1;
-}
-
-.ytot-close:hover {
-    color: #fff;
-    background: #ffffff0d;
-}
-
-/* Dropdown Body */
-.ytot-dropdown-body {
-    display: flex;
-    gap: 8px;
-    padding: 14px 18px;
-}
-
-#ytot-url {
-    flex: 1;
-    min-width: 0;
-    padding: 11px 12px;
-    background: #100e16;
-    border: 1px solid #40384c;
-    border-radius: 8px;
-    color: #efeff1;
-    font-size: 13px;
-    outline: none;
-}
-
-#ytot-url:focus {
-    border-color: #9147ff;
-}
-
-#ytot-url::placeholder {
-    color: #aaa2b6;
-}
-
-.ytot-go {
-    padding: 10px 16px;
-    background: #9147ff;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.ytot-go:hover {
-    background: #772ce8;
-}
-
-.ytot-option {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    color: #eee8f6;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.ytot-option:hover {
-    color: #efeff1;
-}
-
-.ytot-option input[type="checkbox"] {
-    appearance: none;
-    order: 2;
-    position: relative;
-    flex: 0 0 36px;
-    width: 36px;
-    height: 21px;
-    margin: 0 0 0 auto;
-    border: 1px solid #655c72;
-    border-radius: 12px;
-    background: #39323f;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-}
-
-/* Actions Section */
-.ytot-layout-controls {
-    padding: 0 18px 14px;
-}
-
-.ytot-theatre {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 9px 12px;
-    border: 1px solid #53535f;
-    border-radius: 8px;
-    background: #26262c;
-    color: #efeff1;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.ytot-theatre:hover:not(:disabled) {
-    background: #3a3a3d;
-}
-
-.ytot-theatre[aria-pressed="true"] {
-    border-color: #a66bff;
-    color: #d4b8f6;
-}
-
-.ytot-theatre:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-.ytot-actions {
-    display: flex;
-    gap: 8px;
-    padding: 14px 18px;
-    border-top: 1px solid #302936;
-}
-
-.ytot-sync-now,
-.ytot-restore {
-    display: none;
-    flex: 1;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.ytot-sync-now {
-    background: #9147ff;
-    color: white;
-}
-
-.ytot-sync-now:hover {
-    background: #a66bff;
-}
-
-.ytot-restore {
-    background: #3a3a3d;
-    color: #adadb8;
-}
-
-.ytot-restore:hover {
-    background: #4a4a4d;
-    color: #efeff1;
-}
-
-/* Status */
-.ytot-status {
-    padding: 0 18px 14px;
-    font-size: 11px;
-    color: #adadb8;
-    min-height: 14px;
-}
-
-.ytot-status:empty {
-    display: none;
-}
-
-.ytot-status-success {
-    color: #85dfb4;
-}
-
-.ytot-status-error {
-    color: #ff5252;
-}
-
-.ytot-status-syncing {
-    color: #c6a0ff;
-}
-
-/* YouTube Player Wrapper */
-#ytot-youtube-wrapper {
-    position: fixed;
-    z-index: 900;
-    background: #000;
-}
-
-/* Twitch's native theatre player uses a higher layer than its normal player. */
-html[data-ypft-theatre] #ytot-youtube-wrapper { z-index: 3001; }
-html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index: 3010; }
-
-.ytot-vaft-status {
-    color: #adadb8;
-    font-size: 12px;
-    line-height: 1.4;
-    padding: 6px 0 0 14px;
-    position: relative;
-}
-
-.ytot-vaft-reload {
-    margin: 10px 0 0;
-    border: 1px solid #53535f;
-    border-radius: 8px;
-    background: #26262c;
-    color: #efeff1;
-    cursor: pointer;
-    padding: 5px 8px;
-}
-
-#ytot-youtube-player {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* Auto-Find Section */
-.ytot-autofind {
-    padding: 14px 18px;
-    border-bottom: 1px solid #302936;
-}
-
-.ytot-autofind-btn {
-    width: 100%;
-    padding: 10px 14px;
-    background: #9147ff;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.ytot-autofind-btn:hover {
-    background: #a66bff;
-}
-
-.ytot-divider {
-    text-align: center;
-    padding: 10px 18px 0;
-    color: #aaa2b6;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Search Results */
-.ytot-search-result {
-    padding: 0;
-}
-
-.ytot-search-result:empty {
-    display: none;
-}
-
-.ytot-result-card {
-    background: #241f2c;
-    border: 1px solid #40364f;
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.ytot-result-note {
-    color: #ffab00;
-    font-size: 11px;
-    margin-bottom: 6px;
-}
-
-.ytot-result-title {
-    color: #efeff1;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 4px;
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.ytot-result-channel {
-    color: #adadb8;
-    font-size: 11px;
-    margin-bottom: 10px;
-}
-
-.ytot-result-use {
-    width: 100%;
-    padding: 8px;
-    background: #9147ff;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.ytot-result-use:hover {
-    background: #a66bff;
-}
-
-/* History Section */
-.ytot-history-section {
-    display: none;
-    padding: 0 18px;
-    border-bottom: 1px solid #302936;
-}
-
-.ytot-history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    color: #adadb8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 8px 0;
-}
-
-.ytot-clear-history {
-    background: none;
-    border: none;
-    color: #adadb8;
-    font-size: 10px;
-    cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 8px;
-    transition: all 0.15s;
-    text-transform: uppercase;
-}
-
-.ytot-clear-history:hover {
-    color: #ff5252;
-    background: rgba(255, 82, 82, 0.1);
-}
-
-.ytot-history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-}
-
-.ytot-history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.1s;
-}
-
-.ytot-history-item:hover {
-    background: #2f2f35;
-}
-
-.ytot-dropdown .ytot-history-play {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    margin-right: 8px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-}
-
-.ytot-history-title {
-    display: block;
-    color: #efeff1;
-    font-size: 12px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ytot-history-channel {
-    display: block;
-    color: #adadb8;
-    font-size: 11px;
-}
-
-.ytot-pin-btn {
-    background: transparent;
-    border: none;
-    font-size: 14px;
-    color: #aaa2b6;
-    padding: 4px;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ytot-history-item:hover .ytot-pin-btn,
-.ytot-history-item.pinned .ytot-pin-btn {
-    opacity: 1;
-}
-
-.ytot-pin-btn[aria-pressed="true"] { color: #bf94ff; }
-
-.ytot-pin-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
-}
-
-.ytot-history-item.pinned {
-    background: rgba(145, 71, 255, 0.1);
-    border-left: 2px solid #9147ff;
-}
-
-.ytot-history-item.pinned:hover {
-    background: rgba(145, 71, 255, 0.2);
-}
-
-/* Menu hierarchy and accessible switches */
-.ytot-dropdown *, .ytot-dropdown *::before, .ytot-dropdown *::after {
-    box-sizing: border-box;
-}
-
-.ytot-dropdown button, .ytot-dropdown input {
-    font-family: inherit;
-}
-.ytot-dropdown button { text-align: center; }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog) input { caret-color: var(--ytot-accent); }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog) button { cursor: pointer; }
+:is(#ytot-nav-wrapper, #ytot-settings-dialog) button:disabled { cursor: default; opacity: 0.55; }
 .ytot-button-icon { display: inline-block; flex: 0 0 16px; width: 16px; height: 16px; vertical-align: middle; }
-.ytot-autofind-btn { display: flex; justify-content: center; align-items: center; gap: 8px; }
-.ytot-sync-now .ytot-button-icon { margin-right: 5px; }
-.ytot-close { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 30px; padding: 0; line-height: 1; }
+
+/* A compact, native-looking entry point on Twitch's right navigation. */
+#ytot-nav-wrapper { position: relative; display: flex; align-items: center; flex: 0 0 auto; margin: 0 4px; }
+.ytot-nav-btn {
+    display: flex; align-items: center; justify-content: center; height: 30px; padding: 0 7px;
+    background: transparent; border: 0; border-radius: 4px;
+    color: var(--color-text-base, var(--ytot-text)); font: 700 12px/1 var(--ytot-font);
+}
+.ytot-nav-btn:hover { background: var(--color-background-interactable-hover, var(--ytot-native-hover)); }
+.ytot-nav-btn.active { color: var(--ytot-accent); }
+#ytot-nav-wrapper.ytot-nav-theatre { position: fixed; top: 8px; left: 12px; margin: 0; z-index: 3020; }
+.ytot-nav-theatre > .ytot-nav-btn { background: var(--ytot-bg); border: 1px solid var(--ytot-control-line); }
+.ytot-nav-theatre > .ytot-dropdown { left: 0; right: auto; }
+
+/* Stream selector. Search and playback actions stay here; preferences do not. */
+.ytot-dropdown {
+    display: none; position: absolute; top: calc(100% + 8px); left: auto; right: 0;
+    width: 360px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 76px);
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+    font: 13px/1.5 var(--ytot-font); color: var(--ytot-text); background: var(--ytot-bg);
+    border: 0; border-radius: 12px; box-shadow: 0 16px 48px var(--ytot-scrim); z-index: 9999;
+}
+.ytot-dropdown.visible { display: block; }
+.ytot-dropdown-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    padding: 20px 20px 8px; background: none; color: var(--ytot-text);
+}
+.ytot-menu-title, .ytot-menu-subtitle, .ytot-option-title, .ytot-option-description { display: block; }
+.ytot-menu-title { font-size: 15px; font-weight: 650; letter-spacing: -0.2px; }
+.ytot-menu-subtitle { margin-top: 4px; font-size: 12px; font-weight: 400; color: var(--ytot-muted); }
+.ytot-close {
+    display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px;
+    padding: 0; background: none; border: 0; border-radius: 6px; color: var(--ytot-muted);
+}
 .ytot-close .ytot-button-icon { width: 18px; height: 18px; }
-
-.ytot-menu-title, .ytot-menu-subtitle, .ytot-option-title, .ytot-option-description {
-    display: block;
+.ytot-close:hover { background: var(--ytot-hover); color: var(--ytot-text); }
+.ytot-autofind { padding: 14px 20px 18px; border-bottom: 0; }
+.ytot-autofind-btn, .ytot-go, .ytot-result-use, .ytot-sync-now {
+    border: 0; border-radius: 6px; background: var(--ytot-accent); color: var(--ytot-accent-ink);
+    font-size: 13px; font-weight: 650;
 }
+.ytot-autofind-btn { display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 10px 14px; }
+:is(.ytot-autofind-btn, .ytot-go, .ytot-result-use, .ytot-sync-now):hover:not(:disabled) { background: var(--ytot-accent-hover); }
+.ytot-divider { display: flex; align-items: center; gap: 12px; padding: 0 20px; color: var(--ytot-muted); font-size: 12px; text-transform: none; letter-spacing: 0; }
+.ytot-divider::before, .ytot-divider::after { content: ""; flex: 1; height: 1px; background: var(--ytot-line); }
+.ytot-dropdown-body { display: flex; gap: 8px; padding: 12px 20px 20px; }
+#ytot-url { flex: 1; min-width: 0; min-height: 40px; padding: 9px 12px; background: var(--ytot-field-bg); border: 1px solid var(--ytot-control-line); border-radius: 6px; color: var(--ytot-text); font-size: 13px; }
+#ytot-url:focus { border-color: var(--ytot-accent); }
+#ytot-url[aria-invalid="true"] { border-color: var(--ytot-danger); }
+.ytot-search-result, .ytot-status, .ytot-result-title, .ytot-result-channel, .ytot-option-copy,
+.ytot-menu-title, .ytot-menu-subtitle { overflow-wrap: anywhere; }
+#ytot-url::placeholder { color: var(--ytot-muted); opacity: 1; }
+.ytot-go { padding: 9px 15px; min-width: 48px; }
+.ytot-search-result:empty, .ytot-status:empty { display: none; }
+.ytot-result-card { background: var(--ytot-surface); border: 0; border-radius: 12px; padding: 14px; margin-top: 12px; }
+.ytot-result-note { color: var(--ytot-warning); font-size: 12px; margin-bottom: 8px; }
+.ytot-result-title { color: var(--ytot-text); font-size: 14px; font-weight: 600; margin-bottom: 4px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.ytot-result-channel { color: var(--ytot-muted); font-size: 12px; margin-bottom: 12px; }
+.ytot-result-use { width: 100%; min-height: 36px; padding: 8px; }
+.ytot-history-section { display: none; padding: 0 20px 14px; border-bottom: 0; }
+.ytot-history-header { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; font-size: 12px; color: var(--ytot-muted); text-transform: none; letter-spacing: 0; }
+.ytot-clear-history { min-height: 28px; padding: 3px 6px; background: none; border: 0; border-radius: 5px; color: var(--ytot-muted); font-size: 11px; text-transform: none; }
+.ytot-clear-history:hover { color: var(--ytot-danger); background: var(--ytot-danger-subtle); }
+.ytot-history-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0; }
+.ytot-history-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 8px; border-radius: 6px; }
+.ytot-history-item:hover { background: var(--ytot-hover); }
+.ytot-dropdown .ytot-history-play { flex: 1; min-width: 0; overflow: hidden; margin: 0; padding: 0; border: 0; background: transparent; text-align: left; }
+.ytot-history-title { display: block; color: var(--ytot-text); font-size: 13px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ytot-history-channel { display: block; color: var(--ytot-muted); font-size: 12px; }
+.ytot-pin-btn { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; padding: 4px; background: none; border: 0; border-radius: 5px; color: var(--ytot-muted); opacity: 0.65; }
+.ytot-history-item:hover .ytot-pin-btn, .ytot-pin-btn:focus-visible, .ytot-history-item.pinned .ytot-pin-btn { opacity: 1; }
+.ytot-pin-btn[aria-pressed="true"] { color: var(--ytot-accent); }
+.ytot-pin-btn:hover { background: var(--ytot-tint); transform: none; }
+.ytot-history-item.pinned { background: var(--ytot-accent-subtle); border: 0; }
+.ytot-history-item.pinned:hover { background: var(--ytot-accent-subtle-hover); }
+.ytot-actions { display: flex; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--ytot-line); }
+.ytot-sync-now, .ytot-restore { display: none; flex: 1; min-height: 36px; padding: 8px 10px; border: 0; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.ytot-sync-now .ytot-button-icon { margin-right: 5px; }
+.ytot-restore { background: var(--ytot-hover); color: var(--ytot-text); }
+.ytot-restore:hover { background: var(--ytot-hover-strong); }
+.ytot-status { padding: 0 20px 16px; font-size: 12px; color: var(--ytot-muted); min-height: 0; }
+.ytot-status-success { color: var(--ytot-success); }
+.ytot-status-error { color: var(--ytot-danger); }
+.ytot-status-syncing { color: var(--ytot-accent); }
+.ytot-menu-footer { border-top: 1px solid var(--ytot-line); padding: 8px 12px; }
+.ytot-open-settings { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 38px; padding: 9px 8px; background: none; border: 0; border-radius: 6px; color: var(--ytot-muted); font-size: 13px; }
+.ytot-open-settings > .ytot-button-icon:last-child { margin-left: auto; transform: rotate(-90deg); }
+.ytot-open-settings:hover { color: var(--ytot-text); background: var(--ytot-hover); }
 
-.ytot-menu-title {
-    font-size: 14px;
-    font-weight: 650;
-    letter-spacing: -0.25px;
+/* Settings use one aligned row vocabulary, with an optional appearance preview. */
+#ytot-settings-dialog {
+    width: min(1040px, calc(100vw - 48px)); height: min(720px, calc(100dvh - 64px));
+    max-width: none; max-height: none; margin: auto; padding: 0; overflow: hidden;
+    background: var(--ytot-bg); border: 0; border-radius: 14px; box-shadow: 0 24px 80px var(--ytot-scrim);
+    color: var(--ytot-text); font: 14px/1.5 var(--ytot-font);
 }
-
-.ytot-menu-subtitle {
-    margin-top: 3px;
-    font-size: 11px;
-    font-weight: 400;
-    color: #b4a8c5;
+#ytot-settings-dialog::backdrop { background: var(--ytot-scrim); }
+.ytot-settings-shell { display: grid; grid-template-columns: 210px minmax(0, 1fr); height: 100%; }
+.ytot-settings-sidebar { display: flex; flex-direction: column; min-height: 0; padding: 30px 18px 24px; background: var(--ytot-rail); border: 0; }
+.ytot-settings-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; height: auto; flex: 0 0 auto; padding: 0 12px; color: var(--ytot-muted); font-size: 12px; line-height: 1.5; }
+.ytot-settings-mark { display: block; width: auto; height: auto; padding: 0; border-radius: 0; background: none; color: var(--ytot-text); font-size: 26px; font-weight: 750; letter-spacing: -0.6px; }
+.ytot-settings-tabs { display: flex; flex-direction: column; gap: 6px; padding-top: 36px; }
+.ytot-settings-tabs > button { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 11px 14px; background: none; border: 0; border-radius: 6px; color: var(--ytot-muted); text-align: left; font-size: 13px; font-weight: 550; }
+.ytot-settings-tabs > button:hover { background: var(--ytot-hover); color: var(--ytot-text); }
+.ytot-settings-tabs > button[aria-selected="true"] { background: var(--ytot-accent); color: var(--ytot-accent-ink); }
+.ytot-settings-note { margin: auto 12px 0; padding-top: 24px; font-size: 12px; color: var(--ytot-muted); }
+.ytot-settings-main { display: grid; grid-template-rows: 78px minmax(0, 1fr); min-width: 0; min-height: 0; }
+.ytot-settings-header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--ytot-line); }
+#ytot-settings-dialog h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.2px; }
+.ytot-settings-content { min-height: 0; padding: 28px 32px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+#ytot-settings-dialog h2 { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.25; letter-spacing: -0.65px; }
+#ytot-settings-dialog h3 { margin: 28px 0 10px; font-size: 16px; font-weight: 600; }
+.ytot-settings-intro { max-width: 65ch; margin: 8px 0 24px; color: var(--ytot-muted); font-size: 13px; }
+.ytot-settings-group { padding: 0; border: 0; border-radius: 0; background: none; }
+#ytot-settings-dialog .ytot-option { display: flex; align-items: center; gap: 24px; min-height: 76px; padding: 17px 0; color: var(--ytot-text); font-size: 14px; cursor: pointer; border-bottom: 1px solid var(--ytot-line); }
+#ytot-settings-dialog .ytot-option-copy { flex: 1; min-width: 0; }
+#ytot-settings-dialog .ytot-option-title { color: var(--ytot-text); font-size: 14px; font-weight: 550; }
+#ytot-settings-dialog .ytot-option-description { margin-top: 4px; color: var(--ytot-muted); font-size: 12px; }
+#ytot-settings-dialog .ytot-option input[type="checkbox"] {
+    appearance: none; order: 2; position: relative; flex: 0 0 40px; width: 40px; height: 24px;
+    margin: 0 0 0 auto; background: var(--ytot-control-line); border: 0; border-radius: 14px; cursor: pointer;
 }
+#ytot-settings-dialog .ytot-option input[type="checkbox"]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ytot-text); transition: transform 150ms ease-out; }
+#ytot-settings-dialog .ytot-option input[type="checkbox"]:checked { background: var(--ytot-accent); }
+#ytot-settings-dialog .ytot-option input[type="checkbox"]:checked::before { transform: translateX(16px); background: var(--ytot-accent-ink); }
+#ytot-settings-dialog .ytot-option input[type="checkbox"]:disabled { cursor: default; opacity: 0.55; }
+.ytot-settings-action { display: flex; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--ytot-line); }
+.ytot-theatre, .ytot-vaft-reload { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 8px 12px; border: 1px solid var(--ytot-control-line); border-radius: 6px; background: none; color: var(--ytot-text); font-size: 12px; }
+#ytot-settings-dialog .ytot-theatre { width: auto; min-width: 150px; flex: 0 0 auto; }
+.ytot-theatre:hover:not(:disabled), .ytot-vaft-reload:hover { background: var(--ytot-hover); }
+.ytot-theatre[aria-pressed="true"] { border-color: var(--ytot-accent); color: var(--ytot-accent); }
+#ytot-settings-dialog .ytot-chat-settings { margin: 0; padding: 0; border: 0; background: none; }
+.ytot-chat-customization { display: grid; grid-template-columns: minmax(0, 1fr) 228px; gap: 28px; align-items: start; }
+.ytot-chat-fields { min-width: 0; }
+#ytot-settings-dialog .ytot-chat-setting { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; margin: 0; color: var(--ytot-muted); font-size: 13px; }
+#ytot-settings-dialog .ytot-chat-setting select { width: 174px; max-width: 60%; min-height: 36px; padding: 7px 9px; background: var(--ytot-rail); color: var(--ytot-text); border: 1px solid var(--ytot-control-line); border-radius: 6px; font-size: 12px; }
+.ytot-range-control { display: flex; align-items: center; gap: 10px; width: 174px; max-width: 60%; }
+.ytot-range-control input[type="range"] { flex: 1; min-width: 0; width: 100%; margin: 0; accent-color: var(--ytot-accent); }
+.ytot-range-control output { flex: 0 0 34px; color: var(--ytot-text); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+#ytot-settings-dialog input[type="color"] { width: 38px; height: 30px; padding: 3px; background: none; border: 1px solid var(--ytot-control-line); border-radius: 5px; cursor: pointer; }
+#ytot-settings-dialog .ytot-chat-fields .ytot-option { min-height: 54px; padding: 12px 0; }
+#ytot-chat-reset { margin-top: 18px; }
+.ytot-chat-preview-stage { min-width: 0; margin: 12px 0 0; padding: 0; }
+.ytot-chat-preview { padding: 0 12px 14px; overflow: hidden; min-height: 208px; border-radius: 12px; color: var(--ytot-text); background: var(--ytot-field-bg); line-height: 1.5; }
+.ytot-chat-preview-header { display: flex; align-items: center; gap: 7px; min-height: 38px; margin-bottom: 8px; border-bottom: 1px solid var(--ytot-preview-line); color: var(--ytot-text); font-size: 12px; font-weight: 600; }
+.ytot-chat-preview-line { padding: 5px 0; overflow-wrap: anywhere; }
+.ytot-chat-preview-author { color: var(--ytot-accent); font-weight: 650; }
+.ytot-chat-preview-compact .ytot-chat-preview-line { padding: 1px 0; line-height: 1.2; }
+.ytot-chat-preview-stage figcaption { margin-top: 12px; color: var(--ytot-muted); font-size: 11px; line-height: 1.5; }
+.ytot-badge { display: inline-block; margin-left: 6px; padding: 2px 6px; border: 0; border-radius: 4px; background: var(--ytot-warning-subtle); color: var(--ytot-warning); font-size: 10px; font-weight: 550; letter-spacing: 0; vertical-align: middle; }
+#ytot-settings-dialog .ytot-vaft-card { margin: 0; padding: 0 0 16px; background: none; border: 0; border-radius: 0; }
+.ytot-vaft-status { position: relative; margin-top: 12px; padding: 0 0 0 14px; color: var(--ytot-muted); font-size: 12px; line-height: 1.5; }
+.ytot-vaft-status::before { content: ""; position: absolute; top: 6px; left: 0; width: 6px; height: 6px; background: var(--ytot-muted); border-radius: 50%; }
+.ytot-vaft-status[data-state="on"]::before { background: var(--ytot-success); }
+.ytot-vaft-status[data-state="warning"] { color: var(--ytot-warning); }
+.ytot-vaft-status[data-state="warning"]::before,
+.ytot-vaft-status[data-state="pending"]::before { background: var(--ytot-warning); }
+.ytot-vaft-status[data-state="error"] { color: var(--ytot-danger); }
+.ytot-vaft-status[data-state="error"]::before { background: var(--ytot-danger); }
+#ytot-vaft-reload { margin-top: 12px; }
 
-.ytot-section-label {
-    margin-bottom: 5px;
-    font-size: 10px;
-    font-weight: 650;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: #b4a8c5;
-}
-
-.ytot-option-copy {
-    min-width: 0;
-}
-
-.ytot-option-title {
-    font-weight: 550;
-}
-
-.ytot-option-description {
-    margin-top: 3px;
-    font-size: 11px;
-    color: #b4a8c5;
-}
-
-.ytot-option input[type="checkbox"]::before {
-    content: "";
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    background: #f4effa;
-    transition: transform 0.15s;
-}
-
-.ytot-option input[type="checkbox"]:checked {
-    border-color: #a66bff;
-    background: #9147ff;
-}
-
-.ytot-option input[type="checkbox"]:checked::before {
-    transform: translateX(15px);
-}
-
-.ytot-option input[type="checkbox"]:disabled {
-    opacity: 0.5;
-    cursor: wait;
-}
-
-.ytot-vaft-card {
-    margin-top: 10px;
-    padding: 4px 12px 12px;
-    background: #221b2c;
-    border: 1px solid #443253;
-    border-radius: 10px;
-}
-
-.ytot-badge {
-    display: inline-block;
-    margin-left: 4px;
-    padding: 1px 5px;
-    border: 1px solid #6e4e8a;
-    border-radius: 4px;
-    font-size: 9px;
-    font-weight: 650;
-    letter-spacing: 0.4px;
-    color: #d4b8f6;
-    vertical-align: 1px;
-}
-
-.ytot-vaft-status::before {
-    content: "";
-    position: absolute;
-    top: 12px;
-    left: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #a79bae;
-}
-
-.ytot-vaft-status[data-state="on"]::before { background: #85dfb4; }
-.ytot-vaft-status[data-state="pending"]::before { background: #c6a0ff; }
-.ytot-vaft-status[data-state="warning"]::before { background: #f4bd65; }
-.ytot-vaft-status[data-state="error"]::before { background: #ff8e8e; }
-
-.ytot-nav-btn:focus-visible,
-.ytot-dropdown button:focus-visible, .ytot-dropdown input:focus-visible, .ytot-dropdown select:focus-visible {
-    outline: 2px solid #bf94ff;
-    outline-offset: 3px;
-}
-
-.ytot-history-item:focus-within .ytot-pin-btn {
-    opacity: 1;
-}
-
-.ytot-dropdown button:disabled { opacity: 0.55; cursor: default; }
-.ytot-search-result { color: #c7bfd3; font-size: 12px; overflow-wrap: anywhere; }
-.ytot-search-result:not(:empty) { margin-top: 10px; }
-
-@media (hover: none) {
-    .ytot-pin-btn { opacity: 1; }
-}
-
-@media (max-width: 640px) {
-    .ytot-dropdown {
-        position: fixed;
-        left: 12px;
-        right: 12px;
-        top: 56px;
-        width: auto;
-        max-height: calc(100vh - 72px);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    #ytot-nav-wrapper * { transition: none; }
-}
-
-/* Floating chat is read-only; only its controls intercept player input. */
-#ytot-chat-root {
-    position: fixed;
-    z-index: 910;
-    pointer-events: none;
-    font-family: system-ui, -apple-system, sans-serif;
-    color: #f4effa;
-}
-#ytot-chat-root *, #ytot-chat-root *::before, #ytot-chat-root *::after { box-sizing: border-box; }
-#ytot-chat-root[hidden], #ytot-chat-root [hidden] { display: none !important; }
+/* Bounded read-only floating chat. No filters or compositing effects over video. */
+.right-column[data-ypft-chat-priming] { width: 0 !important; min-width: 0 !important; }
+.right-column[data-ypft-chat-priming] #live-page-chat { opacity: 0 !important; pointer-events: none !important; }
+.right-column[data-ypft-chat-priming] .channel-root__right-column { transition: none !important; }
+.persistent-player[data-ypft-chat-priming-player] { width: var(--ypft-chat-player-width) !important; }
+#ytot-chat-root { position: fixed; z-index: 910; pointer-events: none; color: var(--ytot-text); }
+/* Keep scrolling available without native scrollbars in any overlay state. */
+#ytot-chat-root, #ytot-chat-root * { scrollbar-width: none !important; }
+#ytot-chat-root::-webkit-scrollbar, #ytot-chat-root *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 #ytot-chat-root.ytot-chat-in-fullscreen { position: absolute; z-index: 2147483000; }
-.ytot-chat-panel {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid rgba(213, 192, 246, 0.25);
-    border-radius: 10px;
-    pointer-events: auto;
-    contain: layout style paint;
-    line-height: 1.4;
-    text-shadow: 0 1px 2px #000;
-}
-.ytot-chat-header {
-    display: flex;
-    flex: 0 0 38px;
-    gap: 4px;
-    align-items: center;
-    background: rgba(18, 14, 24, 0.6);
-    padding: 4px 6px;
-}
-#ytot-chat-root button {
-    appearance: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: #f4effa;
-    font-family: inherit;
-    text-align: center;
-    line-height: 1;
-    cursor: pointer;
-    pointer-events: auto;
-}
-#ytot-chat-root button:hover { background: rgba(199, 169, 243, 0.18); }
-#ytot-chat-root button[aria-pressed="true"] { background: rgba(145, 71, 255, 0.35); color: #ddc4ff; }
+.ytot-chat-panel { position: absolute; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--ytot-overlay-line); border-radius: 12px; pointer-events: auto; contain: layout style paint; line-height: 1.45; text-shadow: 0 1px 2px var(--ytot-ink); }
+.ytot-chat-header { display: flex; flex: 0 0 36px; align-items: center; gap: 2px; padding: 3px 5px; background: var(--ytot-overlay-header); border-bottom: 1px solid var(--ytot-tint-hover); text-shadow: none; }
+#ytot-chat-root button { appearance: none; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--ytot-text); font-family: inherit; text-align: center; line-height: 1; cursor: pointer; pointer-events: auto; }
+#ytot-chat-root button:hover { background: var(--ytot-tint-hover); }
+#ytot-chat-root button[aria-pressed="true"] { background: var(--ytot-accent-subtle); color: var(--ytot-accent); }
 #ytot-chat-root svg { display: block; flex: 0 0 16px; width: 16px; height: 16px; }
-#ytot-chat-root button:focus-visible, .ytot-chat-messages:focus-visible {
-    outline: 2px solid #bf94ff;
-    outline-offset: -2px;
-}
-.ytot-chat-grip {
-    flex: 1;
-    gap: 6px;
-    padding: 5px 6px !important;
-    justify-content: flex-start !important;
-    height: 28px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 650;
-    cursor: grab !important;
-    touch-action: none;
-}
-.ytot-chat-grip svg { opacity: 0.55; width: 12px !important; flex-basis: 12px !important; }
+#ytot-chat-root button:focus-visible, .ytot-chat-messages:focus-visible { outline: 2px solid var(--ytot-accent); outline-offset: -2px; }
+.ytot-chat-grip { flex: 1; gap: 6px; height: 28px; padding: 5px 7px !important; justify-content: flex-start !important; text-align: left; font-size: 12px; font-weight: 600; cursor: grab !important; touch-action: none; }
+.ytot-chat-grip svg { opacity: 0.7; width: 12px !important; flex-basis: 12px !important; }
 .ytot-chat-grip:active { cursor: grabbing !important; }
 .ytot-chat-tool { width: 28px; height: 28px; }
-.ytot-chat-messages { position: relative; flex: 1; min-height: 0; padding: 6px 10px 14px; overflow: auto; scrollbar-width: thin; overflow-anchor: none; }
-.ytot-chat-line { padding: 3px 0; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.ytot-chat-messages { position: relative; flex: 1; min-height: 0; padding: 8px 12px 24px; overflow: auto; overflow-anchor: none; }
+.ytot-chat-line { padding: 4px 0; overflow-wrap: anywhere; unicode-bidi: plaintext; }
 .ytot-chat-author { font-weight: 700; }
 .ytot-chat-emote { display: inline-block; height: 1.65em; max-width: 5em; vertical-align: middle; object-fit: contain; margin: -2px 1px 0; }
 .ytot-chat-badge { height: 1em; width: 1em; vertical-align: baseline; margin-right: 4px; }
-.ytot-chat-empty { position: absolute; top: 45px; left: 12px; right: 12px; font-size: 12px; color: #d5c5e8; }
+.ytot-chat-empty { position: absolute; top: 48px; left: 12px; right: 12px; color: var(--ytot-text); font-size: 12px; }
 .ytot-chat-compact .ytot-chat-line { padding: 0; line-height: 1.2; }
-.ytot-chat-through { pointer-events: none; }
+.ytot-chat-through, .ytot-chat-through .ytot-chat-messages { pointer-events: none; }
 .ytot-chat-through .ytot-chat-header { pointer-events: auto; }
-.ytot-chat-through .ytot-chat-messages { pointer-events: none; }
-.ytot-chat-resize { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; cursor: nwse-resize !important; touch-action: none; }
-.ytot-chat-latest { position: absolute; right: 27px; bottom: 5px; padding: 5px 8px !important; font-size: 11px; background: #5b279c !important; }
-.ytot-chat-fullscreen { position: absolute; bottom: 54px; right: 12px; width: 34px; height: 34px; background: rgba(18, 14, 24, 0.75) !important; opacity: 0.65; }
+#ytot-chat-root .ytot-chat-resize { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; border-radius: 6px 0 11px 0; color: var(--ytot-muted); cursor: nwse-resize !important; touch-action: none; }
+#ytot-chat-root .ytot-chat-resize svg { position: absolute; right: 5px; bottom: 5px; pointer-events: none; }
+#ytot-chat-root .ytot-chat-resize:hover,
+#ytot-chat-root .ytot-chat-resize:active { color: var(--ytot-text); }
+#ytot-chat-root .ytot-chat-latest { position: absolute; right: 28px; bottom: 7px; gap: 5px; min-height: 28px; padding: 5px 9px; background: var(--ytot-accent); color: var(--ytot-accent-ink); font-size: 11px; text-shadow: none; }
+.ytot-chat-latest svg { flex-basis: 12px !important; width: 12px !important; height: 12px !important; }
+#ytot-chat-root .ytot-chat-latest:hover { background: var(--ytot-accent-hover); }
+#ytot-chat-root .ytot-chat-fullscreen { position: absolute; right: 12px; bottom: 54px; width: 34px; height: 34px; background: var(--ytot-overlay-header); }
 .ytot-chat-fullscreen svg { width: 20px !important; height: 20px !important; flex-basis: 20px !important; }
-#ytot-chat-root .ytot-chat-fullscreen:hover, #ytot-chat-root .ytot-chat-fullscreen:focus-visible { opacity: 1; }
+#ytot-chat-root .ytot-chat-fullscreen:hover { background: var(--ytot-hover); }
+
+/* Provider image proportions and playback portal behavior remain independent. */
+.ypft-global-emote { display: inline-block; width: auto; height: 28px; max-width: 112px; object-fit: contain; vertical-align: middle; margin: -4px 0; }
+.ytot-chat-line .ypft-global-emote { height: 1.5em; max-width: 6em; margin: 0; }
+#ytot-youtube-wrapper { position: fixed; z-index: 900; background: var(--ytot-ink, #000); }
+html[data-ypft-theatre] #ytot-youtube-wrapper { z-index: 3001; }
+html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index: 3010; }
+#ytot-youtube-player { width: 100%; height: 100%; border: 0; }
 #ytot-youtube-wrapper:fullscreen { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; visibility: visible !important; background: #000; }
-.ytot-chat-settings { margin: 4px 0 10px; padding: 8px 10px; border: 1px solid #40364f; border-radius: 8px; background: #1d1725; font-size: 12px; }
-.ytot-chat-settings summary { cursor: pointer; color: #d6c0f5; }
-.ytot-chat-setting { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0; }
-.ytot-chat-setting input[type="range"] { width: 140px; accent-color: #a66bff; }
-.ytot-chat-setting input[type="color"] { width: 38px; height: 25px; padding: 0; border: 1px solid #655c72; border-radius: 5px; background: none; }
-.ytot-chat-setting select { max-width: 175px; background: #100e16; border: 1px solid #40384c; border-radius: 5px; color: #eee8f6; padding: 4px; }
-
-/* Twitch styles details and [hidden]; keep the menu's own state authoritative. */
-#ytot-nav-wrapper [hidden],
-#ytot-dropdown details:not([open]) > :not(summary) { display: none !important; }
-
-/* Native disclosures retain keyboard support; inset groups share a compact rhythm. */
-#ytot-dropdown .ytot-additional-settings { margin: 0; border-top: 1px solid #302936; }
-#ytot-dropdown .ytot-additional-settings > summary,
-#ytot-dropdown .ytot-chat-settings > summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin: 0;
-    padding: 12px 18px;
-    list-style: none;
-    cursor: pointer;
-    color: #d6c0f5;
-    font: 600 12px/1.4 system-ui, -apple-system, sans-serif;
-}
-#ytot-dropdown summary::-webkit-details-marker { display: none; }
-#ytot-dropdown summary::marker { content: ''; }
-#ytot-dropdown summary:hover { color: #f4effa; background: #ffffff06; }
-#ytot-dropdown summary > .ytot-button-icon { width: 14px; height: 14px; flex-basis: 14px; opacity: 0.7; }
-#ytot-dropdown details[open] > summary > .ytot-button-icon { transform: rotate(180deg); }
-#ytot-dropdown summary:focus-visible {
-    outline: 2px solid #bf94ff; outline-offset: -3px; border-radius: 6px;
-}
-#ytot-dropdown .ytot-settings-body { padding: 0 18px 14px; }
-#ytot-dropdown .ytot-settings-group { margin: 0; padding: 0; }
-#ytot-dropdown .ytot-settings-group + .ytot-settings-group {
-    border-top: 1px solid #302936; padding-top: 10px; margin-top: 10px;
-}
-#ytot-dropdown .ytot-section-label { margin: 0 0 2px; font-size: 9px; letter-spacing: 1px; }
-#ytot-dropdown .ytot-option { min-height: 36px; padding: 7px 0; gap: 10px; line-height: 1.35; }
-#ytot-dropdown .ytot-option-copy { flex: 1; }
-#ytot-dropdown .ytot-option-title { font-size: 12px; font-weight: 500; }
-#ytot-dropdown .ytot-option-description { margin-top: 2px; font-size: 10px; }
-#ytot-dropdown .ytot-chat-settings { margin: 4px 0 0; padding: 0; background: #1d1924; border-radius: 7px; }
-#ytot-dropdown .ytot-chat-settings > summary { padding: 8px 10px; font-weight: 500; }
-#ytot-dropdown .ytot-chat-setting,
-#ytot-dropdown .ytot-chat-settings > .ytot-option { margin: 8px 10px; }
-#ytot-dropdown .ytot-chat-settings > button { margin: 2px 10px 10px; }
-#ytot-dropdown .ytot-vaft-card { margin-top: 4px; padding: 3px 10px 9px; border-radius: 7px; background: #211a2b; }
-#ytot-dropdown .ytot-vaft-card .ytot-option { gap: 8px; }
-#ytot-dropdown .ytot-vaft-status { font-size: 10px; padding-top: 3px; }
-#ytot-dropdown .ytot-vaft-status::before { top: 7px; width: 5px; height: 5px; }
-
-/* Hide only Twitch player extensions, including replacements inserted by Twitch.
-   This does not disable browser extensions or intercept third-party traffic. */
 html[data-ypft-hide-extensions] :is(.video-player, .video-player__container, [data-a-target="video-player-layout"])
     :is(.extension-view, .extension-view__iframe, .extension-overlay, .extensions-dock,
-        .extension-taskbar, [data-a-target="player-extension-overlay"], [data-a-target="extensions-dock"]) {
-    display: none !important;
-    pointer-events: none !important;
+        .extension-taskbar, [data-a-target="player-extension-overlay"], [data-a-target="extensions-dock"]) { display: none !important; pointer-events: none !important; }
+
+@media (max-width: 940px) {
+    .ytot-chat-customization { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .ytot-chat-preview-stage { max-width: 320px; }
+    .ytot-chat-preview { min-height: 170px; }
+}
+@media (max-width: 760px) {
+    .ytot-settings-shell { grid-template-columns: 180px minmax(0, 1fr); }
+    .ytot-settings-sidebar { padding-left: 12px; padding-right: 12px; }
+    .ytot-settings-header { padding: 0 20px; }
+    .ytot-settings-content { padding: 24px 20px; }
+    .ytot-settings-action { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+    #ytot-settings-dialog { width: calc(100vw - 20px); height: calc(100dvh - 32px); border-radius: 12px; }
+    .ytot-settings-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .ytot-settings-sidebar { padding: 8px; }
+    .ytot-settings-brand, .ytot-settings-note { display: none; }
+    .ytot-settings-tabs { flex-direction: row; gap: 4px; padding: 0; }
+    .ytot-settings-tabs > button { flex: 1; justify-content: center; gap: 6px; min-height: 40px; padding: 9px 6px; font-size: 12px; }
+    .ytot-settings-tabs .ytot-button-icon { display: none; }
+    .ytot-settings-main { grid-template-rows: 60px minmax(0, 1fr); }
+    .ytot-settings-header { padding: 0 18px; }
+    .ytot-settings-content { padding: 24px 18px; }
+    #ytot-settings-dialog h2 { font-size: 24px; }
+    .ytot-settings-intro { margin-bottom: 16px; }
+    #ytot-settings-dialog .ytot-option { gap: 16px; }
+    .ytot-dropdown, .ytot-nav-theatre > .ytot-dropdown { position: fixed; top: 48px; left: 12px; right: 12px; width: auto; max-width: none; }
+}
+@media (pointer: coarse) {
+    .ytot-nav-btn { height: 44px; }
+    .ytot-close { flex-basis: 44px; width: 44px; height: 44px; }
+    .ytot-pin-btn { flex-basis: 44px; width: 44px; height: 44px; }
+    .ytot-clear-history, .ytot-history-play, .ytot-open-settings,
+    .ytot-autofind-btn, .ytot-go, .ytot-result-use, .ytot-sync-now, .ytot-restore,
+    .ytot-theatre, .ytot-vaft-reload, .ytot-settings-tabs > button { min-height: 44px; }
+    #ytot-settings-dialog .ytot-chat-setting select,
+    .ytot-range-control input[type="range"] { min-height: 44px; }
+    #ytot-settings-dialog input[type="color"] { width: 44px; height: 44px; }
+    .ytot-chat-header { flex-basis: 52px; }
+    .ytot-chat-grip { height: 44px; }
+    #ytot-chat-root .ytot-chat-tool,
+    #ytot-chat-root .ytot-chat-resize,
+    #ytot-chat-root .ytot-chat-fullscreen { width: 44px; height: 44px; }
+    #ytot-chat-root .ytot-chat-latest { right: 52px; min-height: 44px; padding: 8px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    :is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *,
+    :is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *::before,
+    :is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) *::after { transition: none !important; }
 }

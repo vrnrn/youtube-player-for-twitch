@@ -11,8 +11,8 @@
     dropdown.classList.add("visible");
   }
   if (asset === "history") {
-    await window.assetUI.renderHistory();
     dropdown.classList.add("visible");
+    await window.assetUI.renderHistory();
   }
   if (asset === "watch" || asset === "floating")
     window.assetUI.injectYouTube("vrnrnDemo01", sample);
@@ -33,13 +33,8 @@
       ...window.__ypftChat.settings(),
       enabled: true,
     });
-    window.assetUI.renderChatControls();
-    document.getElementById("ytot-additional-settings").open = true;
-    document.getElementById("ytot-chat-settings").open = true;
-    dropdown.classList.add("visible");
-    dropdown.scrollTop = document.getElementById(
-      "ytot-additional-settings",
-    ).offsetTop;
+    window.assetUI.openSettings();
+    window.assetUI.selectSettingsTab("chat");
   }
   await document.fonts.ready;
   document.body.dataset.ready = "true";

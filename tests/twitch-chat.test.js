@@ -1,99 +1,6 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const test = require('node:test');
-const vm = require('node:vm');
-const source = fs.readFileSync(__dirname + '/../twitch-chat.js', 'utf8');
-class Node {
-    constructor(tag = 'DIV', text = '') {
-        this.tagName = tag.toUpperCase(); this.nodeType = tag === '#text' ? 3 : 1;
-        this.textContent = text; this.childNodes = []; this.style = {}; this.attrs = new Map();
-        this.classes = new Set(); this.classList = { toggle: (name, active) => active ? this.classes.add(name) : this.classes.delete(name) };
-        this.scrollTop = 0; this.clientHeight = 200; this.connected = true;
-    }
-    get children() { return this.childNodes.filter(n => n.nodeType === 1); }
-    get parentElement() { return this.parentNode || null; }
-    get isConnected() { return this.connected && (!this.parentNode || this.parentNode.isConnected); }
-    get scrollHeight() { return this.childNodes.length * 24; }
-    append(...nodes) { nodes.forEach(n => this.appendChild(n)); }
-    appendChild(node) {
-        if (node.tagName === '#FRAGMENT') { [...node.childNodes].forEach(n => this.appendChild(n)); return; }
-        node.remove(); node.parentNode = this; this.childNodes.push(node); return node;
-    }
-    insertBefore(node, before) { node.remove(); node.parentNode = this; const i = this.childNodes.indexOf(before); this.childNodes.splice(i < 0 ? this.childNodes.length : i, 0, node); }
-    remove() { if (this.parentNode) { const p = this.parentNode; p.childNodes = p.childNodes.filter(n => n !== this); this.parentNode = null; } }
-    replaceWith(node) { const p = this.parentNode; const i = p.childNodes.indexOf(this); this.parentNode = null; p.childNodes[i] = node; node.parentNode = p; }
-    replaceChildren(...nodes) { this.childNodes.forEach(n => { n.parentNode = null; }); this.childNodes = []; this.append(...nodes); }
-    contains(node) { return this === node || this.childNodes.some(n => n.contains(node)); }
-    setAttribute(key, value) { this.attrs.set(key, String(value)); }
-    getAttribute(key) { return this.attrs.get(key) ?? null; }
-    removeAttribute(key) { this.attrs.delete(key); }
-    querySelectorAll(selector) {
-        const matches = n => selector.includes('chat-line-message') && !selector.includes('-body') ? n.kind === 'line' :
-            selector.includes('chat-message-username') ? n.kind === 'name' :
-            selector.includes('chat-line-message-body') ? n.kind === 'body' :
-            selector === 'img.chat-badge' ? n.className === 'chat-badge' : false;
-        const all = [];
-        const visit = n => { for (const child of n.childNodes) { if (matches(child)) all.push(child); visit(child); } };
-        visit(this); return all;
-    }
-    querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
-    closest(selector) { for (let n = this; n; n = n.parentNode) if (selector === 'button' ? n.tagName === 'BUTTON' : n.kind === 'line') return n; return null; }
-    getBoundingClientRect() { return this.rect || { left: 20, top: 60, width: 1000, height: 600 }; }
-    async requestFullscreen() { this.doc.fullscreenElement = this; }
-    setPointerCapture() {}
-    hasPointerCapture() { return false; }
-}
-function fixture({ saved = {}, path = '/valkyrae', youtube = false } = {}) {
-    const observers = [], resizeObservers = [], timers = new Map(), frames = new Map(), events = new Map(), writes = [];
-    const body = new Node('BODY'), player = new Node(); player.doc = null;
-    let feed = new Node(), host = player;
-    const iframe = youtube ? new Node('IFRAME') : null;
-    if (iframe) { iframe.id = 'ytot-youtube-player'; iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media'); iframe.setAttribute('allowfullscreen', 'true'); player.appendChild(iframe); }
-    const document = { body, visibilityState: 'visible', fullscreenElement: null,
-        createElement: tag => new Node(tag), createTextNode: text => new Node('#text', text),
-        createElementNS: (namespace, tag) => new Node(tag),
-        createDocumentFragment: () => new Node('#fragment'),
-        querySelector: selector => selector.includes('message-container') ? feed : host,
-        getElementById: id => id === 'ytot-youtube-player' ? iframe : id === 'ytot-youtube-wrapper' && youtube ? host : null,
-        addEventListener: (type, fn) => events.set(type, fn), removeEventListener: type => events.delete(type),
-        dispatchEvent() {}, async exitFullscreen() { document.fullscreenElement = null; }
-    };
-    player.doc = document; body.append(player, feed);
-    let storageChange;
-    const context = vm.createContext({ document, location: { pathname: path }, URL, CustomEvent: class {},
-        window: { addEventListener: (type, fn) => events.set(type, fn), removeEventListener: type => events.delete(type) },
-        chrome: { storage: { local: { get(keys, cb) { cb({ ytot_chat: saved }); }, set(data) { writes.push(data); return Promise.resolve(); } },
-            onChanged: { addListener(fn) { storageChange = fn; } } } },
-        MutationObserver: class { constructor(fn) { this.fn = fn; observers.push(this); } observe(node) { this.node = node; this.active = true; } disconnect() { this.active = false; } },
-        ResizeObserver: class { constructor(fn) { this.fn = fn; resizeObservers.push(this); } observe() { this.active = true; } disconnect() { this.active = false; } },
-        setTimeout(fn) { const id = timers.size + 1; timers.set(id, fn); return id; }, clearTimeout(id) { timers.delete(id); },
-        requestAnimationFrame(fn) { const id = frames.size + 1; frames.set(id, fn); return id; }, cancelAnimationFrame(id) { frames.delete(id); }
-    });
-    vm.runInContext(source, context);
-    const getClass = name => {
-        let result;
-        const visit = node => { if (node.className === name) result = node; node.children.forEach(visit); };
-        visit(body); return result;
-    };
-    return { api: context.window.__ypftChat, context, document, events, observers, resizeObservers, writes, timers, frames, iframe,
-        get feed() { return feed; }, get host() { return host; }, getClass,
-        addLine(text = 'hello', name = 'Viewer') {
-            const line = new Node(); line.kind = 'line';
-            const author = new Node('SPAN', name); author.kind = 'name'; author.style.color = 'rgb(100, 200, 255)';
-            const message = new Node('SPAN'); message.kind = 'body'; message.appendChild(new Node('#text', text));
-            line.append(author, message); feed.appendChild(line); return { line, message, author };
-        },
-        flush(records = []) {
-            observers.filter(o => o.active).forEach(o => o.fn(records));
-            const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn());
-        },
-        resize() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn()); },
-        changePath(value) { context.location.pathname = value; },
-        replaceFeed() { feed.connected = false; feed.remove(); feed = new Node(); body.appendChild(feed); },
-        replaceHost() { host.remove(); host = new Node(); host.doc = document; body.appendChild(host); },
-        external(value) { storageChange({ ytot_chat: { newValue: value } }, 'local'); }
-    };
-}
+const { Node, fixture } = require('./helpers/chat-fixture.cjs');
 test('floating chat is idle by default, settings are validated, and enablement has no new network client', () => {
     const f = fixture();
     assert.equal(f.observers.length, 0); assert.equal(f.resizeObservers.length, 0);
@@ -184,6 +91,38 @@ test('geometry remains within the player and keyboard movement persists normaliz
     f.getClass('ytot-chat-tool').onclick();
     assert.equal(f.api.settings().enabled, false);
 });
+
+test('interrupted chat gestures release handlers, persist once and detach the blur listener when disabled', () => {
+    for (const interruption of ['blur', 'hidden', 'cancel', 'lost']) {
+        const f = fixture({ saved: { enabled: true, fullscreenOnly: false } });
+        const grip = f.getClass('ytot-chat-grip');
+        grip.onpointerdown({ button: 0, pointerId: 7, isPrimary: true, clientX: 900, clientY: 100, preventDefault() {} });
+        grip.onpointermove({ pointerId: 7, clientX: 820, clientY: 150 }); f.resize();
+        if (interruption === 'blur') f.events.get('blur')?.();
+        else if (interruption === 'hidden') { f.document.visibilityState = 'hidden'; f.api.sync(); }
+        else if (interruption === 'cancel') grip.onpointercancel({ pointerId: 7 });
+        else grip.onlostpointercapture({ pointerId: 7 });
+        assert.equal(grip.onpointermove, null, interruption);
+        assert.equal(grip.onpointerup, null, interruption);
+        assert.equal(f.writes.length, 1, interruption);
+        assert.ok(f.api.settings().x < 1);
+        f.api.configure({ enabled: false });
+        assert.equal(f.events.size, 0);
+    }
+});
+
+test('a second pointer cannot replace or finish the active chat gesture', () => {
+    const f = fixture({ saved: { enabled: true, fullscreenOnly: false } });
+    const grip = f.getClass('ytot-chat-grip');
+    const down = (pointerId, isPrimary) => grip.onpointerdown({ button: 0, pointerId, isPrimary, clientX: 900, clientY: 100, preventDefault() {} });
+    down(7, true); down(8, false);
+    grip.onpointermove({ pointerId: 7, clientX: 800, clientY: 100 }); f.resize();
+    assert.ok(f.api.settings().x < 1);
+    grip.onpointerup({ pointerId: 8 });
+    assert.equal(typeof grip.onpointermove, 'function'); assert.equal(f.writes.length, 0);
+    grip.onpointerup({ pointerId: 7 });
+    assert.equal(grip.onpointermove, null); assert.equal(f.writes.length, 1);
+});
 test('busy-channel mutations batch once and a partially rendered message retains source order', () => {
     const f = fixture();
     const pending = f.addLine('pending'), later = f.addLine('later');
@@ -199,4 +138,100 @@ test('busy-channel mutations batch once and a partially rendered message retains
     assert.ok(list.children[0].childNodes.some(n => n.textContent === 'pending'));
     f.api.configure({ enabled: false });
     assert.equal(f.timers.size, 0);
+});
+
+test('cold collapsed native chat is initialized once, restored, and continues feeding the bounded overlay', () => {
+    const f = fixture({ chatCollapsed: true, saved: { enabled: true, fullscreenOnly: false } });
+    assert.equal(f.nativeClicks, 1);
+    assert.equal(f.nativeColumn.getAttribute('data-ypft-chat-priming'), '');
+    assert.equal(f.host.getAttribute('data-ypft-chat-priming-player'), '');
+    assert.equal(f.host.style.getPropertyValue('--ypft-chat-player-width'), '1000px');
+    f.tick(600);
+    const first = f.addLine('arrived while initializing'); f.mutate([{ target: first.line }]); f.tick(125);
+    assert.equal(f.getClass('ytot-chat-messages').children.length, 1);
+    assert.equal(f.nativeColumn.classList.contains('right-column--collapsed'), true);
+    f.tick(100);
+    assert.equal(f.nativeColumn.getAttribute('data-ypft-chat-priming'), null);
+    assert.equal(f.host.getAttribute('data-ypft-chat-priming-player'), null);
+    assert.equal(f.host.style.getPropertyValue('--ypft-chat-player-width'), '');
+    assert.equal(f.events.has('click'), false); assert.equal(f.timers.size, 0);
+    for (let i = 0; i < 200; i++) f.addLine('after collapse ' + i);
+    f.mutate(); f.tick(125); f.api.sync(); f.api.sync();
+    assert.equal(f.getClass('ytot-chat-messages').children.length, 60);
+    assert.equal(f.nativeClicks, 2);
+    f.api.configure({ enabled: false });
+    assert.equal(f.observers.filter(o => o.active).length, 0); assert.equal(f.events.size, 0);
+});
+
+test('native chat startup never opens warm, already expanded, disabled, or inactive fullscreen-only chat', () => {
+    for (const mode of ['warm', 'expanded', 'disabled', 'fullscreen']) {
+        const f = fixture({ chatCollapsed: mode !== 'expanded' });
+        if (mode === 'warm') f.addLine('already connected');
+        f.api.configure({ enabled: mode !== 'disabled', fullscreenOnly: mode === 'fullscreen' });
+        assert.equal(f.nativeClicks, 0, mode); assert.equal(f.timers.size, 0, mode);
+    }
+    const hidden = fixture({ chatCollapsed: true }); hidden.document.visibilityState = 'hidden';
+    hidden.api.configure({ enabled: true, fullscreenOnly: false });
+    assert.equal(hidden.nativeClicks, 0);
+});
+
+test('native startup restores collapse on interruption and ignores stale startup callbacks', () => {
+    for (const reason of ['disable', 'hidden', 'fullscreen', 'navigation']) {
+        const f = fixture({ chatCollapsed: true, deferNativeToggle: true });
+        if (reason === 'fullscreen') f.document.fullscreenElement = f.host;
+        f.api.configure({ enabled: true, fullscreenOnly: reason === 'fullscreen' });
+        assert.equal(f.nativeClicks, 1, reason);
+        const stale = [...f.timers.values()][0];
+        if (reason === 'disable') f.api.configure({ enabled: false });
+        else if (reason === 'hidden') { f.document.visibilityState = 'hidden'; f.api.sync(); }
+        else if (reason === 'fullscreen') { f.document.fullscreenElement = null; f.api.sync(); }
+        else { f.changePath('/directory'); f.api.sync(); }
+        f.commitNative(); f.tick(0); f.commitNative(); f.tick(100); stale();
+        assert.equal(f.nativeColumn.classList.contains('right-column--collapsed'), true, reason);
+        assert.equal(f.nativeColumn.getAttribute('data-ypft-chat-priming'), null, reason);
+        assert.equal(f.host.getAttribute('data-ypft-chat-priming-player'), null, reason);
+        assert.equal(f.nativeClicks, 2, reason); assert.equal(f.events.has('click'), false, reason);
+        assert.equal(f.timers.size, 0, reason);
+    }
+});
+
+test('quiet or disconnected native startup has a bounded timeout and does not repeatedly toggle the sidebar', () => {
+    const f = fixture({ chatCollapsed: true, saved: { enabled: true, fullscreenOnly: false } });
+    f.tick(600); assert.equal(f.nativeClicks, 1);
+    f.tick(4400); f.tick(100);
+    for (let i = 0; i < 10; i++) f.api.sync();
+    assert.equal(f.nativeClicks, 2); assert.equal(f.timers.size, 0); assert.equal(f.events.has('click'), false);
+    assert.equal(f.nativeColumn.classList.contains('right-column--collapsed'), true);
+});
+
+test('explicit native chat interaction wins over automatic startup restoration', () => {
+    const f = fixture({ chatCollapsed: true, saved: { enabled: true, fullscreenOnly: false } });
+    f.userToggleNative(); f.userToggleNative();
+    f.tick(5000); f.api.sync();
+    assert.equal(f.nativeColumn.classList.contains('right-column--collapsed'), false);
+    assert.equal(f.nativeColumn.getAttribute('data-ypft-chat-priming'), null);
+    assert.equal(f.nativeClicks, 3); assert.equal(f.timers.size, 0); assert.equal(f.events.has('click'), false);
+});
+
+test('native startup restores the current sidebar after Twitch replaces its column and message container', () => {
+    const f = fixture({ chatCollapsed: true, saved: { enabled: true, fullscreenOnly: false } });
+    const original = f.nativeColumn;
+    f.replaceFeed(); f.replaceNativeColumn(); const next = f.addLine('new native feed');
+    f.api.sync(); f.mutate([{ target: next.line }]); f.tick(125); f.tick(475); f.tick(100);
+    assert.equal(f.nativeColumn.classList.contains('right-column--collapsed'), true);
+    assert.equal(original.getAttribute('data-ypft-chat-priming'), null);
+    assert.equal(f.getClass('ytot-chat-messages').children.length, 1);
+    assert.equal(f.nativeClicks, 2); assert.equal(f.timers.size, 0);
+});
+
+test('temporary native player sizing preserves an existing custom property and its priority', () => {
+    const f = fixture({ chatCollapsed: true });
+    f.host.style.setProperty('--ypft-chat-player-width', '123px', 'important');
+    f.addLine('welcome'); f.api.configure({ enabled: true, fullscreenOnly: false });
+    // Warm feeds need no temporary sizing. Clear it to exercise cold startup.
+    f.feed.replaceChildren(); f.api.sync();
+    assert.equal(f.host.style.getPropertyValue('--ypft-chat-player-width'), '1000px');
+    f.tick(600); f.tick(4400); f.tick(100);
+    assert.equal(f.host.style.getPropertyValue('--ypft-chat-player-width'), '123px');
+    assert.equal(f.host.style.getPropertyPriority('--ypft-chat-player-width'), 'important');
 });

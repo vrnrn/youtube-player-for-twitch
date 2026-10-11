@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b0b10" />
     <meta
       name="description"
-      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare."
+      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, emote providers, and Cloudflare."
     />
     <title>Privacy Policy · YouTube Player for Twitch</title>
     <meta property="og:type" content="website" />
@@ -17,7 +17,7 @@
     />
     <meta
       property="og:description"
-      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare."
+      content="How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, emote providers, and Cloudflare."
     />
     <meta
       property="og:url"
@@ -33,7 +33,7 @@
             "@id": "https://youtube-player-for-twitch.vrnrn.com/privacy/#webpage",
             "url": "https://youtube-player-for-twitch.vrnrn.com/privacy/",
             "name": "Privacy Policy · YouTube Player for Twitch",
-            "description": "How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, and Cloudflare.",
+            "description": "How YouTube Player for Twitch stores preferences and uses YouTube, Twitch, emote providers, and Cloudflare.",
             "inLanguage": "en",
             "isPartOf": {
               "@id": "https://youtube-player-for-twitch.vrnrn.com/#website"
@@ -95,7 +95,7 @@
     <main class="policy" id="main">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="lede">Last updated October 4, 2026</p>
+      <p class="lede">Last updated October 11, 2026</p>
       <p>
         This policy describes the YouTube Player for Twitch Chrome extension,
         this information site, and the separate workflow used by the maintainer
@@ -135,8 +135,9 @@
         locally. It mirrors recent messages, badges and emotes already displayed
         in the current Twitch chat. Mirrored messages remain in memory and are
         not added to extension storage or sent to the developer. The overlay
-        does not open another chat connection or fetch emote-provider metadata;
-        mirrored images can load from their existing HTTPS image URLs.
+        does not open another chat connection; mirrored images can load from
+        their existing HTTPS image URLs. Extra emotes use a separate
+        setting and catalog as described below.
       </p>
 
       <h2>Requests to YouTube and Twitch</h2>
@@ -183,6 +184,31 @@
         <code>https://www.twitch.tv/*</code>, in addition to its existing
         YouTube access. Changing the preference reloads Twitch. Other open
         Twitch tabs need a reload to apply the change.
+      </p>
+
+      <h2>Extra emotes</h2>
+      <p>
+        Extra emotes are enabled by default and can be turned off under
+        YPFT → Additional settings → Chat. When Twitch chat is open, the extension
+        requests public global and current-channel catalogs directly from BetterTTV
+        (<code>api.betterttv.net</code>), FrankerFaceZ
+        (<code>api.frankerfacez.com</code>) and 7TV (<code>7tv.io</code>).
+        If FrankerFaceZ has no room record, the extension resolves the public
+        channel ID through Twitch (<code>gql.twitch.tv</code>). Emote host
+        permissions are limited to these APIs. Normal chat and
+        floating chat load matching images from those providers' HTTPS CDNs.
+      </p>
+      <p>
+        Catalog requests omit credentials, chat messages and viewer usernames.
+        Channel requests include the current channel's public login or Twitch ID.
+        The extension stores channel names and IDs, public emote codes, provider
+        names, image URLs and cache expiry times locally. Global catalogs refresh
+        after six hours and channel catalogs after thirty minutes; at most ten
+        recent channels are cached. A provider outage retains its last catalog and
+        schedules a later retry. Chat messages are not stored or sent to these
+        providers. Image requests omit the referrer. Providers can receive
+        ordinary request information, such as your IP address and requested
+        resource, under their own policies.
       </p>
 
       <h2>Sharing by the extension</h2>

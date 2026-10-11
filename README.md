@@ -29,7 +29,7 @@ When a streamer is live on both platforms, you can watch their YouTube feed with
 ## Get started
 
 1. **[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/youtube-player-for-twitch/pkhipedofkjfffichjllpmoajlfndpad).**
-2. **Open a Twitch channel** and click **▶ YouTube** in the top navigation.
+2. **Open a Twitch channel** and click **YPFT** on the right of the top navigation.
 3. **Find your stream.** Choose **Find YouTube Stream → Use This Stream**, or paste a YouTube URL and click **Go**.
 
 The extension pauses and mutes the underlying Twitch player. **Restore Twitch** brings it back with its original pause, mute and volume settings.
@@ -42,11 +42,13 @@ The extension pauses and mutes the underlying Twitch player. **Restore Twitch** 
 | :--- | :--- |
 | **YouTube playback, Twitch community**<br>Watch through YouTube's embedded player while keeping the Twitch channel interface. Playback quality depends on the source stream and YouTube's available options. | **Find the live stream**<br>Checks the streamer's linked YouTube channel first, then searches by Twitch channel name with fuzzy matching and live-result filtering. |
 | **Catch up to live**<br>Use **Sync Now** to seek toward the live edge and briefly catch up at 2× speed. Optional **Auto-sync** repeats every 10 minutes. | **Recent streams and favorites**<br>Restore playback after a reload, remember links per Twitch channel, revisit your last five streams and pin favorites. |
-| **Floating chat in fullscreen**<br>Optional floating chat mirrors Twitch messages, badges and emotes over the player. Move it, resize it and adjust its appearance. | **Player settings**<br>Keep Twitch at Source quality, hide native Twitch player-extension overlays, and find extra controls in a compact settings menu. |
+| **Floating chat in fullscreen**<br>Optional floating chat mirrors Twitch messages, badges and emotes over the player. Move it, resize it and adjust its appearance. | **Player settings**<br>Keep Twitch at Source quality, hide native Twitch player-extension overlays, and adjust extra controls in a dedicated settings window. |
+
+**Extra emotes** from BetterTTV, FrankerFaceZ and 7TV appear in Twitch chat and floating chat by default, including animated emotes and the current channel's sets. **Channels and categories** default to viewer count, highest first; you can still choose another sort.
 
 **Theatre Mode** widens the player using Twitch’s layout controls. It keeps YouTube playing; **Exit Theatre Mode** restores the standard layout.
 
-Floating chat is **read-only** and starts off by default. Keep the normal Twitch chat open; use it to send messages and access moderation controls. [Explore chat and player settings →](docs/usage.md#floating-chat)
+Floating chat is **read-only** and starts off by default. It works when Twitch chat starts collapsed: the extension initializes the native feed and restores the collapsed sidebar. Open normal Twitch chat to send messages and access moderation controls. [Explore chat and player settings →](docs/usage.md#floating-chat)
 
 <details>
 <summary><strong>Experimental: Twitch interruption blocking</strong></summary>
@@ -76,7 +78,7 @@ npm run check
 npm run build
 ```
 
-The build creates `release.zip` with runtime files and license notices only. See the [development guide](docs/development.md) for local installation, the source map, verification notes and the release workflow.
+The build replaces `release.zip` and refreshes the unpacked dev extension at the fixed path `build/latest`, with runtime files and license notices only. Only the latest build is kept; `build/` is cleared on each build. See the [development guide](docs/development.md) for local installation, the source map, verification notes and the release workflow.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for changes and bug reports. Found a bug or have an idea? [Open an issue](https://github.com/vrnrn/youtube-player-for-twitch/issues). For playback or chat problems, include your Chrome version and steps to reproduce the issue.
 

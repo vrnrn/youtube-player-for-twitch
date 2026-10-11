@@ -4,16 +4,25 @@
 
 ## Find and play a stream
 
-Open a Twitch channel and click **▶ YouTube** in the top navigation.
+Open a Twitch channel and click **YPFT** on the right of the top navigation.
 
 - **Automatic:** Choose **Find YouTube Stream**. The extension checks the streamer's linked YouTube channel first. If it finds no live stream there, it searches YouTube by Twitch channel name and uses fuzzy matching to suggest a live result. Check the title and channel, then click **Use This Stream**. An approximate match can belong to a different channel.
 - **Manual:** Paste a YouTube watch, youtu.be, Shorts, live, or embed URL, then click **Go**. Ordinary videos work too; the live-sync controls are intended for livestreams.
 
 The YouTube player overlays the Twitch player. Twitch chat, badges, channel points and the surrounding interface remain available. YouTube controls playback and the quality options available for the selected stream; 4K/60fps is possible when supported by the source and embedded player.
 
+## Settings window
+
+Choose **Settings** at the bottom of the YPFT dropdown. The centered window groups existing controls under **Playback**, **Chat** and **Player extras**. Changes save automatically; changing interruption blocking also reloads Twitch. Floating-chat appearance controls appear when floating chat is enabled.
+
+Use the sidebar to switch sections. Close with the × button, **Escape**, or a click outside the window. Your stream and URL selection stay in place. The window is removed from memory when closed.
+
+The window uses Twitch's familiar dark colors and purple selection states. On
+narrow windows, the section tabs move above the settings.
+
 ## Theatre mode
 
-Open **▶ YouTube** and click **Theatre Mode** to expand Twitch's layout. The menu moves to the top-left of the player in theatre mode; use **Exit Theatre Mode** there to return. The button sits above **Additional settings**, outside YouTube's embedded controls, and is available whenever Twitch provides its native theatre control.
+Open **YPFT → Settings → Playback** and click **Theatre Mode** to expand Twitch's layout. The YPFT button moves to the top-left of the player in theatre mode; reopen **Settings → Playback** and use **Exit Theatre Mode** to return. The control is available whenever Twitch provides its native theatre button.
 
 YouTube stays mounted and follows the Twitch player size when you change the layout, including through Twitch's **Alt+T** shortcut when the Twitch page has keyboard focus. You do not need to restore Twitch or reopen the YouTube stream. The button is disabled on pages without a native theatre control and while in fullscreen.
 
@@ -21,7 +30,7 @@ YouTube stays mounted and follows the Twitch player size when you change the lay
 
 Click **Sync Now** to seek toward the live edge. The extension briefly requests 2× playback, then returns to normal speed. This helps catch up but cannot guarantee exact alignment with Twitch chat.
 
-Under **Additional settings → Playback**:
+Under **Settings → Playback**:
 
 - **Auto-sync** repeats the catch-up action every 10 minutes while YouTube is active.
 - **Highest Twitch quality** keeps the underlying Twitch player set to Source, when available. This controls Twitch quality, not YouTube quality.
@@ -32,29 +41,42 @@ The extension remembers the last YouTube URL used for each Twitch channel and re
 
 Click **Restore Twitch** to remove the YouTube player and restore the original Twitch pause, mute and volume settings. Playback state also survives a reload caused by toggling interruption blocking.
 
+## Browse sorting
+
+Twitch's categories, live channels and category channel listings default to **Viewers (High to Low)**. Twitch's native control applies the sort, including when you navigate without reloading. Filters remain available. An explicit sort in the URL, including one selected from Twitch's dropdown, is respected.
+
+## Extra emotes
+
+**Settings → Chat → Extra emotes** is on by default. It renders exact, case-sensitive emote codes from BetterTTV, FrankerFaceZ and 7TV in normal Twitch chat and floating chat, including animated images. It loads both the providers' global catalogs and the current channel's assigned and shared sets, preserving channel aliases such as Valkyrae's animated `om`. Channel codes take precedence over matching global codes. Existing Twitch or third-party rendered emotes, links, usernames and badges stay intact.
+
+The extension fetches public catalogs directly from the providers. Global catalogs refresh after six hours; channel catalogs refresh after thirty minutes, with at most ten recent channels cached locally. Channel requests use the channel's public login or Twitch ID. When FrankerFaceZ has no room record, a public Twitch lookup resolves the channel ID. Requests omit credentials, chat messages and viewer usernames. Channel sets are replaced when you navigate to another channel; personal sets are outside this feature. Provider failures keep the last available catalog and retry after five minutes; unavailable images fall back to their text codes. Turn the setting off to restore text immediately.
+
 ## Floating chat
 
-Open **Additional settings → Chat** and enable **Floating chat**. It is off by default; when enabled, its initial mode is **Fullscreen only**.
+Open **Settings → Chat** and enable **Floating chat**. It is off by default; when enabled, its initial mode is **Fullscreen only**.
 
-Use **Fullscreen with chat** on the YouTube player to expand the video with Twitch chat, or Twitch's own fullscreen control when watching Twitch. Keep the normal Twitch chat open so there are messages to mirror.
+Use **Fullscreen with chat** on the YouTube player to expand the video with Twitch chat, or Twitch's own fullscreen control when watching Twitch. Twitch chat can start collapsed: when the overlay needs messages, the extension initializes the native feed and restores the collapsed sidebar.
 
 - Drag the chat header to move it and the bottom-right handle to resize it. Both controls also support arrow keys.
-- Open **Chat appearance** for **Always on player** mode, background color, opacity, text size, compact spacing, click-through and **Reset position & size**.
+- Scrollbars are always hidden. Scroll with your mouse, touch or the keyboard, and use **Latest** to return to new messages.
+- Under **Chat appearance**, adjust **Always on player** mode, background color, opacity, text size, compact spacing, click-through and **Reset position & size**.
+- The labeled sample-message preview shows appearance changes as you adjust
+  background, opacity and text size. The controls also display their values.
 - The overlay is read-only. Send messages and use moderation controls in the normal Twitch chat.
 
-Floating chat reuses messages, badges and emotes already rendered by Twitch. It does not open another chat connection or add emote providers. Up to 60 mirrored messages stay in memory only; updates are batched and observation stops while the overlay is hidden. Preferences and position are stored locally. No additional permissions or framework dependencies are needed.
+Floating chat reuses Twitch's rendered messages, badges and emotes, and uses the extra emote catalogs when that separate setting is enabled. It does not open another chat connection. Up to 60 mirrored messages stay in memory only; updates are batched and observation stops while the overlay is hidden. Preferences and position are stored locally. Catalog requests use host access limited to the three provider APIs and Twitch's public channel lookup; no framework dependencies are needed.
 
 Inspired by [Floating Twitch Chat](https://github.com/xD33m/floating_twitch_chat), with an original implementation built for this extension. See the [floating-chat verification notes](floating-chat-qa.md).
 
 ## Player extras
 
-**Additional settings** groups Playback, Chat and Player extras, and starts collapsed.
+Open **Settings → Player extras** for these controls.
 
 **Hide Twitch extensions** hides native Twitch player-extension overlays and buttons immediately. The preference is stored locally and follows Twitch player replacement and navigation. It does not uninstall extensions or stop their code or network requests. YouTube and floating chat remain available.
 
 ## Experimental interruption blocking
 
-Under **Additional settings → Player extras**, **Interruption blocking** is marked **Experimental** and is **off by default**. Changing it saves the preference and reloads Twitch so the player hooks start early or are fully removed. Already-open Twitch tabs show a reload action when their hooks differ from the saved setting.
+Under **Settings → Player extras**, **Interruption blocking** is marked **Experimental** and is **off by default**. Changing it saves the preference and reloads Twitch so the player hooks start early or are fully removed. Already-open Twitch tabs show a reload action when their hooks differ from the saved setting.
 
 The extension bundles the pinned TwitchAdSolutions VAFT v37.0.0 algorithm. It filters Twitch advertising segments and requests alternate Twitch playback tokens and playlists. It runs only on Twitch; YouTube requests and the embedded player retain their own behavior. Twitch recovery is suspended while YouTube owns playback.
 
@@ -68,4 +90,4 @@ Worker startup and YouTube coordination were checked in the integrated browser. 
 
 Settings, recent history, pinned streams and per-channel playback state are stored on your device in Chrome's extension-local storage. You can clear recent history from the menu; removing the extension clears its local storage.
 
-Search and playback requests go from your browser to YouTube and Twitch. The extension has no developer analytics, telemetry service or developer-operated request proxy. Those platforms process their own requests under their own policies. See the full [privacy policy](https://youtube-player-for-twitch.vrnrn.com/privacy/).
+Search and playback requests go from your browser to YouTube and Twitch. When extra emotes are enabled, public catalogs and images load directly from BetterTTV, FrankerFaceZ and 7TV, and Twitch can resolve a public channel ID when needed. The extension has no developer analytics, telemetry service or developer-operated request proxy. Those platforms process their own requests under their own policies. See the full [privacy policy](https://youtube-player-for-twitch.vrnrn.com/privacy/).

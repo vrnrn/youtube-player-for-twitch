@@ -59,6 +59,7 @@ patch('                super(URL.createObjectURL(new Blob([newBlobStr])), option
                     return terminate();
                 };
                 this.addEventListener('error', () => {
+                    twitchWorkers.delete(this);
                     URL.revokeObjectURL(blobUrl);
                     window.__ypftVaft.fail();
                 }, { once: true });`);
@@ -66,6 +67,7 @@ patch("                    if (e.data.key == 'UpdateAdBlockBanner') {", `       
                         URL.revokeObjectURL(blobUrl);
                         window.__ypftVaft.report('worker-ready');
                     } else if (e.data?.key === 'YPFTVaftWorkerError') {
+                        twitchWorkers.delete(this);
                         URL.revokeObjectURL(blobUrl);
                         window.__ypftVaft.fail();
                     } else if (e.data?.key == 'UpdateAdBlockBanner') {`);
@@ -83,6 +85,28 @@ patch("            if (typeof url === 'string') {\n                if (AdSegment
             if (typeof url === 'string' && isTwitchMedia) {
                 if (AdSegmentCache.has(url)) {`);
 // Twitch can omit SERVER-TIME; keep the original playlist in that case.
+// Long-lived player workers must not retain every previously visited channel.
+patch('                                let streamInfo = StreamInfos[channelName];', `                                let streamInfo = StreamInfos[channelName];
+                                if (streamInfo) {
+                                    delete StreamInfos[channelName];
+                                    StreamInfos[channelName] = streamInfo;
+                                }`);
+patch('                                    StreamInfos[channelName] = streamInfo = {', `                                    const discarded = new Set();
+                                    if (StreamInfos[channelName]) discarded.add(StreamInfos[channelName]);
+                                    delete StreamInfos[channelName];
+                                    while (Object.keys(StreamInfos).length >= 8) {
+                                        const oldest = Object.keys(StreamInfos)[0];
+                                        discarded.add(StreamInfos[oldest]);
+                                        delete StreamInfos[oldest];
+                                    }
+                                    for (const playlistUrl of Object.keys(StreamInfosByUrl)) {
+                                        if (discarded.has(StreamInfosByUrl[playlistUrl])) delete StreamInfosByUrl[playlistUrl];
+                                    }
+                                    StreamInfos[channelName] = streamInfo = {`);
+patch('                            streamInfo.RequestedAds.add(lines[i + 1]);', `                            streamInfo.RequestedAds.add(lines[i + 1]);
+                            if (streamInfo.RequestedAds.size > 128) streamInfo.RequestedAds.delete(streamInfo.RequestedAds.values().next().value);`);
+patch("            console.log('Finished blocking ads');", `            console.log('Finished blocking ads');
+            streamInfo.RequestedAds.clear();`);
 if (source.split('return matches.length > 1 ? matches[1] : null;').length !== 3) throw new Error('VAFT server time patch mismatch');
 source = source.replaceAll('return matches.length > 1 ? matches[1] : null;', 'return matches && matches.length > 1 ? matches[1] : null;');
 // Upstream didn't propagate asynchronous playlist parsing failures to its outer promise.

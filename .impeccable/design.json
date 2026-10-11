@@ -1,0 +1,624 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T22:02:47.902Z",
+  "title": "Design System: YouTube Player for Twitch",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Main dark",
+        "tonalRamp": [
+          "oklch(15% 0.00586 285.89)",
+          "oklch(26.4% 0.00586 285.89)",
+          "oklch(37.9% 0.00586 285.89)",
+          "oklch(49.3% 0.00586 285.89)",
+          "oklch(60.7% 0.00586 285.89)",
+          "oklch(72.1% 0.00586 285.89)",
+          "oklch(83.6% 0.00586 285.89)",
+          "oklch(95% 0.00586 285.89)"
+        ]
+      },
+      "rail": {
+        "role": "neutral",
+        "displayName": "Sidebar dark",
+        "tonalRamp": [
+          "oklch(15% 0.01107 285.63)",
+          "oklch(26.4% 0.01107 285.63)",
+          "oklch(37.9% 0.01107 285.63)",
+          "oklch(49.3% 0.01107 285.63)",
+          "oklch(60.7% 0.01107 285.63)",
+          "oklch(72.1% 0.01107 285.63)",
+          "oklch(83.6% 0.01107 285.63)",
+          "oklch(95% 0.01107 285.63)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Raised dark",
+        "tonalRamp": [
+          "oklch(15% 0.00752 285.83)",
+          "oklch(26.4% 0.00752 285.83)",
+          "oklch(37.9% 0.00752 285.83)",
+          "oklch(49.3% 0.00752 285.83)",
+          "oklch(60.7% 0.00752 285.83)",
+          "oklch(72.1% 0.00752 285.83)",
+          "oklch(83.6% 0.00752 285.83)",
+          "oklch(95% 0.00752 285.83)"
+        ]
+      },
+      "hover": {
+        "role": "neutral",
+        "displayName": "Hover dark",
+        "tonalRamp": [
+          "oklch(15% 0.01420 285.55)",
+          "oklch(26.4% 0.01420 285.55)",
+          "oklch(37.9% 0.01420 285.55)",
+          "oklch(49.3% 0.01420 285.55)",
+          "oklch(60.7% 0.01420 285.55)",
+          "oklch(72.1% 0.01420 285.55)",
+          "oklch(83.6% 0.01420 285.55)",
+          "oklch(95% 0.01420 285.55)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Divider dark",
+        "tonalRamp": [
+          "oklch(15% 0.01397 285.61)",
+          "oklch(26.4% 0.01397 285.61)",
+          "oklch(37.9% 0.01397 285.61)",
+          "oklch(49.3% 0.01397 285.61)",
+          "oklch(60.7% 0.01397 285.61)",
+          "oklch(72.1% 0.01397 285.61)",
+          "oklch(83.6% 0.01397 285.61)",
+          "oklch(95% 0.01397 285.61)"
+        ]
+      },
+      "control-line": {
+        "role": "neutral",
+        "displayName": "Control outline",
+        "tonalRamp": [
+          "oklch(15% 0.02049 285.64)",
+          "oklch(26.4% 0.02049 285.64)",
+          "oklch(37.9% 0.02049 285.64)",
+          "oklch(49.3% 0.02049 285.64)",
+          "oklch(60.7% 0.02049 285.64)",
+          "oklch(72.1% 0.02049 285.64)",
+          "oklch(83.6% 0.02049 285.64)",
+          "oklch(95% 0.02049 285.64)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Primary light",
+        "tonalRamp": [
+          "oklch(15% 0.00266 286.35)",
+          "oklch(26.4% 0.00266 286.35)",
+          "oklch(37.9% 0.00266 286.35)",
+          "oklch(49.3% 0.00266 286.35)",
+          "oklch(60.7% 0.00266 286.35)",
+          "oklch(72.1% 0.00266 286.35)",
+          "oklch(83.6% 0.00266 286.35)",
+          "oklch(95% 0.00266 286.35)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Secondary light",
+        "tonalRamp": [
+          "oklch(15% 0.01397 286.08)",
+          "oklch(26.4% 0.01397 286.08)",
+          "oklch(37.9% 0.01397 286.08)",
+          "oklch(49.3% 0.01397 286.08)",
+          "oklch(60.7% 0.01397 286.08)",
+          "oklch(72.1% 0.01397 286.08)",
+          "oklch(83.6% 0.01397 286.08)",
+          "oklch(95% 0.01397 286.08)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Twitch familiar purple",
+        "tonalRamp": [
+          "oklch(15% 0.15492 301.29)",
+          "oklch(26.4% 0.15492 301.29)",
+          "oklch(37.9% 0.15492 301.29)",
+          "oklch(49.3% 0.15492 301.29)",
+          "oklch(60.7% 0.15492 301.29)",
+          "oklch(72.1% 0.15492 301.29)",
+          "oklch(83.6% 0.15492 301.29)",
+          "oklch(95% 0.15492 301.29)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Purple hover",
+        "tonalRamp": [
+          "oklch(15% 0.11544 302.84)",
+          "oklch(26.4% 0.11544 302.84)",
+          "oklch(37.9% 0.11544 302.84)",
+          "oklch(49.3% 0.11544 302.84)",
+          "oklch(60.7% 0.11544 302.84)",
+          "oklch(72.1% 0.11544 302.84)",
+          "oklch(83.6% 0.11544 302.84)",
+          "oklch(95% 0.11544 302.84)"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Dark purple ink",
+        "tonalRamp": [
+          "oklch(15% 0.00586 285.89)",
+          "oklch(26.4% 0.00586 285.89)",
+          "oklch(37.9% 0.00586 285.89)",
+          "oklch(49.3% 0.00586 285.89)",
+          "oklch(60.7% 0.00586 285.89)",
+          "oklch(72.1% 0.00586 285.89)",
+          "oklch(83.6% 0.00586 285.89)",
+          "oklch(95% 0.00586 285.89)"
+        ]
+      },
+      "accent-subtle": {
+        "role": "primary",
+        "displayName": "Quiet purple",
+        "tonalRamp": [
+          "oklch(15% 0.06008 301.01)",
+          "oklch(26.4% 0.06008 301.01)",
+          "oklch(37.9% 0.06008 301.01)",
+          "oklch(49.3% 0.06008 301.01)",
+          "oklch(60.7% 0.06008 301.01)",
+          "oklch(72.1% 0.06008 301.01)",
+          "oklch(83.6% 0.06008 301.01)",
+          "oklch(95% 0.06008 301.01)"
+        ]
+      },
+      "danger": {
+        "role": "feedback",
+        "displayName": "Error pink",
+        "tonalRamp": [
+          "oklch(15% 0.11870 20.05)",
+          "oklch(26.4% 0.11870 20.05)",
+          "oklch(37.9% 0.11870 20.05)",
+          "oklch(49.3% 0.11870 20.05)",
+          "oklch(60.7% 0.11870 20.05)",
+          "oklch(72.1% 0.11870 20.05)",
+          "oklch(83.6% 0.11870 20.05)",
+          "oklch(95% 0.11870 20.05)"
+        ]
+      },
+      "warning": {
+        "role": "feedback",
+        "displayName": "Warning gold",
+        "tonalRamp": [
+          "oklch(15% 0.11510 83.95)",
+          "oklch(26.4% 0.11510 83.95)",
+          "oklch(37.9% 0.11510 83.95)",
+          "oklch(49.3% 0.11510 83.95)",
+          "oklch(60.7% 0.11510 83.95)",
+          "oklch(72.1% 0.11510 83.95)",
+          "oklch(83.6% 0.11510 83.95)",
+          "oklch(95% 0.11510 83.95)"
+        ]
+      },
+      "success": {
+        "role": "feedback",
+        "displayName": "Success mint",
+        "tonalRamp": [
+          "oklch(15% 0.09916 161.11)",
+          "oklch(26.4% 0.09916 161.11)",
+          "oklch(37.9% 0.09916 161.11)",
+          "oklch(49.3% 0.09916 161.11)",
+          "oklch(60.7% 0.09916 161.11)",
+          "oklch(72.1% 0.09916 161.11)",
+          "oklch(83.6% 0.09916 161.11)",
+          "oklch(95% 0.09916 161.11)"
+        ]
+      },
+      "field-bg": {
+        "role": "neutral",
+        "displayName": "Field dark",
+        "tonalRamp": [
+          "oklch(15% 0.00409 285.97)",
+          "oklch(26.4% 0.00409 285.97)",
+          "oklch(37.9% 0.00409 285.97)",
+          "oklch(49.3% 0.00409 285.97)",
+          "oklch(60.7% 0.00409 285.97)",
+          "oklch(72.1% 0.00409 285.97)",
+          "oklch(83.6% 0.00409 285.97)",
+          "oklch(95% 0.00409 285.97)"
+        ]
+      },
+      "hover-strong": {
+        "role": "neutral",
+        "displayName": "Stronger neutral hover",
+        "canonical": "#40404a",
+        "tonalRamp": [
+          "oklch(15.000% 0.016949 285.555)",
+          "oklch(26.429% 0.016949 285.555)",
+          "oklch(37.857% 0.016949 285.555)",
+          "oklch(49.286% 0.016949 285.555)",
+          "oklch(60.714% 0.016949 285.555)",
+          "oklch(72.143% 0.016949 285.555)",
+          "oklch(83.571% 0.016949 285.555)",
+          "oklch(95.000% 0.016949 285.555)"
+        ]
+      },
+      "accent-subtle-hover": {
+        "role": "primary",
+        "displayName": "Pinned hover",
+        "canonical": "#3d2d53",
+        "tonalRamp": [
+          "oklch(15.000% 0.067656 302.290)",
+          "oklch(26.429% 0.067656 302.290)",
+          "oklch(37.857% 0.067656 302.290)",
+          "oklch(49.286% 0.067656 302.290)",
+          "oklch(60.714% 0.067656 302.290)",
+          "oklch(72.143% 0.067656 302.290)",
+          "oklch(83.571% 0.067656 302.290)",
+          "oklch(95.000% 0.067656 302.290)"
+        ]
+      },
+      "native-hover": {
+        "role": "neutral",
+        "displayName": "Native Twitch hover",
+        "canonical": "#53535f7a",
+        "tonalRamp": [
+          "oklch(15.000% 0.019469 285.585)",
+          "oklch(26.429% 0.019469 285.585)",
+          "oklch(37.857% 0.019469 285.585)",
+          "oklch(49.286% 0.019469 285.585)",
+          "oklch(60.714% 0.019469 285.585)",
+          "oklch(72.143% 0.019469 285.585)",
+          "oklch(83.571% 0.019469 285.585)",
+          "oklch(95.000% 0.019469 285.585)"
+        ]
+      },
+      "danger-subtle": {
+        "role": "neutral",
+        "displayName": "Subtle error fill",
+        "canonical": "#ff9c9c0d",
+        "tonalRamp": [
+          "oklch(15.000% 0.118701 20.048)",
+          "oklch(26.429% 0.118701 20.048)",
+          "oklch(37.857% 0.118701 20.048)",
+          "oklch(49.286% 0.118701 20.048)",
+          "oklch(60.714% 0.118701 20.048)",
+          "oklch(72.143% 0.118701 20.048)",
+          "oklch(83.571% 0.118701 20.048)",
+          "oklch(95.000% 0.118701 20.048)"
+        ]
+      },
+      "warning-subtle": {
+        "role": "neutral",
+        "displayName": "Subtle warning fill",
+        "canonical": "#483e27",
+        "tonalRamp": [
+          "oklch(15.000% 0.038739 86.993)",
+          "oklch(26.429% 0.038739 86.993)",
+          "oklch(37.857% 0.038739 86.993)",
+          "oklch(49.286% 0.038739 86.993)",
+          "oklch(60.714% 0.038739 86.993)",
+          "oklch(72.143% 0.038739 86.993)",
+          "oklch(83.571% 0.038739 86.993)",
+          "oklch(95.000% 0.038739 86.993)"
+        ]
+      },
+      "tint": {
+        "role": "neutral",
+        "displayName": "Interaction tint",
+        "canonical": "#ffffff0d",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      },
+      "tint-hover": {
+        "role": "neutral",
+        "displayName": "Toolbar interaction tint",
+        "canonical": "#ffffff14",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      },
+      "preview-line": {
+        "role": "neutral",
+        "displayName": "Preview divider",
+        "canonical": "#ffffff24",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      },
+      "overlay-line": {
+        "role": "neutral",
+        "displayName": "Floating panel outline",
+        "canonical": "#ffffff26",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      },
+      "overlay-header": {
+        "role": "neutral",
+        "displayName": "Floating toolbar",
+        "canonical": "#18181bd9",
+        "tonalRamp": [
+          "oklch(15.000% 0.005860 285.885)",
+          "oklch(26.429% 0.005860 285.885)",
+          "oklch(37.857% 0.005860 285.885)",
+          "oklch(49.286% 0.005860 285.885)",
+          "oklch(60.714% 0.005860 285.885)",
+          "oklch(72.143% 0.005860 285.885)",
+          "oklch(83.571% 0.005860 285.885)",
+          "oklch(95.000% 0.005860 285.885)"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Backdrop scrim",
+        "canonical": "#0009",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Video and shadow ink",
+        "canonical": "#000",
+        "tonalRamp": [
+          "oklch(15.000% 0.000000 0.000)",
+          "oklch(26.429% 0.000000 0.000)",
+          "oklch(37.857% 0.000000 0.000)",
+          "oklch(49.286% 0.000000 0.000)",
+          "oklch(60.714% 0.000000 0.000)",
+          "oklch(72.143% 0.000000 0.000)",
+          "oklch(83.571% 0.000000 0.000)",
+          "oklch(95.000% 0.000000 0.000)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Settings section headings; 24px at the narrow layout."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Settings-window header."
+      },
+      "section-title": {
+        "displayName": "Section Title",
+        "purpose": "Settings subsection headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default settings text."
+      },
+      "menu-body": {
+        "displayName": "Menu Body",
+        "purpose": "Dropdown copy and appearance-control rows."
+      },
+      "control-label": {
+        "displayName": "Control Label",
+        "purpose": "Filled dropdown action labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Supporting labels, descriptions and status copy."
+      },
+      "nav-label": {
+        "displayName": "Nav Label",
+        "purpose": "Compact YPFT navigation entry."
+      },
+      "brand-mark": {
+        "displayName": "Brand Mark",
+        "purpose": "YPFT word mark in the settings rail."
+      },
+      "menu-title": {
+        "displayName": "Menu Title",
+        "purpose": "Dropdown title"
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Small captions and utility actions"
+      },
+      "badge": {
+        "displayName": "Badge",
+        "purpose": "Experimental label"
+      },
+      "narrow-headline": {
+        "displayName": "Narrow Headline",
+        "purpose": "Narrow settings section heading"
+      }
+    },
+    "shadows": [
+      {
+        "name": "dropdown",
+        "value": "0 16px 48px #0009",
+        "purpose": "Stream selector elevation."
+      },
+      {
+        "name": "dialog",
+        "value": "0 24px 80px #0009",
+        "purpose": "Settings-window elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "switch-thumb",
+        "value": "transform 150ms ease-out",
+        "purpose": "Checked-state thumb movement; disabled by prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "appearance-stack",
+        "value": "940px"
+      },
+      {
+        "name": "narrow-rail",
+        "value": "760px"
+      },
+      {
+        "name": "horizontal-tabs",
+        "value": "560px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary stream action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled action used to find a YouTube stream.",
+      "html": "<button type=\"button\" class=\"ds-primary\"><svg class=\"ds-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0\"></path></svg><span>Find YouTube Stream</span></button>",
+      "css": ".ds-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:40px;padding:10px 14px;border:0;border-radius:6px;background:#bf94ff;color:#18181b;font-size:13px;font-weight:650;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-primary:hover:not(:disabled){background:#d0afff}.ds-primary:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-primary:disabled{opacity:.55;cursor:default}.ds-icon{display:block;flex:0 0 16px}"
+    },
+    {
+      "name": "Neutral action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Restore Twitch uses the filled neutral action.",
+      "html": "<button type=\"button\" class=\"ds-secondary\">Restore Twitch</button>",
+      "css": ".ds-secondary{min-height:36px;padding:8px 10px;border:0;border-radius:6px;background:#303038;color:#efeff1;font-size:12px;font-weight:600;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-secondary:hover{background:#40404a}.ds-secondary:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-secondary:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Outlined settings action",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Theatre, reload and reset controls use the outlined action.",
+      "html": "<button type=\"button\" class=\"ds-outline\">Reset position &amp; size</button>",
+      "css": ".ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:8px 12px;border:1px solid #62626f;border-radius:6px;background:transparent;color:#efeff1;font-size:12px;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-outline:hover:not(:disabled){background:#303038}.ds-outline:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-outline[aria-pressed=\"true\"]{border-color:#bf94ff;color:#bf94ff}.ds-outline:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Close control",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Neutral icon control for the dropdown and settings close action.",
+      "html": "<button type=\"button\" class=\"ds-close\" aria-label=\"Close\"><svg class=\"ds-close-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"></path></svg></button>",
+      "css": ".ds-close{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:6px;background:none;color:#bcbcc6;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-close:hover{background:#303038;color:#efeff1}.ds-close:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-close-icon{display:block}.ds-close:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "YouTube URL field",
+      "kind": "input",
+      "refersTo": "input-url",
+      "description": "Manual stream selection with a clearly named URL input.",
+      "html": "<input class=\"ds-url\" type=\"url\" aria-label=\"YouTube video or livestream URL\" placeholder=\"Paste YouTube URL\" spellcheck=\"false\" autocomplete=\"off\">",
+      "css": ".ds-url{width:100%;min-width:0;min-height:40px;padding:9px 12px;background:#101012;border:1px solid #62626f;border-radius:6px;color:#efeff1;font-size:13px;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;color-scheme:dark;caret-color:#bf94ff}.ds-url:focus{border-color:#bf94ff}.ds-url:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-url::placeholder{color:#bcbcc6;opacity:1}.ds-url::selection{background:#bf94ff;color:#18181b}"
+    },
+    {
+      "name": "Settings navigation",
+      "kind": "nav",
+      "refersTo": "settings-nav",
+      "description": "Three settings sections in a rail, changing to tabs on narrow screens.",
+      "html": "<nav class=\"ds-tabs\" role=\"tablist\" aria-label=\"Settings sections\" aria-orientation=\"vertical\"><button type=\"button\" role=\"tab\" aria-selected=\"true\" class=\"ds-tab\"><svg class=\"ds-tab-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 5 11 7-11 7z\"></path></svg><span>Playback</span></button><button type=\"button\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" class=\"ds-tab\"><svg class=\"ds-tab-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 4h16v12H9l-5 4zM8 8h8M8 12h5\"></path></svg><span>Chat</span></button><button type=\"button\" role=\"tab\" aria-selected=\"false\" tabindex=\"-1\" class=\"ds-tab\"><svg class=\"ds-tab-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1z\"></path></svg><span>Player extras</span></button></nav>",
+      "css": ".ds-tabs{display:flex;flex-direction:column;gap:6px;padding:18px;background:#25252b;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;}.ds-tab{display:flex;align-items:center;gap:12px;min-height:46px;padding:11px 14px;border:0;border-radius:6px;background:none;color:#bcbcc6;text-align:left;font:550 13px/1.5 system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-tab:hover{background:#303038;color:#efeff1}.ds-tab[aria-selected=\"true\"]{background:#bf94ff;color:#18181b}.ds-tab:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-tab-icon{display:block;flex:0 0 16px}@media(max-width:560px){.ds-tabs{flex-direction:row;gap:4px;padding:8px}.ds-tab{flex:1;justify-content:center;gap:6px;min-height:40px;padding:9px 6px;font-size:12px}.ds-tab-icon{display:none}}"
+    },
+    {
+      "name": "Open settings row",
+      "kind": "custom",
+      "refersTo": "settings-row",
+      "description": "Title, description and right-aligned native switch.",
+      "html": "<label class=\"ds-row\"><input class=\"ds-switch\" type=\"checkbox\" role=\"switch\" checked><span class=\"ds-copy\"><span class=\"ds-row-title\">Floating chat</span><span class=\"ds-row-description\">Show Twitch chat over your video, including fullscreen.</span></span></label>",
+      "css": ".ds-row{display:flex;align-items:center;gap:24px;min-height:76px;padding:17px 0;border-bottom:1px solid #35353d;color:#efeff1;font-size:14px;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-copy{flex:1;min-width:0}.ds-row-title{display:block;font-size:14px;font-weight:550}.ds-row-description{display:block;margin-top:4px;color:#bcbcc6;font-size:12px}.ds-switch{appearance:none;order:2;position:relative;flex:0 0 40px;width:40px;height:24px;margin:0 0 0 auto;background:#62626f;border:0;border-radius:14px;cursor:pointer}.ds-switch::before{content:\"\";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#efeff1;transition:transform 150ms ease-out}.ds-switch:checked{background:#bf94ff}.ds-switch:checked::before{transform:translateX(16px);background:#18181b}.ds-switch:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-switch:disabled{opacity:.55;cursor:default}@media(max-width:560px){.ds-row{gap:16px}}@media(prefers-reduced-motion:reduce){.ds-switch::before{transition:none}}"
+    },
+    {
+      "name": "Experimental badge",
+      "kind": "chip",
+      "refersTo": "experimental-badge",
+      "description": "Non-interactive warning label for interruption blocking.",
+      "html": "<span class=\"ds-badge\">Experimental</span>",
+      "css": ".ds-badge{display:inline-block;margin-left:6px;padding:2px 6px;border:0;border-radius:4px;background:#483e27;color:#f4ca74;font-size:10px;font-weight:550;line-height:1.5;letter-spacing:0;vertical-align:middle;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;}"
+    },
+    {
+      "name": "Stream result card",
+      "kind": "card",
+      "refersTo": "result-card",
+      "description": "Found-stream title, creator and filled playback action.",
+      "html": "<div class=\"ds-result\"><div class=\"ds-result-title\">YouTube stream</div><div class=\"ds-result-channel\">Channel</div><button type=\"button\" class=\"ds-result-use\">Use this stream</button></div>",
+      "css": ".ds-result{padding:14px;margin-top:12px;border:0;border-radius:12px;background:#202024;color:#efeff1;line-height:1.5;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;}.ds-result-title{margin-bottom:4px;font-size:14px;font-weight:600;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}.ds-result-channel{margin-bottom:12px;color:#bcbcc6;font-size:12px}.ds-result-use{width:100%;min-height:36px;padding:8px;border:0;border-radius:6px;background:#bf94ff;color:#18181b;font:650 13px/1.5 system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-result-use:hover:not(:disabled){background:#d0afff}.ds-result-use:focus-visible{outline:2px solid #bf94ff;outline-offset:3px;}.ds-result-use:disabled{opacity:.55;cursor:default}"
+    },
+    {
+      "name": "Floating chat",
+      "kind": "custom",
+      "refersTo": "floating-chat",
+      "description": "Read-only overlay with its toolbar and Latest action; sample text is illustrative.",
+      "html": "<section class=\"ds-chat\" aria-label=\"Floating Twitch chat\"><div class=\"ds-chat-header\"><button type=\"button\" class=\"ds-chat-grip\" aria-label=\"Move chat — drag or use arrow keys\"><svg class=\"ds-grip-icon\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 5h.01M16 5h.01M8 12h.01M16 12h.01M8 19h.01M16 19h.01\"></path></svg>Twitch chat</button><button type=\"button\" class=\"ds-chat-tool\" aria-label=\"Compact spacing\" title=\"Reduce message spacing\" aria-pressed=\"false\"><svg class=\"ds-chat-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 5h16M4 9h16M4 13h16M4 17h16\"></path></svg></button><button type=\"button\" class=\"ds-chat-tool\" aria-label=\"Turn off floating chat\"><svg class=\"ds-chat-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M18 6 6 18\"></path></svg></button></div><div class=\"ds-chat-messages\" role=\"log\" aria-live=\"off\" aria-label=\"Recent Twitch messages\" tabindex=\"0\"><div class=\"ds-chat-line\"><span class=\"ds-chat-author\">Viewer:</span> Sample message</div><div class=\"ds-chat-line\"><span class=\"ds-chat-author\">Community:</span> Chat stays with the stream.</div></div><button type=\"button\" class=\"ds-chat-latest\" aria-label=\"Jump to latest chat\"><svg class=\"ds-latest-icon\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4v16m-6-6 6 6 6-6\"></path></svg>Latest</button><button type=\"button\" class=\"ds-chat-resize\" aria-label=\"Resize chat — drag or use arrow keys\"><svg class=\"ds-chat-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 19 19 7M12 19 19 12M17 19 19 17\"></path></svg></button></section>",
+      "css": ".ds-chat{position:relative;display:flex;flex-direction:column;width:320px;max-width:100%;height:220px;overflow:hidden;border:1px solid #ffffff26;border-radius:12px;background:rgba(24,21,31,.7);color:#efeff1;font-size:14px;line-height:1.45;text-shadow:0 1px 2px #000;contain:layout style paint;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;}.ds-chat-header{display:flex;flex:0 0 36px;align-items:center;gap:2px;padding:3px 5px;background:#18181bd9;border-bottom:1px solid #ffffff14;text-shadow:none}.ds-chat button{appearance:none;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:0;margin:0;padding:0;border:0;border-radius:5px;background:none;color:#efeff1;text-align:center;line-height:1;font-family:system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;cursor:pointer}.ds-chat button:hover{background:#ffffff14}.ds-chat button[aria-pressed=\"true\"]{background:#332647;color:#bf94ff}.ds-chat button:focus-visible,.ds-chat-messages:focus-visible{outline:2px solid #bf94ff;outline-offset:-2px}.ds-chat .ds-chat-grip{flex:1;gap:6px;height:28px;padding:5px 7px;justify-content:flex-start;font-size:12px;font-weight:600;cursor:grab;touch-action:none}.ds-chat-grip:active{cursor:grabbing}.ds-grip-icon{display:block;flex:0 0 12px;opacity:.7}.ds-chat-tool{width:28px;height:28px}.ds-chat-icon{display:block;flex:0 0 16px}.ds-chat-messages{position:relative;flex:1;min-height:0;padding:8px 12px 24px;overflow:auto;scrollbar-width:thin;scrollbar-color:#62626f transparent}.ds-chat-line{padding:4px 0;overflow-wrap:anywhere;unicode-bidi:plaintext}.ds-chat-author{font-weight:700;color:#cdb4ff}.ds-chat .ds-chat-latest{position:absolute;right:28px;bottom:7px;gap:5px;min-height:28px;padding:5px 9px;background:#bf94ff;color:#18181b;font-size:11px;text-shadow:none}.ds-chat .ds-chat-latest:hover{background:#d0afff}.ds-latest-icon{display:block;flex:0 0 12px}.ds-chat .ds-chat-resize{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:6px 0 11px 0;color:#bcbcc6;cursor:nwse-resize!important;touch-action:none}.ds-chat .ds-chat-resize svg{position:absolute;right:5px;bottom:5px;pointer-events:none}.ds-chat .ds-chat-resize:hover,.ds-chat .ds-chat-resize:active{color:#efeff1}.ds-chat ::selection{background:#bf94ff;color:#18181b}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Twitch familiar",
+    "overview": "Twitch familiar is the confirmed visual direction. The extension uses dark neutral surfaces, clear purple actions and selection, compact SVG icons and the platform UI sans. Twitch and BTTV are the visual authorities for familiar controls and settings density.\n\nHierarchy comes from text size, spacing and tonal layers. Stream selection stays compact; settings use open rows with aligned controls; floating chat keeps the community readable over the player. The shared system is scoped to extension surfaces so Twitch retains its own interface.",
+    "keyCharacteristics": [
+      "Dark neutral layers with purple actions and selection.",
+      "System UI typography and compact, consistently stroked SVG icons.",
+      "Open settings rows, restrained panel depth and visible keyboard focus.",
+      "An immediate sample-message appearance preview and a bounded, movable chat overlay."
+    ],
+    "rules": [
+      {
+        "name": "The Purple State Rule",
+        "body": "Use the shared accent for primary actions, selected tabs, enabled switches and keyboard focus. Neutral surfaces carry ordinary content.",
+        "section": "colors"
+      },
+      {
+        "name": "The Open Row Rule",
+        "body": "Settings groups stay transparent. Divide ordinary options with a fine bottom rule and align the control at the right edge of the row.",
+        "section": "layout"
+      },
+      {
+        "name": "The Surface Depth Rule",
+        "body": "The dropdown and settings dialog carry the soft elevation shadows. Result cards and chat previews separate through tone; floating chat uses a fine translucent border.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the shared dark palette and purple action, selection and focus states.",
+      "Do keep settings labels and descriptions in open rows with right-aligned controls.",
+      "Do retain the native button, input, tab, switch and dialog semantics and visible focus treatments.",
+      "Do use the existing SVG stroke vocabulary for interface icons.",
+      "Do label the appearance preview as sample messages and reflect appearance controls immediately.",
+      "Do preserve the stacked appearance layout and horizontal settings tabs at the implemented narrow widths."
+    ],
+    "donts": [
+      "Don't turn settings groups into nested cards; use the observed row dividers.",
+      "Don't introduce a separate display font into these extension controls; the confirmed world uses the system UI stack.",
+      "Don't add decorative blur or heavy effects over the player.",
+      "Don't treat user-selected chat colors, text sizes or generated tonal-ramp previews as new shared palette rules.",
+      "Don't infer a light theme from this dark-surface redesign; light-theme styling is not established."
+    ]
+  }
+}

@@ -3,23 +3,30 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 const original = fs.readFileSync(`${__dirname}/../twitch-content.js`, 'utf8');
-const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, applyExtensionVisibility, setupChatControls, renderChatControls, renderTheatreControl, toggleTheatreMode, extractVideoId, escapeHtml, handleAutoFind, handleNavigation, addToHistory, togglePin, renderHistory, getTwitchChannel, setupEventListeners, init };\n})();');
+const source = original.replace(/\}\)\(\);\s*$/, 'window.testContent = { state, closeDropdown, openSettings, closeSettings, selectSettingsTab, createSettingsDialog, setupSettingsListeners, memory: () => ({ settings: !!settingsDialog, ui: Object.values(uiCache).filter(Boolean).length, theatre: [theatreObserver, theatreHost, theatreNative, theatreNavParent].filter(Boolean).length }), changeVaftSetting, renderVaftSetting, injectYouTube, removeYouTube, syncNow, enforceQuality, createNavButton, navParent, placeNavButton, updateToggleButton, applyExtensionVisibility, setupChatControls, renderChatControls, renderTheatreControl, toggleTheatreMode, extractVideoId, escapeHtml, handleAutoFind, handleNavigation, addToHistory, togglePin, renderHistory, getTwitchChannel, setupEventListeners, init };\n})();');
 function fixture({ enabled = false, failure = null, running = null, saved = {}, sendMessage = null } = {}) {
     const elements = new Map(), calls = [], timers = [], stored = { ...saved }, attrs = new Map(), storageListeners = [], observers = [];
     const element = tag => ({ tag, id: '', style: {}, dataset: {}, children: [], attributes: new Map(), classes: new Set(), isConnected: true,
         focus() { document.activeElement = this; },
+        showModal() { this.open = true; }, close() { this.open = false; },
         contains(node) { for (; node; node = node.parentElement) if (node === this) return true; return false; },
         get classList() { return { add: name => this.classes.add(name), remove: name => this.classes.delete(name), contains: name => this.classes.has(name),
-            toggle: (name, active) => active ? this.classes.add(name) : this.classes.delete(name) }; },
+            toggle: (name, active = !this.classes.has(name)) => { if (active) this.classes.add(name); else this.classes.delete(name); return active; } }; },
         appendChild(child) {
             if (child.parentElement) child.parentElement.children = child.parentElement.children.filter(node => node !== child);
             this.children.push(child); child.parentElement = this; elements.set(child.id, child);
         },
+        insertBefore(child, before) { this.appendChild(child); this.children.pop(); this.children.splice(this.children.indexOf(before), 0, child); },
         remove() { this.removed = true; elements.delete(this.id); },
         setAttribute(key, value) { this.attributes.set(key, value); }, getAttribute(key) { return this.attributes.get(key) ?? null; },
-        querySelector() { return null; }, querySelectorAll() { return []; }, closest() { return null; }
+        querySelector(selector) { return selector === '.ytot-settings-content' ? (this.content ||= { scrollTop: 0 }) : null; }, querySelectorAll() { return []; }, closest() { return null; }
     });
-    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label', 'ytot-search-result', 'ytot-autofind', 'ytot-dropdown', 'ytot-close', 'ytot-url', 'ytot-go', 'ytot-autosync', 'ytot-quality']) elements.set(id, element('div'));
+    for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-emotes-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label', 'ytot-search-result', 'ytot-autofind', 'ytot-dropdown', 'ytot-close', 'ytot-url', 'ytot-go', 'ytot-autosync', 'ytot-quality']) elements.set(id, element('div'));
+    for (const id of ['ytot-open-settings', 'ytot-settings-close', ...['playback', 'chat', 'extras'].flatMap(tab => [`ytot-tab-${tab}`, `ytot-panel-${tab}`])]) elements.set(id, element('div'));
+    for (const tab of ['playback', 'chat', 'extras']) {
+        const button = elements.get(`ytot-tab-${tab}`); button.dataset.ytotSettingsTab = tab;
+        button.closest = selector => selector === '[data-ytot-settings-tab]' ? button : null;
+    }
     if (running) attrs.set('data-ypft-vaft', running);
     const document = {
         body: element('body'), head: null,
@@ -55,14 +62,47 @@ function fixture({ enabled = false, failure = null, running = null, saved = {}, 
     vm.runInContext(source, context);
     return { api: context.window.testContent, document, player, element, elements, calls, timers, stored, local, attrs, storageListeners, observers, window: context.window, location: context.location };
 }
-test('menu explains opt-in reload and uses interruption-blocking terminology', () => {
+test('settings window explains opt-in reload and uses interruption-blocking terminology', () => {
     const f = fixture();
-    const menu = f.api.createNavButton().innerHTML;
+    const menu = f.api.createSettingsDialog().innerHTML;
     assert.match(menu, /Interruption blocking/);
     assert.match(menu, /ytot-badge">Experimental/);
     assert.match(menu, /Reload Twitch to apply/);
     assert.match(menu, /id="ytot-vaft" disabled/);
     assert.doesNotMatch(menu, /ad blocking/i);
+});
+test('YPFT uses the right navigation column before the account controls and keeps its accessible name', () => {
+    const f = fixture(), left = f.element('div'), right = f.element('div'), account = f.element('div'), user = f.element('button');
+    right.appendChild(account); account.appendChild(user);
+    right.querySelector = () => user;
+    f.document.querySelector = selector => selector === '.top-nav__menu > div:last-child' ? right : left;
+    assert.equal(f.api.navParent(), right);
+    const nav = f.api.createNavButton(); f.api.placeNavButton(nav, f.api.navParent());
+    assert.deepEqual(right.children, [nav, account]); assert.equal(left.children.length, 0);
+    assert.match(nav.innerHTML, /ytot-label">YPFT</);
+    assert.match(nav.innerHTML, /aria-label="YouTube Player for Twitch"/);
+    assert.doesNotMatch(nav.innerHTML, /ytot-icon/);
+    assert.match(nav.innerHTML, /aria-haspopup="dialog"/);
+    assert.doesNotMatch(nav.innerHTML, /Extra emotes/);
+});
+test('emote settings control persists its setting independently of floating chat', () => {
+    const f = fixture(); let enabled = true, saves = 0;
+    f.window.__ypftEmotes = { enabled: () => enabled, configure(value, save) { enabled = value; if (save) saves++; } };
+    f.api.setupSettingsListeners();
+    const toggle = f.elements.get('ytot-emotes-toggle');
+    assert.equal(toggle.checked, true); assert.equal(toggle.disabled, false);
+    toggle.onchange({ target: { checked: false } });
+    assert.equal(enabled, false); assert.equal(saves, 1);
+});
+test('YPFT label stays unchanged after initialization, activation and restoring Twitch', () => {
+    const f = fixture(), label = f.element('span'), toggle = f.elements.get('ytot-toggle');
+    toggle.querySelector = selector => selector === '.ytot-label' ? label : null;
+    for (const active of [false, true, false]) {
+        f.api.updateToggleButton(active);
+        assert.equal(label.textContent, 'YPFT');
+        assert.equal(toggle.classes.has('active'), active);
+        assert.equal(f.elements.get('ytot-actions').hidden, !active);
+    }
 });
 test('toggle confirms preference and registration before forcing reload, preserving active YouTube state', async () => {
     const f = fixture();
@@ -109,17 +149,97 @@ test('quality preference preserves other Twitch keys and never writes YouTube se
     assert.equal(f.local.size, 1);
 });
 
-test('additional settings is a collapsed native disclosure grouping every optional feature', () => {
+test('dropdown keeps stream search and selection while optional controls are grouped in modal tabs', () => {
     const menu = fixture().api.createNavButton().innerHTML;
-    const start = menu.indexOf('<details class="ytot-additional-settings"');
-    const end = menu.indexOf('<!-- Actions -->');
-    assert.ok(start > 0 && end > start);
-    assert.doesNotMatch(menu.slice(start, menu.indexOf('>', start)), /\bopen\b/);
-    const settings = menu.slice(start, end);
-    for (const id of ['ytot-autosync', 'ytot-quality', 'ytot-chat-toggle', 'ytot-hide-extensions', 'ytot-vaft'])
-        assert.ok(settings.includes('id="' + id + '"'), id);
-    assert.match(settings, /Additional settings/);
-    assert.equal((settings.match(/class="ytot-settings-group"/g) || []).length, 3);
+    const dialog = fixture().api.createSettingsDialog(), settings = dialog.innerHTML;
+    for (const id of ['ytot-autofind', 'ytot-history-section', 'ytot-url', 'ytot-go', 'ytot-sync-now', 'ytot-restore', 'ytot-open-settings'])
+        assert.ok(menu.includes('id="' + id + '"'), id);
+    for (const id of ['ytot-autosync', 'ytot-quality', 'ytot-emotes-toggle', 'ytot-chat-toggle', 'ytot-hide-extensions', 'ytot-vaft', 'ytot-theatre']) {
+        assert.ok(settings.includes('id="' + id + '"'), id); assert.ok(!menu.includes('id="' + id + '"'), id);
+    }
+    assert.equal(dialog.tag, 'dialog'); assert.equal(dialog.getAttribute('aria-labelledby'), 'ytot-settings-title');
+    assert.equal((settings.match(/role="tabpanel"/g) || []).length, 3);
+    assert.match(settings, /aria-orientation="vertical"/);
+    assert.doesNotMatch(menu, /<details/);
+});
+
+test('invalid URL feedback identifies and focuses the field, then clears while correcting it', () => {
+    const f = fixture(); f.api.setupEventListeners();
+    const input = f.elements.get('ytot-url');
+    input.value = 'bad url'; f.elements.get('ytot-go').onclick();
+    assert.equal(input.getAttribute('aria-invalid'), 'true');
+    assert.equal(f.document.activeElement, input);
+    assert.match(f.elements.get('ytot-status').textContent, /YouTube.*URL/);
+    assert.match(f.api.createNavButton().innerHTML, /aria-describedby="ytot-status"/);
+    input.value = 'https://www.youtube.com/watch?v=abcdefghijk'; input.oninput();
+    assert.equal(input.getAttribute('aria-invalid'), 'false');
+    assert.equal(f.elements.get('ytot-status').textContent, '');
+    f.elements.get('ytot-go').onclick();
+    assert.equal(f.api.state.youtubeVideoId, 'abcdefghijk');
+});
+
+test('settings opens lazily, switches accessible tabs by keyboard, and releases its dialog on close', () => {
+    const f = fixture(); f.api.setupEventListeners();
+    assert.equal(f.api.memory().settings, false); assert.equal(f.elements.has('ytot-settings-dialog'), false);
+    f.elements.get('ytot-dropdown').classes.add('visible');
+    f.elements.get('ytot-open-settings').onclick();
+    const dialog = f.elements.get('ytot-settings-dialog');
+    assert.equal(dialog.open, true); assert.equal(f.elements.get('ytot-dropdown').classes.has('visible'), false);
+    assert.equal(f.document.activeElement, f.elements.get('ytot-tab-playback'));
+    assert.equal(f.elements.get('ytot-panel-chat').hidden, true);
+    let prevented = 0;
+    dialog.onkeydown({ target: f.elements.get('ytot-tab-playback'), key: 'ArrowRight', preventDefault() { prevented++; } });
+    assert.equal(prevented, 1); assert.equal(f.document.activeElement, f.elements.get('ytot-tab-chat'));
+    assert.equal(f.elements.get('ytot-panel-chat').hidden, false);
+    assert.equal(f.elements.get('ytot-tab-chat').getAttribute('aria-selected'), 'true');
+    assert.equal(f.elements.get('ytot-tab-playback').tabIndex, -1);
+    f.api.selectSettingsTab('invalid'); assert.equal(f.elements.get('ytot-panel-chat').hidden, false);
+    f.api.openSettings(); assert.equal(f.elements.get('ytot-settings-dialog'), dialog);
+    dialog.oncancel({ preventDefault() { prevented++; } });
+    assert.equal(dialog.open, false); assert.equal(dialog.removed, true); assert.equal(f.api.memory().settings, false);
+    assert.equal(f.document.activeElement, f.elements.get('ytot-toggle'));
+    f.api.openSettings(); const next = f.elements.get('ytot-settings-dialog');
+    assert.notEqual(next, dialog); assert.equal(f.elements.get('ytot-panel-chat').hidden, false);
+    dialog.onclose({ target: dialog }); assert.equal(next.open, true);
+    f.elements.get('ytot-settings-close').onclick(); assert.equal(f.api.memory().settings, false);
+});
+
+test('settings edits persist across window recreation, and navigation closes the window', async () => {
+    const f = fixture(); f.api.openSettings();
+    f.elements.get('ytot-autosync').onchange({ target: { checked: true } });
+    f.elements.get('ytot-hide-extensions').onchange({ target: { checked: true } });
+    f.api.closeSettings(); f.api.openSettings();
+    assert.equal(f.elements.get('ytot-autosync').checked, true);
+    assert.equal(f.elements.get('ytot-hide-extensions').checked, true);
+    assert.equal(f.stored.ytot_autosync, true); assert.equal(f.stored.ytot_hide_extensions, true);
+    const dialog = f.elements.get('ytot-settings-dialog');
+    f.window.location.pathname = '/other'; f.api.handleNavigation();
+    assert.equal(dialog.removed, true); assert.equal(f.api.memory().settings, false);
+    await Promise.resolve();
+});
+
+test('modal focus wraps at both ends and Escape closes without reaching Twitch shortcuts', () => {
+    const f = fixture(); f.api.openSettings();
+    const dialog = f.elements.get('ytot-settings-dialog'), first = f.elements.get('ytot-tab-playback'), last = f.elements.get('ytot-settings-close');
+    first.tabIndex = last.tabIndex = 0; first.getClientRects = last.getClientRects = () => [{}];
+    dialog.querySelectorAll = () => [first, last];
+    let prevented = 0, stopped = 0;
+    const key = (key, shiftKey = false) => dialog.onkeydown({ key, shiftKey, target: f.document.activeElement,
+        preventDefault() { prevented++; }, stopPropagation() { stopped++; } });
+    first.focus(); key('Tab', true); assert.equal(f.document.activeElement, last);
+    key('Tab'); assert.equal(f.document.activeElement, first);
+    key('Escape'); assert.equal(f.elements.has('ytot-settings-dialog'), false);
+    assert.equal(f.document.activeElement, f.elements.get('ytot-toggle'));
+    assert.equal(prevented, 3); assert.equal(stopped, 3);
+});
+
+test('initialization restores preferences when the settings window has never been mounted', async () => {
+    const f = fixture({ saved: { ytot_autosync: true, ytot_force_highest: true } });
+    f.elements.delete('ytot-autosync'); f.elements.delete('ytot-quality');
+    f.document.querySelector = selector => selector.includes('top-nav__menu') ? f.document.body : null;
+    await f.api.init();
+    assert.equal(f.api.state.autoSyncEnabled, true); assert.equal(f.api.state.forceHighestQuality, true);
+    assert.equal(f.api.memory().settings, false);
 });
 test('native extension visibility restores local preference, changes across tabs and switches off cleanly', async () => {
     const f = fixture({ saved: { ytot_hide_extensions: true } });
@@ -141,7 +261,7 @@ test('delayed visibility restore does not overwrite a newer local choice', async
     assert.equal(f.attrs.has('data-ypft-hide-extensions'), false);
 });
 
-test('chat appearance follows enablement and collapses when turned off through the menu', () => {
+test('chat appearance follows enablement in settings and preserves values when turned off', () => {
     const f = fixture();
     let settings = { enabled: false, fullscreenOnly: true, opacity: 70, fontSize: 14,
         color: '#18151f', compact: false, clickThrough: false };
@@ -154,21 +274,42 @@ test('chat appearance follows enablement and collapses when turned off through t
         }
     };
     const appearance = f.elements.get('ytot-chat-settings');
-    appearance.open = true;
     f.api.setupChatControls();
     assert.equal(appearance.hidden, true);
-    assert.equal(appearance.open, false);
     const toggle = f.elements.get('ytot-chat-toggle');
     toggle.onchange({ target: { checked: true } });
     assert.equal(appearance.hidden, false);
-    appearance.open = true;
     f.elements.get('ytot-chat-opacity').onchange({ target: { value: '35' } });
     assert.equal(settings.opacity, 35);
-    assert.equal(appearance.open, true);
     toggle.onchange({ target: { checked: false } });
     assert.equal(appearance.hidden, true);
-    assert.equal(appearance.open, false);
     assert.equal(settings.opacity, 35);
+});
+
+test('appearance input previews changes without writing preferences until committed', () => {
+    const f = fixture();
+    let settings = { enabled: true, fullscreenOnly: true, opacity: 70, fontSize: 14,
+        color: '#18151f', compact: false, clickThrough: false }, saves = 0;
+    for (const id of ['ytot-chat-preview', 'ytot-chat-opacity-value', 'ytot-chat-font-value']) {
+        f.elements.set(id, f.element('div'));
+    }
+    f.window.__ypftChat = {
+        settings: () => ({ ...settings }),
+        configure(value, save) { settings = value; if (save) saves++; f.api.renderChatControls(); }
+    };
+    f.api.setupChatControls();
+    const opacity = f.elements.get('ytot-chat-opacity');
+    opacity.oninput({ target: { value: '35' } });
+    assert.equal(f.elements.get('ytot-chat-opacity-value').textContent, '35%');
+    assert.equal(settings.opacity, 70); assert.equal(saves, 0);
+    f.elements.get('ytot-chat-font').oninput({ target: { value: '20' } });
+    assert.equal(f.elements.get('ytot-chat-font-value').textContent, '20px');
+    assert.equal(settings.fontSize, 14); assert.equal(saves, 0);
+    opacity.onchange({ target: { value: '35' } });
+    assert.equal(settings.opacity, 35); assert.equal(saves, 1);
+    assert.equal(f.elements.get('ytot-chat-font-value').textContent, '14px');
+    f.api.closeSettings();
+    assert.equal(f.api.memory().settings, false);
 });
 
 test('theatre menu toggles Twitch without replacing YouTube or changing playback ownership', () => {
@@ -305,6 +446,7 @@ test('video URLs support shared, reordered, live, embed and Shorts links without
 test('history escapes quoted metadata and ignores malformed stored entries', async () => {
     const f = fixture({ saved: { ytot_history: [null, { videoId: '" onmouseover="bad' },
         { videoId: 'abcdefghijk', title: '" autofocus onfocus="bad <&', channel: 'Creator' }] } });
+    f.elements.get('ytot-dropdown').classes.add('visible');
     await f.api.renderHistory();
     const html = f.elements.get('ytot-history-section').innerHTML;
     assert.ok(html.includes('title="&quot; autofocus onfocus=&quot;bad &lt;&amp;"'));
@@ -323,6 +465,30 @@ test('concurrent history additions and pin changes preserve every entry', async 
     assert.equal(f.stored.ytot_history.length, 2);
     assert.equal(f.stored.ytot_history[0].videoId, 'abcdefghijk');
     assert.equal(f.stored.ytot_history[0].pinned, true);
+});
+
+test('closed menus release history rows without losing saved pins; a late read cannot rebuild closed UI', async () => {
+    const f = fixture({ saved: { ytot_history: [{ videoId: 'abcdefghijk', title: 'Saved', pinned: true }] } });
+    const container = f.elements.get('ytot-history-section'), dropdown = f.elements.get('ytot-dropdown');
+    await f.api.renderHistory(); assert.equal(container.innerHTML, '');
+    dropdown.classes.add('visible'); await f.api.renderHistory(); assert.match(container.innerHTML, /Saved/);
+    f.api.closeDropdown(); assert.equal(container.innerHTML, '');
+    dropdown.classes.add('visible');
+    const pending = f.api.renderHistory(); f.api.closeDropdown(); await pending;
+    assert.equal(container.innerHTML, '');
+    assert.equal(f.stored.ytot_history[0].pinned, true);
+    dropdown.classes.add('visible'); await f.api.renderHistory(); assert.match(container.innerHTML, /Saved/);
+});
+
+test('navigation and missing menu controls release references to replaced player and navigation nodes', () => {
+    const f = fixture();
+    f.api.updateToggleButton(false); f.api.renderTheatreControl();
+    assert.ok(f.api.memory().ui > 0); assert.ok(f.api.memory().theatre > 0);
+    f.window.location.pathname = '/other'; f.api.handleNavigation();
+    assert.equal(f.api.memory().ui, 0); assert.equal(f.api.memory().theatre, 0);
+    assert.ok(f.observers.every(observer => !observer.targets.includes(f.player)));
+    f.api.renderTheatreControl(); f.elements.delete('ytot-theatre'); f.api.renderTheatreControl();
+    assert.equal(f.api.memory().theatre, 0);
 });
 
 test('sync ignores duplicate clicks, resets speed, and cancels pending steps when playback changes', () => {
@@ -389,6 +555,7 @@ test('a setting changed while initialization loads is not overwritten by stored 
     const f = fixture({ saved: { ytot_autosync: true, ytot_force_highest: true } });
     f.document.querySelector = selector => selector.includes('top-nav__menu') ? f.document.body : null;
     const init = f.api.init();
+    f.api.setupSettingsListeners();
     f.elements.get('ytot-autosync').onchange({ target: { checked: false } });
     await init;
     assert.equal(f.api.state.autoSyncEnabled, false);
