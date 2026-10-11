@@ -146,7 +146,7 @@ or unrelated examples were changed in this pass.
 `build/latest`; generated outputs remain untracked. The workflow YAML parses.
 PR and main builds remain automatic; GitHub release creation now requires an
 explicit manual dispatch on main with `create_release` enabled. Chrome Web Store
-submission remains a separate manual operation.
+submission remains a separate manual operation in the Developer Dashboard.
 
 [Polished floating chat](qa/ypft-polish-overlay.png). The complete six-capture set
 is local review evidence in `.impeccable/review/polish/`.

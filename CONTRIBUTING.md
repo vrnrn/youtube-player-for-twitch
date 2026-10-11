@@ -7,7 +7,7 @@ npm run check
 npm run build
 ```
 
-For local installation, browser checks, and publishing instructions, see the [development guide](docs/development.md).
+For local installation, browser checks, and build and release instructions, see the [development guide](docs/development.md).
 
 Keep changes focused. Include reproduction steps for a fix and a screenshot for visible UI changes. Add regression coverage when changing playback, storage, or asynchronous behavior. Check the website at desktop and mobile widths when editing it.
 
