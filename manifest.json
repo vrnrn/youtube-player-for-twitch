@@ -10,6 +10,7 @@
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
+    "https://kick.com/*",
     "https://www.twitch.tv/*",
     "https://gql.twitch.tv/*",
     "https://api.betterttv.net/*",
@@ -29,6 +30,7 @@
         "twitch-directory.js",
         "twitch-emotes.js",
         "twitch-chat.js",
+        "kick-support.js",
         "twitch-content.js"
       ],
       "css": [

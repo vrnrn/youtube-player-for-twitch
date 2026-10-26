@@ -38,7 +38,7 @@ function makePage(contents, assignment = 'var ytInitialData') {
     return `<script>${lhs} = ${JSON.stringify(data)};</script>`;
 }
 
-function createBackground(fetchImpl, stored = {}) {
+function createBackground(fetchImpl, stored = {}, sender = {}) {
     const messageListeners = [];
     vm.runInNewContext(backgroundScript, {
         chrome: {
@@ -48,6 +48,7 @@ function createBackground(fetchImpl, stored = {}) {
                 async remove(keys) { for (const key of Array.isArray(keys) ? keys : [keys]) delete stored[key]; }
             } },
             runtime: {
+                id: 'ypft',
                 onMessage: {
                     addListener(listener) { messageListeners.push(listener); }
                 }
@@ -61,13 +62,57 @@ function createBackground(fetchImpl, stored = {}) {
     assert.ok(messageListeners.length, 'background script should register its message listeners');
     return request => new Promise((resolve, reject) => {
         try {
-            const keepsChannelOpen = messageListeners.some(listener => listener(request, {}, resolve) === true);
-            assert.equal(keepsChannelOpen, true, 'async message should keep the response channel open');
+            const keepsChannelOpen = messageListeners.some(listener => listener(request, sender, resolve) === true);
+            if (request.type !== 'GET_KICK_CHANNEL') assert.equal(keepsChannelOpen, true, 'async message should keep the response channel open');
         } catch (error) {
             reject(error);
         }
     });
 }
+
+test('Kick metadata is gated by opt-in and the top-level Twitch sender, with a fixed validated endpoint', async () => {
+    const requests = [];
+    const fetchKick = async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => ({ slug: 'creator', user: { profile_pic: 'https://files.kick.com/images/user/123/avatar.webp' }, livestream: { is_live: true, viewer_count: 543 } }) }; };
+    const sender = { id: 'ypft', frameId: 0, url: 'https://www.twitch.tv/creator' };
+    const saved = { ytot_kick_settings: { enabled: true } };
+    for (const denied of [{}, { ...sender, frameId: 1 }, { ...sender, id: 'other' }, { ...sender, url: 'https://kick.com/creator' }]) {
+        const send = createBackground(fetchKick, saved, denied);
+        assert.match((await send({ type: 'GET_KICK_CHANNEL', channel: 'creator' })).error, /only available on Twitch/);
+    }
+    const disabled = createBackground(fetchKick, {}, sender);
+    assert.match((await disabled({ type: 'GET_KICK_CHANNEL', channel: 'creator' })).error, /Enable experimental/);
+    const send = createBackground(fetchKick, saved, sender);
+    for (const channel of ['', null, '../auth', 'creator?token=x', 'https://kick.com/creator', 'x'.repeat(26)])
+        assert.match((await send({ type: 'GET_KICK_CHANNEL', channel })).error, /Invalid/);
+    assert.equal(requests.length, 0);
+    const result = await send({ type: 'GET_KICK_CHANNEL', channel: 'creator' });
+    assert.equal(result.live, true); assert.equal(result.viewers, 543);
+    assert.equal(result.avatar, 'https://files.kick.com/images/user/123/avatar.webp');
+    assert.equal(requests[0].url, 'https://kick.com/api/v2/channels/creator');
+    assert.equal(requests[0].options.credentials, 'omit'); assert.equal(requests[0].options.referrerPolicy, 'no-referrer');
+});
+test('Kick channel metadata permits only HTTPS profile icons on the Kick image CDN', async () => {
+    const sender = { id: 'ypft', frameId: 0, url: 'https://www.twitch.tv/creator' }, saved = { ytot_kick_settings: { enabled: true } };
+    for (const profile_pic of [null, '', 'http://files.kick.com/image.webp', 'https://files.kick.com.evil.test/image.webp',
+        'https://user:secret@files.kick.com/image.webp', 'https://files.kick.com:444/image.webp', 'data:image/svg+xml,unsafe', 'https://example.test/image.png']) {
+        const send = createBackground(async () => ({ ok: true, json: async () => ({ slug: 'creator', user: { profile_pic }, livestream: { is_live: true } }) }), saved, sender);
+        const result = await send({ type: 'GET_KICK_CHANNEL', channel: 'creator' });
+        assert.equal(result.live, true); assert.equal(result.avatar, null);
+    }
+});
+
+test('Kick metadata distinguishes offline from blocked, malformed or mismatched responses', async () => {
+    const sender = { id: 'ypft', frameId: 0, url: 'https://www.twitch.tv/creator' }, saved = { ytot_kick_settings: { enabled: true } };
+    const request = { type: 'GET_KICK_CHANNEL', channel: 'creator' };
+    const offline = createBackground(async () => ({ ok: true, json: async () => ({ slug: 'creator', livestream: null }) }), saved, sender);
+    assert.equal((await offline(request)).live, false);
+    for (const data of [{}, { slug: 'creator' }, { slug: 'wrong', livestream: null }, { slug: 'creator', livestream: {} }]) {
+        const send = createBackground(async () => ({ ok: true, json: async () => data }), saved, sender);
+        assert.match((await send(request)).error, /unavailable/);
+    }
+    const blocked = createBackground(async () => ({ ok: false, status: 403 }), saved, sender);
+    assert.match((await blocked(request)).error, /unavailable/);
+});
 
 const globalCatalogs = {
     'https://api.betterttv.net/3/cached/emotes/global': [

@@ -61,12 +61,13 @@ Open `http://127.0.0.1:4185/`. Check the homepage, demo controls, privacy page, 
 | File | Responsibility |
 | :--- | :--- |
 | [`manifest.json`](../manifest.json) | Manifest V3 configuration, permissions and content-script order. |
-| [`background.js`](../background.js) | YouTube search, cached public global/channel emote catalogs and optional VAFT script registration. |
+| [`background.js`](../background.js) | YouTube search, public Kick channel status, cached emote catalogs and optional VAFT script registration. |
 | [`twitch-content.js`](../twitch-content.js) | Navigation menu, stream discovery, YouTube iframe, history and sync controls. |
 | [`twitch-playback.js`](../twitch-playback.js) | Twitch playback ownership and pause, mute and volume restoration. |
 | [`twitch-directory.js`](../twitch-directory.js) | Default viewer-count sorting for channels and categories. |
 | [`twitch-emotes.js`](../twitch-emotes.js) | Global and channel third-party emotes in native and floating chat. |
 | [`twitch-chat.js`](../twitch-chat.js) | Floating chat, appearance settings and fullscreen coordination. |
+| [`kick-support.js`](../kick-support.js) | Experimental Kick settings, sidebar pins, stream/chat embeds and local pseudo channels. |
 | [`twitch-styles.css`](../twitch-styles.css) | Extension menu, player and chat styling. |
 | [`vendor/vaft/`](../vendor/vaft/) and [`vaft-main.js`](../vaft-main.js) | Pinned upstream VAFT and its generated integration adapter. |
 | [`tests/`](../tests/) and [`scripts/`](../scripts/) | Automated verification and release packaging. |

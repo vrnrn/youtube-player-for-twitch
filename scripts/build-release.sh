@@ -19,6 +19,7 @@ zip -X -q release.zip \
     twitch-directory.js \
     twitch-emotes.js \
     twitch-chat.js \
+    kick-support.js \
     twitch-content.js \
     twitch-styles.css \
     icons/icon16.png \

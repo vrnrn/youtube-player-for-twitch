@@ -1,4 +1,4 @@
-// Isolated-world playback owner. The YouTube iframe stays in a stable body portal
+// Isolated-world playback owner. External stream iframes stay in a stable body portal
 // when Twitch replaces its React player/container. Only Twitch's main video is controlled.
 (() => {
     'use strict';
@@ -10,6 +10,8 @@
     let observedPlayer = null;
     let timer = null;
     let frame = null;
+    let provider = 'youtube';
+    let anchor = null;
     let heldVideos = new WeakSet();
     // The outer .video-player can retain a width-based 16:9 height even when
     // Twitch clips its inner viewport on wide windows. Query in priority order;
@@ -27,15 +29,15 @@
     function sync() {
         if (!overlay) return;
         // An attribute is a nonprivileged ownership signal, never a Chrome API bridge.
-        if (document.documentElement.getAttribute('data-ypft-playback') !== 'youtube')
-            document.documentElement.setAttribute('data-ypft-playback', 'youtube');
-        const player = container();
+        if (document.documentElement.getAttribute('data-ypft-playback') !== provider)
+            document.documentElement.setAttribute('data-ypft-playback', provider);
+        const player = anchor || container();
         if (player !== observedPlayer) {
             resizeObserver?.disconnect();
             observedPlayer = player;
             if (player) resizeObserver?.observe(player);
         }
-        hold(player?.querySelector('video'));
+        hold(video());
         if (document.fullscreenElement === overlay) {
             overlay.style.visibility = 'visible';
             return;
@@ -57,7 +59,9 @@
     function onMedia(event) {
         if (overlay && (event.target === video() || heldVideos.has(event.target))) hold(event.target);
     }
-    function own(wrapper, restored = null) {
+    function own(wrapper, restored = null, source = 'youtube', target = null) {
+        provider = source === 'kick' ? 'kick' : 'youtube';
+        anchor = target;
         if (overlay) {
             overlay = wrapper;
             sync();
@@ -66,7 +70,7 @@
         overlay = wrapper;
         if (restored && typeof restored.paused === 'boolean' && typeof restored.muted === 'boolean' &&
             Number.isFinite(restored.volume) && restored.volume >= 0 && restored.volume <= 1) saved = { ...restored };
-        document.documentElement.setAttribute('data-ypft-playback', 'youtube');
+        document.documentElement.setAttribute('data-ypft-playback', provider);
         resizeObserver = new ResizeObserver(schedule);
         sync();
         observer = new MutationObserver(records => {
@@ -86,6 +90,7 @@
     function release({ navigation = false } = {}) {
         const current = video();
         overlay = null;
+        anchor = null;
         document.documentElement.removeAttribute('data-ypft-playback');
         observer?.disconnect();
         observer = null;

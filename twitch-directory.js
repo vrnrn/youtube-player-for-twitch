@@ -7,7 +7,7 @@
     function defaultSortUrl(value) {
         const url = new URL(value);
         if (!/^\/directory(?:\/(?:all|gaming|irl|music|creative|esports)|\/(?:category|game)\/[^/]+)?\/?$/.test(url.pathname) ||
-            url.searchParams.has('sort')) return null;
+            url.searchParams.has('sort') || url.searchParams.has('ypft-kick')) return null;
         url.searchParams.set('sort', 'VIEWER_COUNT');
         return url.href;
     }

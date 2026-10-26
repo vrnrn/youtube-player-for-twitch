@@ -11,7 +11,7 @@
     const workerDescriptor = Object.getOwnPropertyDescriptor(window, 'Worker');
     const api = Object.freeze({
         canStart: () => status === 'starting',
-        ownsPlayback: () => document.documentElement?.getAttribute('data-ypft-playback') === 'youtube',
+        ownsPlayback: () => ['youtube', 'kick'].includes(document.documentElement?.getAttribute('data-ypft-playback')),
         report(value) { if (status !== 'error') status = value; publish(); },
         fail() {
             status = 'error';

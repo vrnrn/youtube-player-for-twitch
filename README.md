@@ -50,6 +50,8 @@ The extension pauses and mutes the underlying Twitch player. **Restore Twitch** 
 
 Floating chat is **read-only** and starts off by default. It works when Twitch chat starts collapsed: the extension initializes the native feed and restores the collapsed sidebar. Open normal Twitch chat to send messages and access moderation controls. [Explore chat and player settings →](docs/usage.md#floating-chat)
 
+**Kick support (Experimental)** is off by default under **Settings → Kick**. Enable it to substitute a Kick channel URL for the Twitch player, or pin Kick channels alongside Twitch's Followed Channels. Only live Kick pins appear in the sidebar, checked every 10 minutes. Pins open a local channel view with Kick playback and chat, including channels without a Twitch account. [Kick setup and limitations →](docs/usage.md#experimental-kick-support)
+
 <details>
 <summary><strong>Experimental: Twitch interruption blocking</strong></summary>
 

@@ -120,7 +120,7 @@
 
                 <!-- Manual Input -->
                 <div class="ytot-dropdown-body">
-                    <input type="url" id="ytot-url" aria-label="YouTube video or livestream URL" aria-describedby="ytot-status" placeholder="Paste YouTube URL" spellcheck="false" autocomplete="off" />
+                    <input type="url" id="ytot-url" aria-label="${window.__ypftKick?.enabled() ? 'YouTube video or Kick channel URL' : 'YouTube video or livestream URL'}" aria-describedby="ytot-status" placeholder="${window.__ypftKick?.enabled() ? 'Paste YouTube or Kick URL' : 'Paste YouTube URL'}" spellcheck="false" autocomplete="off" />
                     <button class="ytot-go" id="ytot-go">Go</button>
                 </div>
 
@@ -139,7 +139,7 @@
         return wrapper;
     }
 
-    const SETTINGS_TABS = ['playback', 'chat', 'extras'];
+    const SETTINGS_TABS = ['playback', 'chat', 'extras', 'kick'];
     let settingsDialog = null;
     let settingsTab = 'playback';
 
@@ -156,6 +156,7 @@
                         <button type="button" role="tab" id="ytot-tab-playback" data-ytot-settings-tab="playback" aria-controls="ytot-panel-playback">${menuIcon('playback')}<span>Playback</span></button>
                         <button type="button" role="tab" id="ytot-tab-chat" data-ytot-settings-tab="chat" aria-controls="ytot-panel-chat">${menuIcon('chat')}<span>Chat</span></button>
                         <button type="button" role="tab" id="ytot-tab-extras" data-ytot-settings-tab="extras" aria-controls="ytot-panel-extras">${menuIcon('settings')}<span>Player extras</span></button>
+                        <button type="button" role="tab" id="ytot-tab-kick" data-ytot-settings-tab="kick" aria-controls="ytot-panel-kick">${menuIcon('pin')}<span>Kick</span></button>
                     </nav>
                     <p class="ytot-settings-note">Settings save automatically.</p>
                 </aside>
@@ -210,6 +211,18 @@
                                 <div id="ytot-vaft-status" class="ytot-vaft-status" role="status" aria-live="polite">Checking setting…</div>
                                 <button type="button" id="ytot-vaft-reload" class="ytot-vaft-reload" hidden>Reload Twitch to apply</button>
                             </div>
+                        </section>
+                        <section class="ytot-settings-panel" id="ytot-panel-kick" role="tabpanel" aria-labelledby="ytot-tab-kick" tabindex="0" hidden>
+                            <h2>Kick <span class="ytot-badge">Experimental</span></h2><p class="ytot-settings-intro">Watch Kick streams inside Twitch and pin channels in the sidebar.</p>
+                            <div class="ytot-settings-group"><label class="ytot-option"><input type="checkbox" role="switch" id="ytot-kick-enabled" disabled /><span class="ytot-option-copy"><span class="ytot-option-title">Enable Kick support</span><span class="ytot-option-description">Off by default. Kick embeds, chat sign-in and channel status may be unavailable.</span></span></label></div>
+                            <div id="ytot-kick-options" hidden>
+                                <div class="ytot-settings-group"><label class="ytot-option"><input type="checkbox" role="switch" id="ytot-kick-chat-enabled" /><span class="ytot-option-copy"><span class="ytot-option-title">Show Kick chat</span><span class="ytot-option-description">Use Kick's chat beside the stream. On a Twitch channel, switch between Kick and Twitch chat.</span></span></label></div>
+                                <h3>Pinned channels</h3><p class="ytot-settings-intro">Live pins appear alongside Twitch's Followed Channels. Status is checked every 10 minutes. Open any saved pin here to watch with Kick chat. Up to 30 pins.</p>
+                                <form id="ytot-kick-pin-form" class="ytot-kick-pin-form"><label for="ytot-kick-channel">Kick channel name or URL</label><div><input type="text" id="ytot-kick-channel" placeholder="https://kick.com/channel" autocomplete="off" spellcheck="false" aria-describedby="ytot-kick-status" /><button type="submit" id="ytot-kick-pin">Pin channel</button></div></form>
+                                <div id="ytot-kick-pins"></div>
+                                <h3>Substitute a stream</h3><p class="ytot-settings-intro">Open a Twitch channel, then paste a Kick channel URL into the YPFT menu. Restore Twitch returns to its player. Auto-sync applies to YouTube only.</p>
+                            </div>
+                            <p id="ytot-kick-status" role="status" aria-live="polite"></p>
                         </section>
                     </div>
                 </div>
@@ -393,7 +406,7 @@
         if (isActive) {
             toggle?.classList.add('active');
             if (restore) restore.style.display = 'block';
-            if (syncNow) syncNow.style.display = 'block';
+            if (syncNow) syncNow.style.display = state.youtubeVideoId ? 'block' : 'none';
         } else {
             toggle?.classList.remove('active');
             if (restore) restore.style.display = 'none';
@@ -779,6 +792,7 @@
             updateStatus('Open a Twitch channel with a player first.', 'error');
             return;
         }
+        window.__ypftKick?.stop({ forget: true });
         searchGeneration++;
         const searchButton = document.getElementById('ytot-autofind');
         if (searchButton) searchButton.disabled = false;
@@ -980,11 +994,18 @@
         close.onclick = () => closeDropdown(true);
 
         const handleGo = () => {
+            const kick = window.__ypftKick;
+            const kickChannel = kick?.parseChannel(urlInput.value);
+            if (kickChannel && /^(?:https?:\/\/)?(?:www\.)?kick\.com\//i.test(urlInput.value.trim())) {
+                urlInput.setAttribute('aria-invalid', String(!kick.enabled()));
+                if (!kick.enabled()) { updateStatus('Enable Kick support in Settings → Kick (Experimental) first.', 'error'); return; }
+                kick.play(kickChannel); closeDropdown(true); return;
+            }
             const videoId = extractVideoId(urlInput.value);
             urlInput.setAttribute('aria-invalid', String(!videoId));
             if (videoId) injectYouTube(videoId);
             else {
-                updateStatus('Enter a valid YouTube video or livestream URL.', 'error');
+                updateStatus(kick?.enabled() ? 'Enter a valid YouTube or Kick channel URL.' : 'Enter a valid YouTube video or livestream URL.', 'error');
                 urlInput.focus();
             }
         };
@@ -999,7 +1020,7 @@
             if (e.key === 'Enter') handleGo();
         };
 
-        restore.onclick = () => removeYouTube(false); // Explicit removal
+        restore.onclick = () => window.__ypftKick?.active() ? window.__ypftKick.restore() : removeYouTube(false);
         syncNowBtn.onclick = syncNow;
         document.getElementById('ytot-open-settings').onclick = openSettings;
     }
@@ -1012,6 +1033,7 @@
     }
 
     function setupSettingsListeners() {
+        window.__ypftKick?.setupSettings();
         const emotesToggle = document.getElementById('ytot-emotes-toggle');
         emotesToggle.disabled = !window.__ypftEmotes;
         emotesToggle.onchange = event => window.__ypftEmotes?.configure(event.target.checked, true);
@@ -1146,7 +1168,7 @@
         renderPlaybackControls();
         if (state.forceHighestQuality) startQualityEnforcement();
         else stopQualityEnforcement();
-        updateToggleButton(!!state.youtubeVideoId);
+        updateToggleButton(!!state.youtubeVideoId || !!window.__ypftKick?.active());
         if (state.autoSyncEnabled && state.youtubeVideoId) startAutoSync();
         else stopAutoSync();
 
@@ -1161,7 +1183,7 @@
             if (validVideoId(activeStream)) {
                 Logger.log('Restoring active stream:', activeStream);
                 const restoreWhenReady = (attempt = 0) => {
-                    if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId) return;
+                    if (generation !== initGeneration || channel !== getTwitchChannel() || state.youtubeVideoId || window.__ypftKick?.active()) return;
                     if (window.__ypftPlayback.container()) injectYouTube(activeStream, null, restoredPlayback);
                     else if (attempt < 40) restoreTimeout = setTimeout(() => {
                         restoreTimeout = null;
@@ -1253,6 +1275,7 @@
 
     function refreshPage() {
         handleNavigation();
+        window.__ypftKick?.sync();
         window.__ypftChat?.sync();
         updateSettingsOrientation();
         if (document.visibilityState === 'hidden') { closeSettings(false); closeDropdown(); releaseTheatreControl(); return; }
@@ -1267,6 +1290,14 @@
     setInterval(refreshPage, 2000);
     document.addEventListener('visibilitychange', refreshPage);
 
+    window.__ypftKick?.connect({ beforePlay: () => removeYouTube(false), changed: () => {
+        updateToggleButton(!!state.youtubeVideoId || !!window.__ypftKick?.active());
+        const input = document.getElementById('ytot-url');
+        if (input) {
+            input.placeholder = window.__ypftKick?.enabled() ? 'Paste YouTube or Kick URL' : 'Paste YouTube URL';
+            input.setAttribute('aria-label', window.__ypftKick?.enabled() ? 'YouTube video or Kick channel URL' : 'YouTube video or livestream URL');
+        }
+    } });
     setupGlobalListeners();
     scheduleCheck(1000);
 

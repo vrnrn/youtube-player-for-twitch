@@ -37,6 +37,17 @@ function fixture(initial = {}) {
         sync() { for (const fn of intervals.values()) fn(); }, disappear() { player = null; }
     };
 }
+test('Kick uses its own anchor while holding Twitch playback and releases every resource', () => {
+    const f = fixture({ paused: false, muted: false, volume: 0.4 });
+    const anchor = { getBoundingClientRect: () => ({ left: 240, top: 150, width: 800, height: 450 }) };
+    f.owner.own(f.element, null, 'kick', anchor);
+    assert.equal(f.attrs.get('data-ypft-playback'), 'kick');
+    assert.equal(f.element.style.left, '240px'); assert.equal(f.element.style.width, '800px');
+    assert.equal(f.resizeObservers[0].target, anchor);
+    assert.equal(f.video.muted, true); assert.equal(f.video.paused, true);
+    f.owner.release(); assert.equal(f.video.paused, false); assert.equal(f.video.muted, false);
+    assert.equal(f.intervals.size, 0); assert.equal(f.events.size, 0);
+});
 test('YouTube owns only Twitch media and restores prior pause, mute and volume', () => {
     for (const paused of [true, false]) for (const muted of [true, false]) {
         const f = fixture({ paused, muted, volume: 0.23 });

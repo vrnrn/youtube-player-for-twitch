@@ -1,5 +1,5 @@
 /* YouTube Player for Twitch: shared tokens are scoped to extension surfaces. */
-:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root) {
+:is(#ytot-nav-wrapper, #ytot-settings-dialog, #ytot-chat-root, #ytot-kick-sidebar, #ytot-kick-page, #ytot-kick-chat) {
     --ytot-bg: #18181b;
     --ytot-rail: #25252b;
     --ytot-surface: #202024;
@@ -208,6 +208,71 @@
 .ytot-vaft-status[data-state="error"]::before { background: var(--ytot-danger); }
 #ytot-vaft-reload { margin-top: 12px; }
 
+/* Experimental Kick controls use the same settings rows and native sidebar density. */
+.ytot-kick-pin-form { margin: 16px 0; }
+.ytot-kick-pin-form label { display: block; margin-bottom: 8px; font-size: 13px; }
+.ytot-kick-pin-form > div { display: flex; gap: 8px; }
+.ytot-kick-pin-form input { min-width: 0; flex: 1; padding: 9px 12px; border: 1px solid var(--ytot-control-line); border-radius: 6px; background: var(--ytot-field-bg); color: var(--ytot-text); font-size: 13px; }
+.ytot-kick-pin-form input::placeholder { color: var(--ytot-muted); opacity: 1; }
+.ytot-kick-pin-form input[aria-invalid="true"] { border-color: var(--ytot-danger); }
+.ytot-kick-pin-form button { padding: 9px 12px; border: 0; border-radius: 6px; background: var(--ytot-accent); color: var(--ytot-accent-ink); font-size: 13px; font-weight: 650; }
+.ytot-kick-pin-form button:hover { background: var(--ytot-accent-hover); }
+.ytot-kick-pin-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; border-bottom: 1px solid var(--ytot-line); }
+.ytot-kick-pin-row a { color: var(--ytot-accent); overflow-wrap: anywhere; }
+.ytot-kick-pin-row button { flex-shrink: 0; padding: 7px 10px; border: 0; border-radius: 6px; background: var(--ytot-hover); color: var(--ytot-text); font-size: 12px; }
+.ytot-kick-pin-row button:hover { background: var(--ytot-hover-strong); }
+#ytot-kick-status { margin-top: 12px; color: var(--ytot-muted); font-size: 12px; overflow-wrap: anywhere; }
+:is(#ytot-kick-sidebar, #ytot-kick-page, #ytot-kick-chat) { box-sizing: border-box; color: var(--ytot-text); font-size: 13px; line-height: 1.5; }
+:is(#ytot-kick-sidebar, #ytot-kick-page, #ytot-kick-chat) * { box-sizing: border-box; }
+:is(#ytot-kick-sidebar, #ytot-kick-page, #ytot-kick-chat, #ytot-kick-pins) :is(a, button):focus-visible { outline: 2px solid var(--ytot-accent); outline-offset: -2px; }
+#ytot-kick-sidebar { padding: 0; }
+#ytot-kick-followed > h3 { padding: 12px 10px 8px; margin: 0; color: var(--color-text-base, #efeff1); font: 650 13px/1.5 system-ui, sans-serif; }
+#ytot-kick-sidebar a { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 5px 8px; background: transparent; color: var(--color-text-base, var(--ytot-text)); text-decoration: none; }
+.ytot-kick-avatar { position: relative; display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; overflow: hidden; border-radius: 50%; background: var(--ytot-accent-subtle); color: var(--ytot-accent); font-size: 11px; font-weight: 650; }
+.ytot-kick-avatar img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; background: var(--ytot-rail); }
+.ytot-kick-channel-copy { flex: 1; min-width: 0; }
+.ytot-kick-channel-name, .ytot-kick-channel-status { display: block; }
+.ytot-kick-channel-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; line-height: 1.1; }
+.ytot-kick-channel-status { color: var(--color-text-alt-2, var(--ytot-muted)); font-size: 12px; line-height: 1.5; }
+.ytot-kick-viewers { display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+.ytot-kick-viewers::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--color-fill-live, #eb0400); }
+.side-nav--collapsed #ytot-kick-followed > h3, .side-nav--collapsed #ytot-kick-sidebar :is(.ytot-kick-channel-copy, .ytot-kick-viewers) { display: none; }
+.side-nav--collapsed #ytot-kick-sidebar a { min-height: 38px; padding-block: 4px; }
+.ytot-kick-page-host { position: relative; }
+.ytot-kick-page-host > :not(#ytot-kick-page) { visibility: hidden; pointer-events: none; }
+#ytot-kick-page { position: absolute; inset: 0; display: flex; overflow: auto; background: var(--ytot-bg); }
+.ytot-kick-watch { flex: 1; min-width: 0; overflow: auto; }
+.ytot-kick-channel-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; }
+.ytot-kick-channel-header h1 { margin: 0; color: var(--ytot-text); font-size: 24px; font-weight: 650; overflow-wrap: anywhere; }
+.ytot-kick-channel-header p, .ytot-kick-help { color: var(--ytot-muted); font-size: 12px; }
+.ytot-kick-channel-header a { flex-shrink: 0; color: var(--ytot-accent); }
+.ytot-kick-help { margin: 16px 24px; }
+.ytot-kick-video-slot { width: 100%; aspect-ratio: 16 / 9; background: var(--ytot-ink); }
+.ytot-kick-page-chat { position: relative; flex: 0 0 340px; min-height: 400px; border-left: 1px solid var(--ytot-line); }
+.ytot-kick-no-chat .ytot-kick-page-chat { display: none; }
+[data-ypft-kick-chat] { position: relative; }
+.right-column[data-ypft-kick-column] { width: 340px !important; min-width: 340px !important; flex-shrink: 0; }
+#live-page-chat[data-ypft-kick-chat] { width: 100%; }
+[data-ypft-kick-chat="kick"] > :not(#ytot-kick-chat) { visibility: hidden; pointer-events: none; }
+#ytot-kick-chat { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; min-height: 0; background: var(--ytot-bg); }
+.ytot-kick-chat-header { display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-height: 44px; padding: 6px 10px; border-bottom: 1px solid var(--ytot-line); }
+.ytot-kick-chat-header strong { margin-right: auto; font-size: 13px; }
+.ytot-kick-chat-header a { color: var(--ytot-accent); font-size: 12px; }
+.ytot-kick-chat-header button { padding: 5px 8px; border: 0; border-radius: 6px; background: var(--ytot-hover); color: var(--ytot-text); font: inherit; font-size: 12px; cursor: pointer; }
+.ytot-kick-chat-header button:hover { background: var(--ytot-hover-strong); }
+#ytot-kick-chat iframe { flex: 1; min-height: 0; width: 100%; border: 0; }
+#ytot-kick-chat[data-mode="twitch"] { bottom: auto; }
+#ytot-kick-chat[data-mode="twitch"] iframe { display: none; }
+@media (max-width: 900px) {
+    #ytot-kick-page { flex-direction: column; }
+    .ytot-kick-watch { flex: 0 0 auto; overflow: visible; }
+    .ytot-kick-page-chat { flex: 1 0 420px; border-left: 0; border-top: 1px solid var(--ytot-line); }
+}
+@media (max-width: 560px) {
+    .ytot-kick-pin-form > div { flex-direction: column; }
+    .ytot-kick-channel-header { padding: 16px; gap: 8px; flex-wrap: wrap; }
+}
+
 /* Bounded read-only floating chat. No filters or compositing effects over video. */
 .right-column[data-ypft-chat-priming] { width: 0 !important; min-width: 0 !important; }
 .right-column[data-ypft-chat-priming] #live-page-chat { opacity: 0 !important; pointer-events: none !important; }
@@ -255,7 +320,7 @@
 #ytot-youtube-wrapper { position: fixed; z-index: 900; background: var(--ytot-ink, #000); }
 html[data-ypft-theatre] #ytot-youtube-wrapper { z-index: 3001; }
 html[data-ypft-theatre] #ytot-chat-root:not(.ytot-chat-in-fullscreen) { z-index: 3010; }
-#ytot-youtube-player { width: 100%; height: 100%; border: 0; }
+#ytot-youtube-player, #ytot-kick-player { width: 100%; height: 100%; border: 0; }
 #ytot-youtube-wrapper:fullscreen { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; visibility: visible !important; background: #000; }
 html[data-ypft-hide-extensions] :is(.video-player, .video-player__container, [data-a-target="video-player-layout"])
     :is(.extension-view, .extension-view__iframe, .extension-overlay, .extensions-dock,
