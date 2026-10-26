@@ -41,6 +41,19 @@ The extension remembers the last YouTube URL used for each Twitch channel and re
 
 Click **Restore Twitch** to remove the YouTube player and restore the original Twitch pause, mute and volume settings. Playback state also survives a reload caused by toggling interruption blocking.
 
+## Experimental Kick support
+
+Open **YPFT → Settings → Kick** and enable **Enable Kick support**. It is marked **Experimental** and is **off by default**.
+
+- To substitute a stream on a Twitch channel, paste `https://kick.com/channel` into the YPFT menu and click **Go**. **Restore Twitch** restores the original player and audio state. Active Kick substitutions return after a reload.
+- In **Settings → Kick**, enter a Kick channel name or URL and choose **Pin channel**. Up to 30 pins are saved. Only pins confirmed live on Kick appear alongside Twitch's **Followed Channels**, with their profile icon, a **Kick** label, live indicator and viewer count. Hover keeps the row background unchanged and shows the channel tooltip; keyboard focus retains a visible outline. Offline channels and failed status checks stay hidden in the sidebar. All saved pins remain accessible in Settings; **Unpin** removes one.
+- Selecting a pin opens a local pseudo channel at `/directory?ypft-kick=channel`, with Kick playback and chat. This does not create a Twitch account, follow a Twitch channel, or require a matching Twitch username.
+- **Show Kick chat** displays Kick's popout chat next to the stream. On an existing Twitch channel, the chat header switches between Kick and Twitch chat. **Open chat** opens Kick chat separately if embedding or sign-in is unavailable. Turning this preference off removes the Kick chat iframe.
+
+The feature uses [Kick's stream embed](https://help.kick.com/en/articles/8010826-how-to-embed-your-kick-livestream) and [popout chat](https://help.kick.com/en/articles/7978574-how-to-create-a-kick-chat-dock-in-obs). Kick may block an embed, require interaction before autoplay, or restrict sign-in through browser cookie rules. Public channel status uses Kick's website endpoint, which is undocumented and may change or reject requests. New pins get an initial check, then each pin is rechecked every **10 minutes** while the Twitch tab is visible, with at most three requests in flight. Failed checks hide the channel until a later check confirms it is live. When Twitch has no followed-channel section, live pins occupy that section's usual sidebar slot. Pins remain saved when support is turned off. No Kick requests or frames start while support is disabled.
+
+Settings, pins and active substitutions are stored locally. Metadata requests to `kick.com` omit cookies and credentials; profile icons load from `files.kick.com` without a referrer and fall back to channel initials if unavailable. Player and chat frames use Kick's normal browser session and load directly from Kick. The extension does not capture or store Kick chat messages. YouTube's **Sync Now / Auto-sync** and the Twitch-only floating chat overlay do not control or mirror Kick chat. Turning support off removes Kick playback, chat and sidebar entries immediately.
+
 ## Browse sorting
 
 Twitch's categories, live channels and category channel listings default to **Viewers (High to Low)**. Twitch's native control applies the sort, including when you navigate without reloading. Filters remain available. An explicit sort in the URL, including one selected from Twitch's dropdown, is respected.

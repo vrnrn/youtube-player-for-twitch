@@ -5,6 +5,15 @@
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request?.type === 'GET_KICK_CHANNEL') {
+        const url = sender.url || sender.tab?.url;
+        if (sender.id !== chrome.runtime.id || sender.frameId !== 0 || !/^https:\/\/www\.twitch\.tv\//.test(url || '')) {
+            sendResponse({ error: 'Kick channels are only available on Twitch.' });
+            return;
+        }
+        getKickChannel(request.channel).then(sendResponse).catch(error => sendResponse({ error: error.message }));
+        return true;
+    }
     if (request?.type === 'GET_GLOBAL_EMOTES') {
         getGlobalEmotes().then(sendResponse).catch(() => sendResponse({ emotes: [] }));
         return true;
@@ -36,6 +45,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 });
+
+async function getKickChannel(channel) {
+    if (typeof channel !== 'string' || !/^[a-z0-9_][a-z0-9_-]{0,24}$/.test(channel)) throw new Error('Invalid Kick channel.');
+    const stored = await chrome.storage.local.get('ytot_kick_settings');
+    if (stored.ytot_kick_settings?.enabled !== true) throw new Error('Enable experimental Kick support in Settings first.');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+        const response = await fetch(`https://kick.com/api/v2/channels/${channel}`, {
+            credentials: 'omit', referrerPolicy: 'no-referrer', signal: controller.signal
+        });
+        if (!response.ok) throw new Error('Kick channel status is unavailable.');
+        const data = await response.json();
+        if (typeof data?.slug !== 'string' || data.slug.toLowerCase() !== channel ||
+            !Object.hasOwn(data, 'livestream') || (data.livestream !== null && typeof data.livestream?.is_live !== 'boolean')) {
+            throw new Error('Kick channel status is unavailable.');
+        }
+        return { channel, live: data.livestream?.is_live === true,
+            avatar: emoteImageUrl(data.user?.profile_pic, 'files.kick.com'),
+            viewers: Number.isFinite(data.livestream?.viewer_count) && data.livestream.viewer_count >= 0 ? data.livestream.viewer_count : null };
+    } finally { clearTimeout(timer); }
+}
 
 const EMOTE_CACHE_KEY = 'ypft_global_emotes_v1';
 const EMOTE_CACHE_TTL = 6 * 60 * 60 * 1000;

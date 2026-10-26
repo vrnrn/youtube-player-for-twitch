@@ -22,8 +22,8 @@ function fixture({ enabled = false, failure = null, running = null, saved = {}, 
         querySelector(selector) { return selector === '.ytot-settings-content' ? (this.content ||= { scrollTop: 0 }) : null; }, querySelectorAll() { return []; }, closest() { return null; }
     });
     for (const id of ['ytot-vaft', 'ytot-vaft-status', 'ytot-vaft-reload', 'ytot-status', 'ytot-history-section', 'ytot-toggle', 'ytot-restore', 'ytot-sync-now', 'ytot-actions', 'ytot-hide-extensions', 'ytot-chat-toggle', 'ytot-emotes-toggle', 'ytot-chat-settings', 'ytot-chat-mode', 'ytot-chat-opacity', 'ytot-chat-font', 'ytot-chat-color', 'ytot-chat-compact', 'ytot-chat-through', 'ytot-chat-reset', 'ytot-theatre', 'ytot-theatre-label', 'ytot-search-result', 'ytot-autofind', 'ytot-dropdown', 'ytot-close', 'ytot-url', 'ytot-go', 'ytot-autosync', 'ytot-quality']) elements.set(id, element('div'));
-    for (const id of ['ytot-open-settings', 'ytot-settings-close', ...['playback', 'chat', 'extras'].flatMap(tab => [`ytot-tab-${tab}`, `ytot-panel-${tab}`])]) elements.set(id, element('div'));
-    for (const tab of ['playback', 'chat', 'extras']) {
+    for (const id of ['ytot-open-settings', 'ytot-settings-close', ...['playback', 'chat', 'extras', 'kick'].flatMap(tab => [`ytot-tab-${tab}`, `ytot-panel-${tab}`])]) elements.set(id, element('div'));
+    for (const tab of ['playback', 'chat', 'extras', 'kick']) {
         const button = elements.get(`ytot-tab-${tab}`); button.dataset.ytotSettingsTab = tab;
         button.closest = selector => selector === '[data-ytot-settings-tab]' ? button : null;
     }
@@ -70,6 +70,18 @@ test('settings window explains opt-in reload and uses interruption-blocking term
     assert.match(menu, /Reload Twitch to apply/);
     assert.match(menu, /id="ytot-vaft" disabled/);
     assert.doesNotMatch(menu, /ad blocking/i);
+});
+test('Kick URLs require the experimental setting, invoke Kick playback and hide YouTube-only sync', () => {
+    const f = fixture(); let enabled = false, active = false;
+    const played = [];
+    f.window.__ypftKick = { parseChannel: value => value === 'https://kick.com/creator' ? 'creator' : null,
+        enabled: () => enabled, active: () => active, play(channel) { played.push(channel); active = true; }, restore() { active = false; } };
+    f.api.setupEventListeners(); f.elements.get('ytot-url').value = 'https://kick.com/creator';
+    f.elements.get('ytot-go').onclick(); assert.equal(played.length, 0);
+    assert.match(f.elements.get('ytot-status').textContent, /Enable Kick support/);
+    enabled = true; f.elements.get('ytot-go').onclick(); assert.deepEqual(played, ['creator']);
+    f.api.updateToggleButton(true); assert.equal(f.elements.get('ytot-sync-now').style.display, 'none');
+    f.elements.get('ytot-restore').onclick(); assert.equal(active, false);
 });
 test('YPFT uses the right navigation column before the account controls and keeps its accessible name', () => {
     const f = fixture(), left = f.element('div'), right = f.element('div'), account = f.element('div'), user = f.element('button');
@@ -158,7 +170,7 @@ test('dropdown keeps stream search and selection while optional controls are gro
         assert.ok(settings.includes('id="' + id + '"'), id); assert.ok(!menu.includes('id="' + id + '"'), id);
     }
     assert.equal(dialog.tag, 'dialog'); assert.equal(dialog.getAttribute('aria-labelledby'), 'ytot-settings-title');
-    assert.equal((settings.match(/role="tabpanel"/g) || []).length, 3);
+    assert.equal((settings.match(/role="tabpanel"/g) || []).length, 4);
     assert.match(settings, /aria-orientation="vertical"/);
     assert.doesNotMatch(menu, /<details/);
 });

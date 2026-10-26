@@ -32,7 +32,7 @@ test('channels, categories and category stream listings default to descending vi
     }
 });
 test('explicit sort selections and unrelated Twitch routes are preserved', () => {
-    for (const path of ['/directory?sort=RECOMMENDED', '/directory/all?sort=VIEWER_COUNT_ASC', '/directory/category/music?sort=RELEVANCE', '/channel', '/directory/following', '/directory/event/example']) {
+    for (const path of ['/directory?ypft-kick=creator', '/directory?sort=RECOMMENDED', '/directory/all?sort=VIEWER_COUNT_ASC', '/directory/category/music?sort=RELEVANCE', '/channel', '/directory/following', '/directory/event/example']) {
         const f = fixture(`https://www.twitch.tv${path}`);
         f.flush(); assert.deepEqual(f.clicks, []);
     }

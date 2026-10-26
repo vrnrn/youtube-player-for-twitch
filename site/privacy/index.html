@@ -95,7 +95,7 @@
     <main class="policy" id="main">
       <p class="eyebrow">Privacy</p>
       <h1>Privacy Policy</h1>
-      <p class="lede">Last updated October 11, 2026</p>
+      <p class="lede">Last updated October 25, 2026</p>
       <p>
         This policy describes the YouTube Player for Twitch Chrome extension,
         this information site, and the separate workflow used by the maintainer
@@ -138,6 +138,23 @@
         does not open another chat connection; mirrored images can load from
         their existing HTTPS image URLs. Extra emotes use a separate
         setting and catalog as described below.
+      </p>
+
+      <h2>Experimental Kick support</h2>
+      <p>
+        Kick support is off by default. When enabled in Settings, the extension
+        stores your Kick preferences, pinned channel names and active stream
+        substitutions locally. It requests public channel status directly from
+        kick.com while your Twitch tab is visible, without cookies or account
+        credentials. Selected streams load from player.kick.com, and optional
+        Kick chat loads from kick.com in a separate frame. These frames use
+        Kick’s normal browser session and may process ordinary request
+        information, cookies and chat interactions under
+        <a href="https://kick.com/privacy-policy">Kick’s Privacy Policy</a>.
+        The extension does not capture or store Kick chat messages, send them
+        to the developer, or create a Twitch account for a pinned channel.
+        Turning support off removes Kick frames and stops channel checks;
+        saved pins remain on your device until unpinned or the extension is removed.
       </p>
 
       <h2>Requests to YouTube and Twitch</h2>

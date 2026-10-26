@@ -45,7 +45,7 @@ function runtime({ owned = false, paused = false, conflict = false, fetchImpl } 
     context.window = context;
     context.top = context;
     if (conflict) context.twitchAdSolutionsVersion = 1;
-    if (owned) attrs.set('data-ypft-playback', 'youtube');
+    if (owned) attrs.set('data-ypft-playback', typeof owned === 'string' ? owned : 'youtube');
     vm.runInContext(guard, context);
     // Expose internal tasks solely for deterministic extension unit tests.
     const instrumented = adapter.replace('    declareOptions(window);', '    window.testTasks = { doTwitchPlayerTask, hookWorkerFetch, processM3U8, parseAttributes, handleWorkerFetchRequest };\n    declareOptions(window);');
@@ -109,17 +109,19 @@ test('Twitch token hook preserves callers, accepts Headers, and safely ignores m
     await f.context.fetch('https://gql.twitch.tv/gql', invalid);
     assert.equal(f.calls.at(-1).init, invalid);
 });
-test('YouTube ownership suppresses ad/focus/buffering reload and resume paths; manual Twitch pause stays paused', () => {
-    const f = runtime({ owned: true });
-    f.context.testTasks.doTwitchPlayerTask(true, false);
-    f.context.testTasks.doTwitchPlayerTask(false, true);
-    const worker = new f.context.Worker('blob:https://www.twitch.tv/original');
-    worker.emit('message', { key: 'ReloadPlayer' });
-    worker.emit('message', { key: 'PauseResumePlayer' });
-    for (const timer of [...f.timers.values()]) timer();
-    assert.deepEqual(f.calls, []);
-    assert.equal(f.listeners.has('visibilitychange'), false);
-    assert.equal(Object.getOwnPropertyDescriptor(f.context.document, 'hidden'), undefined);
+test('YouTube and Kick ownership suppress ad/focus/buffering recovery; manual Twitch pause stays paused', () => {
+    for (const source of ['youtube', 'kick']) {
+        const f = runtime({ owned: source });
+        f.context.testTasks.doTwitchPlayerTask(true, false);
+        f.context.testTasks.doTwitchPlayerTask(false, true);
+        const worker = new f.context.Worker('blob:https://www.twitch.tv/original');
+        worker.emit('message', { key: 'ReloadPlayer' });
+        worker.emit('message', { key: 'PauseResumePlayer' });
+        for (const timer of [...f.timers.values()]) timer();
+        assert.deepEqual(f.calls, []);
+        assert.equal(f.listeners.has('visibilitychange'), false);
+        assert.equal(Object.getOwnPropertyDescriptor(f.context.document, 'hidden'), undefined);
+    }
     const paused = runtime({ paused: true });
     paused.context.testTasks.doTwitchPlayerTask(false, true);
     assert.deepEqual(paused.calls, []);
